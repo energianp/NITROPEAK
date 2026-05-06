@@ -730,3 +730,44 @@ section h2::after {
     .hero-content h2 { font-size: 2em; }
     .modal-content { margin: 10% auto; padding: 20px; }
 }
+
+/* ============ MAPA LEAFLET ============ */
+#mapa {
+    height: 400px;
+    width: 100%;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    border: 2px solid rgba(72, 187, 120, 0.3);
+    z-index: 1;
+}
+
+.custom-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+    background: #1a2f1f !important;
+    color: #48bb78 !important;
+    border: 1px solid #48bb78 !important;
+    border-radius: 10px !important;
+}
+
+.leaflet-popup-tip {
+    background: #1a2f1f !important;
+    border: 1px solid #48bb78 !important;
+}
+
+.leaflet-popup-content {
+    color: #48bb78 !important;
+}
+
+.leaflet-popup-close-button {
+    color: #48bb78 !important;
+}
+
+.leaflet-control-zoom a {
+    background: #1a472a !important;
+    color: #48bb78 !important;
+    border: 1px solid #48bb78 !important;
+}
