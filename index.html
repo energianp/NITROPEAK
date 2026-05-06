@@ -79,14 +79,25 @@
     </section>
 
     <!-- Dónde Comprar -->
-    <section id="ubicaciones" class="ubicaciones">
-        <h2>Dónde Comprar NITROPEAK</h2>
-        <div id="mapa"></div>
-        <div class="ubicaciones-lista" id="ubicaciones-contenido">
-            <!-- Cargado dinámicamente -->
-        </div>
-    </section>
-
+<section id="ubicaciones" class="ubicaciones">
+    <h2>Dónde Comprar NITROPEAK</h2>
+    
+    <div class="mapa-buscador">
+        <select id="buscar-departamento" onchange="cargarMunicipiosSelect(); buscarPorDepartamento();">
+            <option value="">Seleccionar departamento</option>
+        </select>
+        <select id="buscar-municipio" onchange="buscarPorDepartamento();">
+            <option value="">Todos los municipios</option>
+        </select>
+        <button onclick="buscarPorDepartamento()">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+    </div>
+    
+    <div id="mapa"></div>
+    <div class="ubicaciones-lista" id="ubicaciones-contenido"></div>
+</section>
+    
     <!-- Personalizar Producto -->
     <section id="personalizar" class="personalizar">
         <h2>Personaliza tu NITROPEAK</h2>
