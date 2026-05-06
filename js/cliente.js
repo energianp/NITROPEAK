@@ -49,24 +49,24 @@ function cargarHistoria() {
     });
 }
 
-// ============ MAPA Y UBICACIONES ============
+// ============ MAPA Y UBICACIONES (Leaflet + OpenStreetMap) ============
+let mapa;
+let marcadoresLayer;
+
 function initMap() {
-    const centro = { lat: 13.7942, lng: -88.8965 };
-    mapa = new google.maps.Map(document.getElementById('mapa'), {
-        zoom: 8,
-        center: centro,
-        styles: [
-            { elementType: "geometry", stylers: [{ color: "#1a2f1f" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#1a2f1f" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#48bb78" }] },
-            {
-                featureType: "water",
-                elementType: "geometry",
-                stylers: [{ color: "#0d1f14" }]
-            }
-        ]
-    });
+    // Crear el mapa centrado en El Salvador
+    mapa = L.map('mapa').setView([13.7942, -88.8965], 8);
     
+    // Agregar capa de OpenStreetMap (gratis, sin API Key)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(mapa);
+    
+    // Capa para los marcadores
+    marcadoresLayer = L.layerGroup().addTo(mapa);
+    
+    // Cargar ubicaciones
     cargarUbicaciones();
     cargarDepartamentosSelect();
 }
@@ -149,66 +149,76 @@ function cargarUbicaciones() {
 }
 
 function actualizarMapa(ubicaciones) {
-    marcadores.forEach(marker => marker.setMap(null));
-    marcadores = [];
+    // Limpiar marcadores anteriores
+    marcadoresLayer.clearLayers();
     
-    if (!mapa) return;
+    if (!mapa || ubicaciones.length === 0) return;
     
-    const bounds = new google.maps.LatLngBounds();
+    const bounds = [];
     
     ubicaciones.forEach(ubicacion => {
-        // Geocodificar la dirección si no hay coordenadas
-        if (ubicacion.direccion && ubicacion.departamento) {
-            const geocoder = new google.maps.Geocoder();
-            const direccionCompleta = `${ubicacion.direccion}, ${ubicacion.municipio}, ${ubicacion.departamento}, El Salvador`;
-            
-            geocoder.geocode({ address: direccionCompleta }, (results, status) => {
-                if (status === 'OK') {
-                    const marker = new google.maps.Marker({
-                        position: results[0].geometry.location,
-                        map: mapa,
-                        title: ubicacion.nombre,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 10,
-                            fillColor: ubicacion.color || '#48bb78',
-                            fillOpacity: 0.8,
-                            strokeWeight: 2,
-                            strokeColor: '#1a472a'
-                        }
+        // Geocodificar la dirección usando Nominatim (gratis)
+        const direccionCompleta = `${ubicacion.direccion}, ${ubicacion.municipio}, ${ubicacion.departamento}, El Salvador`;
+        
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccionCompleta)}&limit=1`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    
+                    // Crear marcador con color personalizado
+                    const markerColor = ubicacion.color || '#48bb78';
+                    
+                    const markerIcon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="
+                            width: 20px;
+                            height: 20px;
+                            background: ${markerColor};
+                            border: 3px solid #1a472a;
+                            border-radius: 50%;
+                            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+                        "></div>`,
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
                     });
                     
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                            <div style="color:#1a472a;">
-                                <h4>${ubicacion.nombre}</h4>
-                                <p>${ubicacion.direccion}</p>
-                                <p>${ubicacion.telefono || ''}</p>
-                                <p><strong>${ubicacion.tipo}</strong></p>
-                                ${ubicacion.mapsLink ? `<a href="${ubicacion.mapsLink}" target="_blank">Ver en Google Maps</a>` : ''}
-                            </div>
-                        `
-                    });
+                    const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(marcadoresLayer);
                     
-                    marker.addListener('click', () => infoWindow.open(mapa, marker));
-                    marcadores.push(marker);
-                    bounds.extend(results[0].geometry.location);
+                    marker.bindPopup(`
+                        <div style="color:#1a472a; font-family:sans-serif;">
+                            <h4 style="margin:0 0 5px 0;">${ubicacion.nombre}</h4>
+                            <p style="margin:2px 0;">📍 ${ubicacion.direccion}</p>
+                            <p style="margin:2px 0;">📞 ${ubicacion.telefono || 'N/A'}</p>
+                            <p style="margin:2px 0;"><strong>${ubicacion.tipo}</strong></p>
+                            ${ubicacion.mapsLink ? 
+                                `<a href="${ubicacion.mapsLink}" target="_blank" style="color:#48bb78;">Ver en Google Maps</a>` : ''}
+                        </div>
+                    `);
                     
-                    if (ubicaciones.length > 1) {
+                    bounds.push([lat, lng]);
+                    
+                    // Ajustar el mapa para mostrar todos los marcadores
+                    if (bounds.length > 1) {
                         mapa.fitBounds(bounds);
                     } else {
-                        mapa.setCenter(results[0].geometry.location);
-                        mapa.setZoom(14);
+                        mapa.setView([lat, lng], 15);
                     }
                 }
-            });
-        }
+            })
+            .catch(error => console.error('Error geocodificando:', error));
     });
 }
 
 function mostrarListaUbicaciones(ubicaciones) {
     const contenedor = document.getElementById('ubicaciones-contenido');
     if (!contenedor) return;
+    
+    if (ubicaciones.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center; color:#a0d8b0;">No se encontraron ubicaciones</p>';
+        return;
+    }
     
     contenedor.innerHTML = ubicaciones.map(u => `
         <div class="ubicacion-item" style="border-left: 4px solid ${u.color || '#48bb78'}">
@@ -418,6 +428,7 @@ function mostrarNotificacion(mensaje) {
 
 // ============ INICIALIZACIÓN ============
 window.onload = function() {
+    initMap();
     cargarProductos();
     cargarHistoria();
     cargarValoraciones();
