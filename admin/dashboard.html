@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NITROPEAK - Panel Administrador</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>⚡ NITROPEAK</h2>
+                <p>Panel Administrador</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="active" onclick="mostrarSeccion('productos', this)">
+                    <i class="fas fa-box"></i> Productos
+                </li>
+                <li onclick="mostrarSeccion('historia', this)">
+                    <i class="fas fa-book"></i> Historia
+                </li>
+                <li onclick="mostrarSeccion('ubicaciones', this)">
+                    <i class="fas fa-map-marker-alt"></i> Ubicaciones
+                </li>
+                <li onclick="mostrarSeccion('valoraciones', this)">
+                    <i class="fas fa-star"></i> Valoraciones
+                </li>
+                <li onclick="mostrarSeccion('contactos', this)">
+                    <i class="fas fa-envelope"></i> Contactos
+                </li>
+                <li onclick="logout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Sección Productos -->
+            <section id="seccion-productos" class="seccion">
+                <h2><i class="fas fa-box"></i> Gestión de Productos</h2>
+                
+                <div class="form-container">
+                    <h3 id="form-titulo">Agregar Nuevo Producto</h3>
+                    <input type="hidden" id="producto-id">
+                    <div class="form-grid">
+                        <input type="text" id="nombre-producto" placeholder="Nombre del producto" class="form-input">
+                        <input type="number" id="precio-producto" placeholder="Precio ($)" step="0.01" class="form-input">
+                        <input type="number" id="stock-producto" placeholder="Stock disponible" class="form-input">
+                        <input type="text" id="categoria-producto" placeholder="Categoría" class="form-input">
+                        <input type="url" id="imagen-producto" placeholder="URL de la imagen" class="form-input">
+                        <textarea id="descripcion-producto" placeholder="Descripción del producto" class="form-input" rows="3"></textarea>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="activo-producto" checked> Producto activo
+                        </label>
+                    </div>
+                    <div class="form-buttons">
+                        <button onclick="guardarProducto()" class="btn-guardar">
+                            <i class="fas fa-save"></i> Guardar Producto
+                        </button>
+                        <button onclick="cancelarEdicion()" class="btn-cancelar" style="display:none;">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="productos-grid" id="lista-productos">
+                    <!-- Productos cargados dinámicamente -->
+                </div>
+            </section>
+
+            <!-- Sección Historia -->
+            <section id="seccion-historia" class="seccion" style="display:none;">
+                <h2><i class="fas fa-book"></i> Nuestra Historia</h2>
+                
+                <div class="form-container">
+                    <input type="text" id="historia-titulo" placeholder="Título de la historia" class="form-input">
+                    <textarea id="historia-contenido" placeholder="Contenido de la historia" class="form-input" rows="6"></textarea>
+                    <input type="url" id="historia-imagen" placeholder="URL de imagen (opcional)" class="form-input">
+                    <button onclick="guardarHistoria()" class="btn-guardar">
+                        <i class="fas fa-save"></i> Guardar Historia
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sección Ubicaciones -->
+            <section id="seccion-ubicaciones" class="seccion" style="display:none;">
+                <h2><i class="fas fa-map-marker-alt"></i> Puntos de Venta</h2>
+                
+                <div class="form-container">
+                    <h3>Agregar Ubicación</h3>
+                    <div class="form-grid">
+                        <input type="text" id="ubicacion-nombre" placeholder="Nombre del lugar" class="form-input">
+                        <input type="text" id="ubicacion-direccion" placeholder="Dirección" class="form-input">
+                        <input type="text" id="ubicacion-telefono" placeholder="Teléfono" class="form-input">
+                        <select id="ubicacion-tipo" class="form-input">
+                            <option value="">Seleccionar tipo</option>
+                            <option value="Supermercado">Supermercado</option>
+                            <option value="Gimnasio">Gimnasio</option>
+                            <option value="Tienda de conveniencia">Tienda de conveniencia</option>
+                            <option value="Farmacia">Farmacia</option>
+                        </select>
+                        <input type="number" id="ubicacion-lat" placeholder="Latitud" step="any" class="form-input">
+                        <input type="number" id="ubicacion-lng" placeholder="Longitud" step="any" class="form-input">
+                        <select id="ubicacion-color" class="form-input">
+                            <option value="">Color del marcador</option>
+                            <option value="#FF6B6B">Rojo - Supermercado</option>
+                            <option value="#4ECDC4">Turquesa - Gimnasio</option>
+                            <option value="#45B7D1">Azul - Tienda</option>
+                            <option value="#96CEB4">Verde - Farmacia</option>
+                            <option value="#FFEAA7">Amarillo</option>
+                            <option value="#DDA0DD">Morado</option>
+                        </select>
+                    </div>
+                    <button onclick="guardarUbicacion()" class="btn-guardar">
+                        <i class="fas fa-save"></i> Guardar Ubicación
+                    </button>
+                </div>
+
+                <div class="ubicaciones-grid" id="lista-ubicaciones">
+                    <!-- Ubicaciones cargadas dinámicamente -->
+                </div>
+            </section>
+
+            <!-- Sección Valoraciones -->
+            <section id="seccion-valoraciones" class="seccion" style="display:none;">
+                <h2><i class="fas fa-star"></i> Moderar Valoraciones</h2>
+                
+                <div class="valoraciones-grid" id="lista-valoraciones">
+                    <!-- Valoraciones cargadas dinámicamente -->
+                </div>
+            </section>
+
+            <!-- Sección Contactos -->
+            <section id="seccion-contactos" class="seccion" style="display:none;">
+                <h2><i class="fas fa-envelope"></i> Mensajes de Contacto</h2>
+                
+                <div class="contactos-grid" id="lista-contactos">
+                    <!-- Mensajes cargados dinámicamente -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>
