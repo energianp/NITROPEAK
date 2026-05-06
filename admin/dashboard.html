@@ -12,6 +12,7 @@
         <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-header">
+                <img src="../img/logo.png" alt="NITROPEAK" id="sidebar-logo" class="sidebar-logo">
                 <h2>⚡ NITROPEAK</h2>
                 <p>Panel Administrador</p>
             </div>
@@ -25,11 +26,17 @@
                 <li onclick="mostrarSeccion('ubicaciones', this)">
                     <i class="fas fa-map-marker-alt"></i> Ubicaciones
                 </li>
+                <li onclick="mostrarSeccion('secciones', this)">
+                    <i class="fas fa-puzzle-piece"></i> Secciones
+                </li>
                 <li onclick="mostrarSeccion('valoraciones', this)">
                     <i class="fas fa-star"></i> Valoraciones
                 </li>
                 <li onclick="mostrarSeccion('contactos', this)">
                     <i class="fas fa-envelope"></i> Contactos
+                </li>
+                <li onclick="mostrarSeccion('configuracion', this)">
+                    <i class="fas fa-cog"></i> Configuración
                 </li>
                 <li onclick="logout()" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
@@ -51,7 +58,17 @@
                         <input type="number" id="precio-producto" placeholder="Precio ($)" step="0.01" class="form-input">
                         <input type="number" id="stock-producto" placeholder="Stock disponible" class="form-input">
                         <input type="text" id="categoria-producto" placeholder="Categoría" class="form-input">
-                        <input type="url" id="imagen-producto" placeholder="URL de la imagen" class="form-input">
+                        <div class="upload-container">
+                            <label for="imagen-producto" class="upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span id="imagen-texto">Subir imagen del producto</span>
+                            </label>
+                            <input type="file" id="imagen-producto" accept="image/*" class="form-input-file" onchange="previewImagen(event)">
+                            <img id="imagen-preview" class="imagen-preview" style="display:none;">
+                            <div id="progress-bar" class="progress-bar" style="display:none;">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
                         <textarea id="descripcion-producto" placeholder="Descripción del producto" class="form-input" rows="3"></textarea>
                         <label class="checkbox-label">
                             <input type="checkbox" id="activo-producto" checked> Producto activo
@@ -67,9 +84,7 @@
                     </div>
                 </div>
 
-                <div class="productos-grid" id="lista-productos">
-                    <!-- Productos cargados dinámicamente -->
-                </div>
+                <div class="productos-grid" id="lista-productos"></div>
             </section>
 
             <!-- Sección Historia -->
@@ -79,7 +94,14 @@
                 <div class="form-container">
                     <input type="text" id="historia-titulo" placeholder="Título de la historia" class="form-input">
                     <textarea id="historia-contenido" placeholder="Contenido de la historia" class="form-input" rows="6"></textarea>
-                    <input type="url" id="historia-imagen" placeholder="URL de imagen (opcional)" class="form-input">
+                    <div class="upload-container">
+                        <label for="historia-imagen" class="upload-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="historia-imagen-texto">Subir imagen de la historia</span>
+                        </label>
+                        <input type="file" id="historia-imagen" accept="image/*" class="form-input-file" onchange="previewImagenHistoria(event)">
+                        <img id="historia-imagen-preview" class="imagen-preview" style="display:none;">
+                    </div>
                     <button onclick="guardarHistoria()" class="btn-guardar">
                         <i class="fas fa-save"></i> Guardar Historia
                     </button>
@@ -103,8 +125,14 @@
                             <option value="Tienda de conveniencia">Tienda de conveniencia</option>
                             <option value="Farmacia">Farmacia</option>
                         </select>
-                        <input type="number" id="ubicacion-lat" placeholder="Latitud" step="any" class="form-input">
-                        <input type="number" id="ubicacion-lng" placeholder="Longitud" step="any" class="form-input">
+                        <select id="ubicacion-departamento" class="form-input" onchange="cargarMunicipios()">
+                            <option value="">Seleccionar departamento</option>
+                        </select>
+                        <select id="ubicacion-municipio" class="form-input">
+                            <option value="">Seleccionar municipio</option>
+                        </select>
+                        <input type="text" id="ubicacion-maps" placeholder="Link de Google Maps" class="form-input">
+                        <div id="mapa-busqueda" class="mapa-busqueda"></div>
                         <select id="ubicacion-color" class="form-input">
                             <option value="">Color del marcador</option>
                             <option value="#FF6B6B">Rojo - Supermercado</option>
@@ -120,26 +148,97 @@
                     </button>
                 </div>
 
-                <div class="ubicaciones-grid" id="lista-ubicaciones">
-                    <!-- Ubicaciones cargadas dinámicamente -->
+                <div class="ubicaciones-grid" id="lista-ubicaciones"></div>
+            </section>
+
+            <!-- Sección Secciones Personalizadas -->
+            <section id="seccion-secciones" class="seccion" style="display:none;">
+                <h2><i class="fas fa-puzzle-piece"></i> Gestión de Secciones</h2>
+                
+                <div class="form-container">
+                    <h3>Agregar/Editar Sección</h3>
+                    <input type="hidden" id="seccion-id">
+                    <div class="form-grid">
+                        <input type="text" id="seccion-titulo" placeholder="Título de la sección" class="form-input">
+                        <select id="seccion-tipo" class="form-input" onchange="cambiarTipoSeccion()">
+                            <option value="texto">Solo texto</option>
+                            <option value="imagen">Imagen + texto</option>
+                            <option value="video">Video + texto</option>
+                            <option value="galeria">Galería de imágenes</option>
+                        </select>
+                        <textarea id="seccion-contenido" placeholder="Contenido de la sección" class="form-input" rows="4"></textarea>
+                        <div id="seccion-media" class="upload-container">
+                            <label for="seccion-archivo" class="upload-label" id="upload-label-text">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Subir archivo</span>
+                            </label>
+                            <input type="file" id="seccion-archivo" accept="image/*,video/*" class="form-input-file" onchange="previewSeccionMedia(event)">
+                            <img id="seccion-media-preview" class="imagen-preview" style="display:none;">
+                            <video id="seccion-video-preview" class="video-preview" style="display:none;" controls></video>
+                        </div>
+                        <input type="text" id="seccion-video-url" placeholder="O URL de YouTube/Vimeo" class="form-input" style="display:none;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="seccion-activo" checked> Sección activa
+                        </label>
+                    </div>
+                    <button onclick="guardarSeccion()" class="btn-guardar">
+                        <i class="fas fa-save"></i> Guardar Sección
+                    </button>
                 </div>
+
+                <div class="secciones-grid" id="lista-secciones"></div>
             </section>
 
             <!-- Sección Valoraciones -->
             <section id="seccion-valoraciones" class="seccion" style="display:none;">
                 <h2><i class="fas fa-star"></i> Moderar Valoraciones</h2>
-                
-                <div class="valoraciones-grid" id="lista-valoraciones">
-                    <!-- Valoraciones cargadas dinámicamente -->
-                </div>
+                <div class="valoraciones-grid" id="lista-valoraciones"></div>
             </section>
 
             <!-- Sección Contactos -->
             <section id="seccion-contactos" class="seccion" style="display:none;">
                 <h2><i class="fas fa-envelope"></i> Mensajes de Contacto</h2>
+                <div class="contactos-grid" id="lista-contactos"></div>
+            </section>
+
+            <!-- Sección Configuración -->
+            <section id="seccion-configuracion" class="seccion" style="display:none;">
+                <h2><i class="fas fa-cog"></i> Configuración General</h2>
                 
-                <div class="contactos-grid" id="lista-contactos">
-                    <!-- Mensajes cargados dinámicamente -->
+                <div class="form-container">
+                    <h3>Cambiar Logo</h3>
+                    <div class="upload-container">
+                        <label for="logo-input" class="upload-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Subir nuevo logo</span>
+                        </label>
+                        <input type="file" id="logo-input" accept="image/*" class="form-input-file" onchange="previewLogo(event)">
+                        <img id="logo-preview" class="imagen-preview" style="display:none;">
+                    </div>
+                    <button onclick="actualizarLogo()" class="btn-guardar">
+                        <i class="fas fa-save"></i> Actualizar Logo
+                    </button>
+                </div>
+
+                <div class="form-container">
+                    <h3>Colores del sitio</h3>
+                    <div class="form-grid">
+                        <div>
+                            <label>Color principal</label>
+                            <input type="color" id="color-principal" class="form-input" value="#1a472a">
+                        </div>
+                        <div>
+                            <label>Color secundario</label>
+                            <input type="color" id="color-secundario" class="form-input" value="#2d5a3d">
+                        </div>
+                        <div>
+                            <label>Color acento</label>
+                            <input type="color" id="color-acento" class="form-input" value="#48bb78">
+                        </div>
+                    </div>
+                    <button onclick="guardarColores()" class="btn-guardar">
+                        <i class="fas fa-save"></i> Guardar Colores
+                    </button>
                 </div>
             </section>
         </main>
@@ -147,6 +246,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
     <script src="../js/firebase-config.js"></script>
     <script src="../js/admin.js"></script>
 </body>
