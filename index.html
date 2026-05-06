@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NITROPEAK - Energía Natural Sin Cafeína</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <img src="img/logo.png" alt="NITROPEAK" id="logo-img">
+                <h1>NITROPEAK</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#productos">Productos</a></li>
+                <li><a href="#historia">Nuestra Historia</a></li>
+                <li><a href="#ubicaciones">Dónde Comprar</a></li>
+                <li><a href="#personalizar">Personalizar</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+                <li>
+                    <a href="#" class="carrito-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="contador-carrito">0</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h2>Energía Pura, Natural y Sin Cafeína</h2>
+            <p>Descubre NITROPEAK, el energizante que revoluciona tu rendimiento con vitaminas y sin conservantes artificiales</p>
+            <a href="#productos" class="btn-cta">Ver Productos</a>
+        </div>
+    </section>
+
+    <!-- Productos -->
+    <section id="productos" class="productos">
+        <h2>Nuestros Productos</h2>
+        <div class="productos-grid" id="productos-lista">
+            <!-- Cargado dinámicamente -->
+        </div>
+    </section>
+
+    <!-- Nuestra Historia -->
+    <section id="historia" class="historia">
+        <h2>Nuestra Historia</h2>
+        <div class="historia-content" id="historia-contenido">
+            <!-- Cargado dinámicamente -->
+        </div>
+    </section>
+
+    <!-- Valoraciones -->
+    <section id="valoraciones" class="valoraciones">
+        <h2>Lo que dicen nuestros clientes</h2>
+        <div class="valoraciones-grid" id="valoraciones-lista">
+            <!-- Cargado dinámicamente -->
+        </div>
+        <div class="agregar-valoracion">
+            <h3>Deja tu valoración</h3>
+            <div class="estrellas">
+                <span onclick="calificar(1)">★</span>
+                <span onclick="calificar(2)">★</span>
+                <span onclick="calificar(3)">★</span>
+                <span onclick="calificar(4)">★</span>
+                <span onclick="calificar(5)">★</span>
+            </div>
+            <textarea id="comentario-valoracion" placeholder="Tu comentario"></textarea>
+            <input type="text" id="nombre-valoracion" placeholder="Tu nombre">
+            <button onclick="enviarValoracion()">Enviar Valoración</button>
+        </div>
+    </section>
+
+    <!-- Dónde Comprar -->
+    <section id="ubicaciones" class="ubicaciones">
+        <h2>Dónde Comprar NITROPEAK</h2>
+        <div id="mapa"></div>
+        <div class="ubicaciones-lista" id="ubicaciones-contenido">
+            <!-- Cargado dinámicamente -->
+        </div>
+    </section>
+
+    <!-- Personalizar Producto -->
+    <section id="personalizar" class="personalizar">
+        <h2>Personaliza tu NITROPEAK</h2>
+        <p>¿Quieres un NITROPEAK único? Personalízalo a tu gusto</p>
+        <a href="https://forms.gle/c23R8qCtBQAp88tN6" target="_blank" class="btn-personalizar">
+            Ir al Formulario de Personalización
+        </a>
+    </section>
+
+    <!-- Contacto -->
+    <section id="contacto" class="contacto">
+        <h2>Contáctanos</h2>
+        <form id="formulario-contacto" onsubmit="enviarContacto(event)">
+            <input type="text" id="nombre-contacto" placeholder="Tu nombre" required>
+            <input type="email" id="email-contacto" placeholder="Tu email" required>
+            <input type="tel" id="telefono-contacto" placeholder="Tu teléfono">
+            <textarea id="mensaje-contacto" placeholder="Tu mensaje" required></textarea>
+            <button type="submit">Enviar Mensaje</button>
+        </form>
+    </section>
+
+    <!-- Carrito Modal -->
+    <div id="carrito-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Tu Carrito</h2>
+            <div id="carrito-items"></div>
+            <div id="carrito-total"></div>
+            <button onclick="realizarPedido()">Realizar Pedido</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 NITROPEAK - Todos los derechos reservados</p>
+        <p>Energía natural, sin cafeína, más vitaminas, menos conservantes</p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/cliente.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+</body>
+</html>
