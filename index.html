@@ -19,7 +19,8 @@
             <ul class="nav-menu">
                 <li><a href="#inicio">Inicio</a></li>
                 <li><a href="#productos">Productos</a></li>
-                <li><a href="#historia">Nuestra Historia</a></li>
+                <li><a href="#historia">Historia</a></li>
+                <li><a href="#valoraciones">Valoraciones</a></li>
                 <li><a href="#ubicaciones">Dónde Comprar</a></li>
                 <li><a href="#personalizar">Personalizar</a></li>
                 <li><a href="#contacto">Contacto</a></li>
@@ -54,10 +55,23 @@
         <div class="historia-content" id="historia-contenido"></div>
     </section>
 
-    <!-- Valoraciones -->
+    <!-- Valoraciones Generales -->
     <section id="valoraciones" class="valoraciones">
         <h2>Lo que dicen nuestros clientes</h2>
         <div class="valoraciones-grid" id="valoraciones-lista"></div>
+        <div class="agregar-valoracion">
+            <h3>Deja tu valoración general</h3>
+            <div class="estrellas" id="estrellas-general">
+                <span onclick="calificarGeneral(1)">★</span>
+                <span onclick="calificarGeneral(2)">★</span>
+                <span onclick="calificarGeneral(3)">★</span>
+                <span onclick="calificarGeneral(4)">★</span>
+                <span onclick="calificarGeneral(5)">★</span>
+            </div>
+            <textarea id="comentario-general" placeholder="Tu comentario"></textarea>
+            <input type="text" id="nombre-general" placeholder="Tu nombre">
+            <button onclick="enviarValoracionGeneral()">Enviar Valoración</button>
+        </div>
     </section>
 
     <!-- Dónde Comprar -->
@@ -110,6 +124,36 @@
         </div>
     </section>
 
+    <!-- Modal de Valoración de Producto -->
+    <div id="valoracion-producto-modal" class="modal">
+        <div class="modal-content valoracion-modal-content">
+            <span class="close" onclick="cerrarValoracionProducto()">&times;</span>
+            <h2>Valorar Producto</h2>
+            <h3 id="valoracion-producto-nombre"></h3>
+            <div class="estrellas" id="estrellas-producto">
+                <span onclick="calificarProducto(1)">★</span>
+                <span onclick="calificarProducto(2)">★</span>
+                <span onclick="calificarProducto(3)">★</span>
+                <span onclick="calificarProducto(4)">★</span>
+                <span onclick="calificarProducto(5)">★</span>
+            </div>
+            <textarea id="comentario-producto-modal" placeholder="Tu comentario sobre este producto"></textarea>
+            <input type="text" id="nombre-valorador-producto" placeholder="Tu nombre">
+            <button onclick="enviarValoracionProducto()" class="btn-enviar-valoracion">Enviar Valoración</button>
+        </div>
+    </div>
+
+    <!-- Modal de Comentarios del Producto -->
+    <div id="comentarios-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarComentarios()">&times;</span>
+            <h2>Comentarios del Producto</h2>
+            <h3 id="comentarios-producto-nombre"></h3>
+            <div class="promedio-estrellas" id="promedio-estrellas"></div>
+            <div id="comentarios-lista"></div>
+        </div>
+    </div>
+
     <!-- Carrito Modal -->
     <div id="carrito-modal" class="modal">
         <div class="modal-content">
@@ -117,16 +161,7 @@
             <h2>Tu Carrito</h2>
             <div id="carrito-items"></div>
             <div id="carrito-total"></div>
-            <button onclick="irAPagar()" id="btn-pagar" class="btn-pagar">Proceder al Pago</button>
-        </div>
-    </div>
-
-    <!-- Modal de Valoración de Producto -->
-    <div id="valoracion-producto-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="cerrarValoracionProducto()">&times;</span>
-            <h2>Valorar Producto</h2>
-            <div id="valoracion-producto-contenido"></div>
+            <button onclick="irAPagar()" id="btn-pagar" class="btn-pagar" style="display:none;">Proceder al Pago</button>
         </div>
     </div>
 
@@ -135,8 +170,34 @@
         <div class="modal-content pago-content">
             <span class="close" onclick="cerrarPago()">&times;</span>
             <h2>Finalizar Compra</h2>
-            <div id="pago-form">
-                <div class="resumen-compra" id="resumen-compra"></div>
+            <div id="pago-paso1">
+                <h3>Método de entrega</h3>
+                <div class="metodo-entrega">
+                    <label class="radio-label">
+                        <input type="radio" name="entrega" value="punto" onchange="mostrarPasoEntrega('punto')" checked> 
+                        Retirar en punto de distribución
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="entrega" value="domicilio" onchange="mostrarPasoEntrega('domicilio')"> 
+                        Envío a domicilio
+                    </label>
+                </div>
+                <div id="entrega-punto">
+                    <h4>Selecciona un punto de distribución:</h4>
+                    <select id="punto-distribucion" class="form-input"></select>
+                </div>
+                <div id="entrega-domicilio" style="display:none;">
+                    <h4>Datos de envío:</h4>
+                    <input type="text" id="envio-direccion" placeholder="Dirección completa" class="form-input">
+                    <input type="text" id="envio-departamento" placeholder="Departamento" class="form-input">
+                    <input type="text" id="envio-municipio" placeholder="Municipio" class="form-input">
+                    <input type="text" id="envio-referencia" placeholder="Referencia (opcional)" class="form-input">
+                    <input type="text" id="envio-contacto" placeholder="Teléfono de contacto" class="form-input">
+                </div>
+                <button onclick="irAPaso2()" class="btn-pagar-ahora">Continuar al Pago</button>
+            </div>
+            <div id="pago-paso2" style="display:none;">
+                <div id="resumen-compra"></div>
                 <div class="tarjeta-form">
                     <h3>Datos de Tarjeta (Simulación)</h3>
                     <div class="tarjeta-visual">
