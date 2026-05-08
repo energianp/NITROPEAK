@@ -1,3 +1,4 @@
+// Configuración de Firebase para NITROPEAK
 const firebaseConfig = {
   apiKey: "AIzaSyCmQvuZForGQIxafEcIfHFAsPyeqgB1by",
   authDomain: "nitropeak-6bee4.firebaseapp.com",
@@ -8,6 +9,6 @@ const firebaseConfig = {
   measurementId: "G-87SK8SC22D"
 };
 
+// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const storage = firebase.storage();
