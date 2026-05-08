@@ -29,21 +29,14 @@
         </nav>
 
         <main class="main-content">
-            <!-- Notificaciones -->
-            <div class="notificaciones-bell" onclick="mostrarNotificaciones()">
-                <i class="fas fa-bell"></i>
-                <span id="contador-notificaciones" class="badge-notificacion">0</span>
-            </div>
-            <div id="panel-notificaciones" class="panel-notificaciones" style="display:none;"></div>
-
             <!-- Sección Productos -->
             <section id="seccion-productos" class="seccion">
                 <h2><i class="fas fa-box"></i> Gestión de Productos</h2>
                 <div class="buscador-seccion">
-                    <input type="text" id="buscar-producto" placeholder="🔍 Buscar producto..." class="form-input" oninput="filtrarProductos()">
+                    <input type="text" id="buscar-producto" placeholder="🔍 Buscar..." class="form-input" oninput="filtrarProductos()">
                 </div>
                 <div class="form-container">
-                    <h3 id="form-titulo">Agregar Nuevo Producto</h3>
+                    <h3 id="form-titulo">Agregar Producto</h3>
                     <input type="hidden" id="producto-id">
                     <div class="form-grid">
                         <input type="text" id="nombre-producto" placeholder="Nombre" class="form-input">
@@ -57,27 +50,21 @@
                         <textarea id="descripcion-producto" placeholder="Descripción" class="form-input" rows="3"></textarea>
                         <label class="checkbox-label"><input type="checkbox" id="activo-producto" checked> Activo</label>
                     </div>
-                    <div class="form-buttons">
-                        <button onclick="guardarProducto()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
-                        <button onclick="cancelarEdicion()" class="btn-cancelar" style="display:none;">Cancelar</button>
-                    </div>
+                    <button onclick="guardarProducto()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
+                    <button onclick="cancelarEdicion()" class="btn-cancelar" style="display:none;">Cancelar</button>
                 </div>
                 <div class="productos-grid" id="lista-productos"></div>
             </section>
 
             <!-- Sección Órdenes -->
             <section id="seccion-ordenes" class="seccion" style="display:none;">
-                <h2><i class="fas fa-shopping-cart"></i> Órdenes de Compra</h2>
+                <h2><i class="fas fa-shopping-cart"></i> Órdenes</h2>
                 <div class="buscador-seccion">
-                    <input type="text" id="buscar-orden" placeholder="🔍 Buscar orden..." class="form-input" oninput="filtrarOrdenes()">
+                    <input type="text" id="buscar-orden" placeholder="🔍 Buscar..." class="form-input" oninput="filtrarOrdenes()">
                     <select id="filtro-estado-orden" class="form-input" onchange="filtrarOrdenes()">
-                        <option value="">Todos los estados</option>
-                        <option value="confirmada">Confirmada</option>
-                        <option value="enviada">Enviada</option>
-                        <option value="en_transito">En tránsito</option>
-                        <option value="recibida">Recibida</option>
-                        <option value="retirada">Retirada</option>
-                        <option value="cancelada">Cancelada</option>
+                        <option value="">Todos</option>
+                        <option value="confirmada">Confirmada</option><option value="enviada">Enviada</option><option value="en_transito">En tránsito</option>
+                        <option value="recibida">Recibida</option><option value="retirada">Retirada</option><option value="cancelada">Cancelada</option>
                     </select>
                 </div>
                 <div class="ordenes-grid" id="lista-ordenes"></div>
@@ -102,30 +89,28 @@
             <section id="seccion-ubicaciones" class="seccion" style="display:none;">
                 <h2><i class="fas fa-map-marker-alt"></i> Puntos de Venta</h2>
                 <div class="buscador-seccion">
-                    <input type="text" id="buscar-ubicacion" placeholder="🔍 Buscar ubicación..." class="form-input" oninput="filtrarUbicaciones()">
+                    <input type="text" id="buscar-ubicacion" placeholder="🔍 Buscar..." class="form-input" oninput="filtrarUbicaciones()">
                 </div>
                 <div class="form-container">
-                    <h3>Agregar Ubicación</h3>
+                    <h3 id="form-ubicacion-titulo">Agregar Ubicación</h3>
+                    <input type="hidden" id="ubicacion-id">
                     <div class="form-grid">
                         <input type="text" id="ubicacion-nombre" placeholder="Nombre" class="form-input">
                         <input type="text" id="ubicacion-direccion" placeholder="Dirección" class="form-input">
                         <input type="text" id="ubicacion-telefono" placeholder="Teléfono" class="form-input">
                         <select id="ubicacion-tipo" class="form-input" onchange="autoColorUbicacion()">
-                            <option value="">Seleccionar tipo</option>
-                            <option value="Supermercado">Supermercado</option>
-                            <option value="Gimnasio">Gimnasio</option>
-                            <option value="Tienda de conveniencia">Tienda de conveniencia</option>
-                            <option value="Farmacia">Farmacia</option>
+                            <option value="">Tipo</option>
+                            <option value="Supermercado">Supermercado</option><option value="Gimnasio">Gimnasio</option>
+                            <option value="Tienda de conveniencia">Tienda</option><option value="Farmacia">Farmacia</option>
                         </select>
-                        <select id="ubicacion-departamento" class="form-input" onchange="cargarMunicipios()">
-                            <option value="">Departamento</option>
-                        </select>
+                        <select id="ubicacion-departamento" class="form-input" onchange="cargarMunicipios()"><option value="">Departamento</option></select>
                         <select id="ubicacion-municipio" class="form-input"><option value="">Municipio</option></select>
                         <input type="text" id="ubicacion-maps" placeholder="Link Google Maps" class="form-input">
                         <input type="hidden" id="ubicacion-color" value="#48bb78">
-                        <div id="color-preview-ubicacion" class="color-preview"></div>
+                        <div id="color-preview-ubicacion" class="color-preview" style="width:30px;height:30px;border-radius:50%;background:#48bb78;"></div>
                     </div>
                     <button onclick="guardarUbicacion()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
+                    <button onclick="cancelarEdicionUbicacion()" class="btn-cancelar" style="display:none;">Cancelar</button>
                 </div>
                 <div class="ubicaciones-grid" id="lista-ubicaciones"></div>
             </section>
@@ -134,18 +119,14 @@
             <section id="seccion-secciones" class="seccion" style="display:none;">
                 <h2><i class="fas fa-puzzle-piece"></i> Gestión de Secciones</h2>
                 <div class="buscador-seccion">
-                    <input type="text" id="buscar-seccion" placeholder="🔍 Buscar sección..." class="form-input" oninput="filtrarSecciones()">
+                    <input type="text" id="buscar-seccion" placeholder="🔍 Buscar..." class="form-input" oninput="filtrarSecciones()">
                 </div>
                 <div class="form-container">
                     <h3>Agregar/Editar Sección</h3>
                     <input type="hidden" id="seccion-id">
                     <div class="form-grid">
                         <input type="text" id="seccion-titulo" placeholder="Título" class="form-input">
-                        <select id="seccion-tipo" class="form-input">
-                            <option value="texto">Solo texto</option>
-                            <option value="imagen">Imagen + texto</option>
-                            <option value="video">Video + texto</option>
-                        </select>
+                        <select id="seccion-tipo" class="form-input"><option value="texto">Solo texto</option><option value="imagen">Imagen + texto</option><option value="video">Video + texto</option></select>
                         <textarea id="seccion-contenido" placeholder="Contenido" class="form-input" rows="4"></textarea>
                         <div class="upload-container">
                             <label for="seccion-archivo" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Subir archivo</span></label>
@@ -161,51 +142,43 @@
 
             <!-- Sección Valoraciones -->
             <section id="seccion-valoraciones" class="seccion" style="display:none;">
-                <h2><i class="fas fa-star"></i> Moderar Valoraciones</h2>
+                <h2><i class="fas fa-star"></i> Valoraciones</h2>
                 <div class="buscador-seccion">
                     <input type="text" id="buscar-valoracion" placeholder="🔍 Buscar..." class="form-input" oninput="filtrarValoraciones()">
-                    <select id="filtro-estado-valoracion" class="form-input" onchange="filtrarValoraciones()">
-                        <option value="">Todas</option>
-                        <option value="pendiente">Pendientes</option>
-                        <option value="aprobada">Aprobadas</option>
-                    </select>
+                    <select id="filtro-estado-valoracion" class="form-input" onchange="filtrarValoraciones()"><option value="">Todas</option><option value="pendiente">Pendientes</option><option value="aprobada">Aprobadas</option></select>
                 </div>
                 <div class="valoraciones-grid" id="lista-valoraciones"></div>
             </section>
 
             <!-- Sección Contactos -->
             <section id="seccion-contactos" class="seccion" style="display:none;">
-                <h2><i class="fas fa-envelope"></i> Mensajes de Contacto</h2>
+                <h2><i class="fas fa-envelope"></i> Mensajes</h2>
                 <div class="buscador-seccion">
                     <input type="text" id="buscar-contacto" placeholder="🔍 Buscar..." class="form-input" oninput="filtrarContactos()">
-                    <select id="filtro-estado-contacto" class="form-input" onchange="filtrarContactos()">
-                        <option value="">Todos</option>
-                        <option value="pendiente">Pendientes</option>
-                        <option value="contactado">Contactados</option>
-                    </select>
+                    <select id="filtro-estado-contacto" class="form-input" onchange="filtrarContactos()"><option value="">Todos</option><option value="pendiente">Pendientes</option><option value="contactado">Contactados</option></select>
                 </div>
                 <div class="contactos-grid" id="lista-contactos"></div>
             </section>
 
             <!-- Sección Configuración -->
             <section id="seccion-configuracion" class="seccion" style="display:none;">
-                <h2><i class="fas fa-cog"></i> Configuración General</h2>
+                <h2><i class="fas fa-cog"></i> Configuración</h2>
                 <div class="form-container">
-                    <h3>Cambiar Logo</h3>
+                    <h3>Logo</h3>
                     <div class="upload-container">
-                        <label for="logo-input" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Subir nuevo logo</span></label>
+                        <label for="logo-input" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Subir logo</span></label>
                         <input type="file" id="logo-input" accept="image/*" class="form-input-file" onchange="previewLogo(event)">
                         <img id="logo-preview" class="imagen-preview" style="display:none;">
                     </div>
-                    <button onclick="actualizarLogo()" class="btn-guardar"><i class="fas fa-save"></i> Actualizar</button>
+                    <button onclick="actualizarLogo()" class="btn-guardar">Actualizar Logo</button>
                 </div>
                 <div class="form-container">
                     <h3>Redes Sociales</h3>
                     <div class="form-grid">
                         <input type="text" id="config-instagram" placeholder="Link Instagram" class="form-input">
-                        <input type="text" id="config-whatsapp" placeholder="WhatsApp (ej: 50361727059)" class="form-input">
+                        <input type="text" id="config-whatsapp" placeholder="WhatsApp" class="form-input">
                     </div>
-                    <button onclick="guardarRedes()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
+                    <button onclick="guardarRedes()" class="btn-guardar">Guardar Redes</button>
                 </div>
             </section>
         </main>
