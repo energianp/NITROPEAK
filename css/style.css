@@ -213,17 +213,19 @@ section h2::after {
 
 .producto-card-compacto {
     background: var(--color-card);
-    border: 1px solid var(--color-borde);
+    border: 2px solid transparent;
     border-radius: 15px;
     padding: 18px;
     text-align: center;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .producto-card-compacto:hover {
     border-color: var(--color-acento);
-    box-shadow: 0 8px 30px rgba(72, 187, 120, 0.25);
+    box-shadow: 0 0 25px rgba(72, 187, 120, 0.4), 0 0 50px rgba(72, 187, 120, 0.15);
     transform: translateY(-5px);
+    background: #1f3d26;
 }
 
 .producto-card-compacto img {
@@ -276,7 +278,7 @@ section h2::after {
 
 .cantidad-input-compacto:focus {
     border-color: var(--color-acento);
-    background: var(--color-card);
+    box-shadow: 0 0 10px rgba(72, 187, 120, 0.3);
     outline: none;
 }
 
@@ -293,13 +295,15 @@ section h2::after {
 
 .btn-carrito-compacto:hover {
     background: #38a169;
-    transform: scale(1.05);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(72, 187, 120, 0.5);
 }
 
 .btn-carrito-compacto:disabled {
     background: var(--color-secundario);
     color: var(--color-texto-terciario);
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 .producto-acciones-compactas {
@@ -311,8 +315,8 @@ section h2::after {
 
 .btn-icono {
     background: transparent;
-    border: 2px solid var(--color-acento);
-    color: var(--color-acento);
+    border: 2px solid var(--color-secundario);
+    color: var(--color-texto-secundario);
     border-radius: 8px;
     padding: 6px 15px;
     cursor: pointer;
@@ -322,7 +326,10 @@ section h2::after {
 }
 
 .btn-icono:hover {
+    border-color: var(--color-acento);
+    color: var(--color-acento);
     background: rgba(72, 187, 120, 0.15);
+    box-shadow: 0 0 15px rgba(72, 187, 120, 0.3);
     transform: scale(1.05);
 }
 
@@ -403,8 +410,9 @@ section h2::after {
 }
 
 .btn-carrusel:hover {
-    background: rgba(72, 187, 120, 0.2);
+    background: rgba(72, 187, 120, 0.25);
     transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(72, 187, 120, 0.4);
 }
 
 .carrusel-container {
@@ -428,12 +436,13 @@ section h2::after {
     padding: 25px;
     text-align: center;
     flex-shrink: 0;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .carrusel-item:hover {
     border-color: var(--color-acento);
-    box-shadow: 0 5px 20px rgba(72, 187, 120, 0.15);
+    box-shadow: 0 0 20px rgba(72, 187, 120, 0.3);
+    transform: translateY(-3px);
 }
 
 .carrusel-item .estrellas-valoracion {
@@ -469,6 +478,12 @@ section h2::after {
     border-radius: 15px;
     border: 1px solid var(--color-borde);
     text-align: center;
+    transition: all 0.3s;
+}
+
+.agregar-valoracion:hover {
+    border-color: var(--color-acento);
+    box-shadow: 0 0 20px rgba(72, 187, 120, 0.2);
 }
 
 .agregar-valoracion h3 {
@@ -484,12 +499,63 @@ section h2::after {
 .estrellas span {
     cursor: pointer;
     color: var(--color-secundario);
-    transition: color 0.3s;
+    transition: all 0.3s;
     margin: 0 3px;
 }
 
 .estrellas span:hover {
     color: #ffd700;
+    transform: scale(1.2);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Valoraciones individuales (vista anterior) */
+.valoraciones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto 50px;
+}
+
+.valoracion-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-borde);
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.valoracion-card:hover {
+    border-color: var(--color-acento);
+    box-shadow: 0 0 20px rgba(72, 187, 120, 0.25);
+    transform: translateY(-3px);
+}
+
+.valoracion-card .estrellas-valoracion {
+    color: #ffd700;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.valoracion-card p {
+    color: var(--color-texto-secundario);
+    font-style: italic;
+    line-height: 1.6;
+}
+
+.valoracion-card small {
+    color: var(--color-texto-terciario);
+    display: block;
+    margin: 5px 0;
+}
+
+.valoracion-card .nombre-valorador {
+    color: var(--color-texto-terciario);
+    display: block;
+    margin-top: 12px;
+    font-weight: bold;
 }
 
 /* ============ UBICACIONES ============ */
@@ -551,13 +617,14 @@ section h2::after {
     padding: 20px;
     border-radius: 10px;
     border: 1px solid var(--color-borde);
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .ubicacion-item:hover {
     transform: translateY(-5px);
     border-color: var(--color-acento);
-    box-shadow: 0 5px 20px rgba(72, 187, 120, 0.2);
+    box-shadow: 0 0 20px rgba(72, 187, 120, 0.3);
+    background: #1f3d26;
 }
 
 .ubicacion-item h4 { color: var(--color-acento); margin-bottom: 10px; }
@@ -671,7 +738,8 @@ section h2::after {
     max-height: 80vh;
     overflow-y: auto;
     position: relative;
-    border: 1px solid var(--color-borde);
+    border: 1px solid var(--color-acento);
+    box-shadow: 0 0 40px rgba(72, 187, 120, 0.3);
 }
 
 .close {
