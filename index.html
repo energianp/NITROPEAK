@@ -79,14 +79,17 @@
     <section id="ubicaciones" class="ubicaciones">
         <h2>Dónde Comprar NITROPEAK</h2>
         <div class="mapa-buscador">
-            <select id="buscar-departamento" class="form-input" onchange="cargarMunicipiosSelect(); buscarPorDepartamento();">
-                <option value="">Departamento</option>
-            </select>
-            <select id="buscar-municipio" class="form-input" onchange="buscarPorDepartamento();">
-                <option value="">Municipio</option>
-            </select>
-            <button onclick="buscarPorDepartamento()" class="btn-buscar"><i class="fas fa-search"></i> Buscar</button>
-        </div>
+    <select id="buscar-tipo" class="form-input" onchange="buscarPorDepartamento();">
+        <option value="">Tipo de lugar</option>
+    </select>
+    <select id="buscar-departamento" class="form-input" onchange="cargarMunicipiosSelect(); buscarPorDepartamento();">
+        <option value="">Departamento</option>
+    </select>
+    <select id="buscar-municipio" class="form-input" onchange="buscarPorDepartamento();">
+        <option value="">Municipio</option>
+    </select>
+    <button onclick="buscarPorDepartamento()" class="btn-buscar"><i class="fas fa-search"></i> Buscar</button>
+</div>
         <div id="mapa"></div>
         <div class="ubicaciones-lista" id="ubicaciones-contenido"></div>
     </section>
