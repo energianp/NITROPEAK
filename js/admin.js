@@ -37,7 +37,11 @@ function addNotif(sec, msg, id) {
 function updateBadges() {
     ['productos','ordenes','valoraciones','contactos'].forEach(s => {
         const b = document.getElementById('badge-'+s);
-        if (b) { b.textContent = notifSec[s]||0; b.style.display = notifSec[s] ? 'flex' : 'none'; }
+        if (b) {
+            const count = notifSec[s] || 0;
+            b.textContent = count;
+            b.style.display = count > 0 ? 'flex' : 'none';
+        }
     });
 }
 
@@ -46,7 +50,10 @@ function mostrarSeccion(sec, el) {
     document.getElementById('seccion-'+sec).style.display = 'block';
     document.querySelectorAll('.nav-menu li').forEach(li => li.classList.remove('active'));
     if (el) el.classList.add('active');
-    notifSec[sec] = 0; updateBadges();
+    // Limpiar notificaciones de esta sección
+    notifSec[sec] = 0;
+    notificaciones = notificaciones.filter(n => n.sec !== sec || n.leida);
+    updateBadges();
     const fn = {
         productos: cargarProductos, ordenes: cargarOrdenes, historia: cargarHistoriaAdmin,
         ubicaciones: () => { cargarUbicacionesAdmin(); cargarDepartamentos(); },
@@ -72,13 +79,21 @@ function renderProd(lista) {
     document.getElementById('lista-productos').innerHTML = lista.map(p => `
         <div class="producto-card ${p.activo?'':'inactivo'}">
             <img src="${p.imagen||''}" alt="${p.nombre}">
-            <div class="producto-info"><h3>${p.nombre}</h3><p>${p.descripcion||''}</p><span class="precio">$${p.precio}</span><span class="stock">Stock: ${p.stock}</span></div>
+            <div class="producto-info">
+                <h3>${p.nombre}</h3>
+                <p>${p.descripcion||''}</p>
+                <div class="producto-detalles">
+                    <span class="precio">$${p.precio}</span>
+                    <span class="stock ${p.stock<=0?'stock-agotado':p.stock<12?'stock-bajo':'stock-disponible'}">Stock: ${p.stock}</span>
+                </div>
+            </div>
             <div class="producto-acciones">
                 <button onclick="editProducto('${p.id}')" class="btn-editar">Editar</button>
                 <button onclick="eliminarProducto('${p.id}')" class="btn-eliminar">Eliminar</button>
             </div>
         </div>`).join('');
 }
+
 function filtrarProductos() {
     const t = document.getElementById('buscar-producto').value.toLowerCase();
     renderProd(allProd.filter(p => p.nombre.toLowerCase().includes(t) || (p.descripcion||'').toLowerCase().includes(t)));
