@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <nav class="nav">
             <div class="logo">
@@ -24,130 +23,120 @@
                 <li><a href="#ubicaciones">Dónde Comprar</a></li>
                 <li><a href="#personalizar">Personalizar</a></li>
                 <li><a href="#contacto">Contacto</a></li>
-                <li>
-                    <a href="#" class="carrito-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span id="contador-carrito">0</span>
-                    </a>
-                </li>
+                <li><a href="#" class="carrito-icon"><i class="fas fa-shopping-cart"></i><span id="contador-carrito">0</span></a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- Hero Section -->
     <section id="inicio" class="hero">
         <div class="hero-content">
             <h2>Energía Pura, Natural y Sin Cafeína</h2>
-            <p>Descubre NITROPEAK, el energizante que revoluciona tu rendimiento con vitaminas y sin conservantes artificiales</p>
+            <p>Descubre NITROPEAK, el energizante que revoluciona tu rendimiento</p>
             <a href="#productos" class="btn-cta">Ver Productos</a>
         </div>
     </section>
 
-    <!-- Productos -->
     <section id="productos" class="productos">
         <h2>Nuestros Productos</h2>
         <div class="productos-grid" id="productos-lista"></div>
     </section>
 
-    <!-- Nuestra Historia -->
     <section id="historia" class="historia">
         <h2>Nuestra Historia</h2>
         <div class="historia-content" id="historia-contenido"></div>
     </section>
 
-    <!-- Valoraciones Generales -->
     <section id="valoraciones" class="valoraciones">
         <h2>Lo que dicen nuestros clientes</h2>
-        <div class="valoraciones-grid" id="valoraciones-lista"></div>
-        <div class="agregar-valoracion">
-            <h3>Deja tu valoración general</h3>
-            <div class="estrellas" id="estrellas-general">
-                <span onclick="calificarGeneral(1)">★</span>
-                <span onclick="calificarGeneral(2)">★</span>
-                <span onclick="calificarGeneral(3)">★</span>
-                <span onclick="calificarGeneral(4)">★</span>
-                <span onclick="calificarGeneral(5)">★</span>
+        <div class="filtro-valoraciones">
+            <select id="filtro-estrellas" class="form-input" onchange="filtrarValoracionesCliente()">
+                <option value="0">Todas las valoraciones</option>
+                <option value="5">★★★★★</option>
+                <option value="4">★★★★</option>
+                <option value="3">★★★</option>
+                <option value="2">★★</option>
+                <option value="1">★</option>
+            </select>
+            <div class="carrusel-nav">
+                <button onclick="moverCarrusel(-1)" class="btn-carrusel"><i class="fas fa-chevron-left"></i></button>
+                <button onclick="moverCarrusel(1)" class="btn-carrusel"><i class="fas fa-chevron-right"></i></button>
             </div>
-            <textarea id="comentario-general" placeholder="Tu comentario"></textarea>
-            <input type="text" id="nombre-general" placeholder="Tu nombre">
-            <button onclick="enviarValoracionGeneral()">Enviar Valoración</button>
+        </div>
+        <div class="carrusel-container">
+            <div class="carrusel-track" id="carrusel-valoraciones"></div>
+        </div>
+        <div class="agregar-valoracion">
+            <h3>Deja tu valoración</h3>
+            <div class="estrellas" id="estrellas-general">
+                <span onclick="calificarGeneral(1)">★</span><span onclick="calificarGeneral(2)">★</span><span onclick="calificarGeneral(3)">★</span><span onclick="calificarGeneral(4)">★</span><span onclick="calificarGeneral(5)">★</span>
+            </div>
+            <textarea id="comentario-general" placeholder="Tu comentario" class="form-input"></textarea>
+            <input type="text" id="nombre-general" placeholder="Tu nombre" class="form-input">
+            <button onclick="enviarValoracionGeneral()" class="btn-guardar">Enviar</button>
         </div>
     </section>
 
-    <!-- Dónde Comprar -->
     <section id="ubicaciones" class="ubicaciones">
         <h2>Dónde Comprar NITROPEAK</h2>
         <div class="mapa-buscador">
-            <select id="buscar-departamento" onchange="cargarMunicipiosSelect(); buscarPorDepartamento();">
-                <option value="">Seleccionar departamento</option>
+            <select id="buscar-departamento" class="form-input" onchange="cargarMunicipiosSelect(); buscarPorDepartamento();">
+                <option value="">Departamento</option>
             </select>
-            <select id="buscar-municipio" onchange="buscarPorDepartamento();">
-                <option value="">Todos los municipios</option>
+            <select id="buscar-municipio" class="form-input" onchange="buscarPorDepartamento();">
+                <option value="">Municipio</option>
             </select>
-            <button onclick="buscarPorDepartamento()"><i class="fas fa-search"></i> Buscar</button>
+            <button onclick="buscarPorDepartamento()" class="btn-buscar"><i class="fas fa-search"></i> Buscar</button>
         </div>
         <div id="mapa"></div>
         <div class="ubicaciones-lista" id="ubicaciones-contenido"></div>
     </section>
 
-    <!-- Personalizar Producto -->
     <section id="personalizar" class="personalizar">
         <h2>Personaliza tu NITROPEAK</h2>
-        <p>¿Quieres un NITROPEAK único? Personalízalo a tu gusto</p>
-        <a href="https://forms.gle/c23R8qCtBQAp88tN6" target="_blank" class="btn-personalizar">
-            Ir al Formulario de Personalización
-        </a>
+        <p>¿Quieres un NITROPEAK único?</p>
+        <a href="https://forms.gle/c23R8qCtBQAp88tN6" target="_blank" class="btn-personalizar">Ir al Formulario</a>
     </section>
 
-    <!-- Contacto -->
     <section id="contacto" class="contacto">
         <h2>Contáctanos</h2>
         <div class="contacto-container">
             <form id="formulario-contacto" onsubmit="enviarContacto(event)">
-                <input type="text" id="nombre-contacto" placeholder="Tu nombre" required>
-                <input type="email" id="email-contacto" placeholder="Tu email" required>
-                <input type="tel" id="telefono-contacto" placeholder="Tu teléfono">
-                <textarea id="mensaje-contacto" placeholder="Tu mensaje" required></textarea>
-                <button type="submit">Enviar Mensaje</button>
+                <input type="text" id="nombre-contacto" placeholder="Tu nombre" required class="form-input">
+                <input type="email" id="email-contacto" placeholder="Tu email" required class="form-input">
+                <input type="tel" id="telefono-contacto" placeholder="Tu teléfono" class="form-input">
+                <textarea id="mensaje-contacto" placeholder="Tu mensaje" required class="form-input"></textarea>
+                <button type="submit" class="btn-guardar">Enviar Mensaje</button>
             </form>
             <div class="redes-sociales-contacto">
-                <h3>Síguenos en redes</h3>
+                <h3>Síguenos</h3>
                 <div class="iconos-redes">
-                    <a href="https://www.instagram.com/nitropeak_?utm_source=qr&igsh=MXJrcGhpMjc2cHhxdg==" target="_blank" class="icono-red instagram">
-                        <i class="fab fa-instagram"></i>
-                    </a>
-                    <a href="https://wa.me/50361727059" target="_blank" class="icono-red whatsapp">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
+                    <a href="https://www.instagram.com/nitropeak_?utm_source=qr&igsh=MXJrcGhpMjc2cHhxdg==" target="_blank" class="icono-red instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="https://wa.me/50361727059" target="_blank" class="icono-red whatsapp"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Modal de Valoración de Producto -->
+    <!-- Modal Valoración Producto -->
     <div id="valoracion-producto-modal" class="modal">
         <div class="modal-content valoracion-modal-content">
             <span class="close" onclick="cerrarValoracionProducto()">&times;</span>
             <h2>Valorar Producto</h2>
             <h3 id="valoracion-producto-nombre"></h3>
             <div class="estrellas" id="estrellas-producto">
-                <span onclick="calificarProducto(1)">★</span>
-                <span onclick="calificarProducto(2)">★</span>
-                <span onclick="calificarProducto(3)">★</span>
-                <span onclick="calificarProducto(4)">★</span>
-                <span onclick="calificarProducto(5)">★</span>
+                <span onclick="calificarProducto(1)">★</span><span onclick="calificarProducto(2)">★</span><span onclick="calificarProducto(3)">★</span><span onclick="calificarProducto(4)">★</span><span onclick="calificarProducto(5)">★</span>
             </div>
-            <textarea id="comentario-producto-modal" placeholder="Tu comentario sobre este producto"></textarea>
-            <input type="text" id="nombre-valorador-producto" placeholder="Tu nombre">
-            <button onclick="enviarValoracionProducto()" class="btn-enviar-valoracion">Enviar Valoración</button>
+            <textarea id="comentario-producto-modal" placeholder="Tu comentario" class="form-input"></textarea>
+            <input type="text" id="nombre-valorador-producto" placeholder="Tu nombre" class="form-input">
+            <button onclick="enviarValoracionProducto()" class="btn-guardar">Enviar</button>
         </div>
     </div>
 
-    <!-- Modal de Comentarios del Producto -->
+    <!-- Modal Comentarios -->
     <div id="comentarios-modal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="cerrarComentarios()">&times;</span>
-            <h2>Comentarios del Producto</h2>
+            <h2>Comentarios</h2>
             <h3 id="comentarios-producto-nombre"></h3>
             <div class="promedio-estrellas" id="promedio-estrellas"></div>
             <div id="comentarios-lista"></div>
@@ -161,11 +150,11 @@
             <h2>Tu Carrito</h2>
             <div id="carrito-items"></div>
             <div id="carrito-total"></div>
-            <button onclick="irAPagar()" id="btn-pagar" class="btn-pagar" style="display:none;">Proceder al Pago</button>
+            <button onclick="irAPagar()" id="btn-pagar" class="btn-guardar" style="display:none;">Proceder al Pago</button>
         </div>
     </div>
 
-    <!-- Modal de Pago Simulado -->
+    <!-- Modal Pago -->
     <div id="pago-modal" class="modal">
         <div class="modal-content pago-content">
             <span class="close" onclick="cerrarPago()">&times;</span>
@@ -173,65 +162,55 @@
             <div id="pago-paso1">
                 <h3>Método de entrega</h3>
                 <div class="metodo-entrega">
-                    <label class="radio-label">
-                        <input type="radio" name="entrega" value="punto" onchange="mostrarPasoEntrega('punto')" checked> 
-                        Retirar en punto de distribución
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="entrega" value="domicilio" onchange="mostrarPasoEntrega('domicilio')"> 
-                        Envío a domicilio
-                    </label>
+                    <label class="radio-label"><input type="radio" name="entrega" value="punto" onchange="mostrarPasoEntrega('punto')" checked> Retirar en punto de distribución</label>
+                    <label class="radio-label"><input type="radio" name="entrega" value="domicilio" onchange="mostrarPasoEntrega('domicilio')"> Envío a domicilio</label>
                 </div>
                 <div id="entrega-punto">
-                    <h4>Selecciona un punto de distribución:</h4>
+                    <h4>Punto de distribución:</h4>
                     <select id="punto-distribucion" class="form-input"></select>
                 </div>
                 <div id="entrega-domicilio" style="display:none;">
                     <h4>Datos de envío:</h4>
-                    <input type="text" id="envio-direccion" placeholder="Dirección completa" class="form-input">
+                    <input type="text" id="envio-direccion" placeholder="Dirección" class="form-input">
                     <input type="text" id="envio-departamento" placeholder="Departamento" class="form-input">
                     <input type="text" id="envio-municipio" placeholder="Municipio" class="form-input">
-                    <input type="text" id="envio-referencia" placeholder="Referencia (opcional)" class="form-input">
-                    <input type="text" id="envio-contacto" placeholder="Teléfono de contacto" class="form-input">
+                    <input type="text" id="envio-referencia" placeholder="Referencia" class="form-input">
+                    <input type="text" id="envio-contacto" placeholder="Teléfono" class="form-input">
                 </div>
-                <button onclick="irAPaso2()" class="btn-pagar-ahora">Continuar al Pago</button>
+                <button onclick="irAPaso2()" class="btn-guardar">Continuar</button>
             </div>
             <div id="pago-paso2" style="display:none;">
                 <div id="resumen-compra"></div>
                 <div class="tarjeta-form">
-                    <h3>Datos de Tarjeta (Simulación)</h3>
+                    <h3>Datos de Tarjeta</h3>
                     <div class="tarjeta-visual">
                         <div class="chip">💳</div>
                         <div class="numero-tarjeta" id="numero-tarjeta-visual">•••• •••• •••• ••••</div>
                         <div class="tarjeta-detalles">
-                            <span id="nombre-tarjeta-visual">NOMBRE DEL TITULAR</span>
+                            <span id="nombre-tarjeta-visual">TITULAR</span>
                             <span id="vencimiento-visual">MM/AA</span>
                         </div>
                     </div>
-                    <input type="text" id="numero-tarjeta" placeholder="Número de tarjeta" maxlength="19" oninput="formatearTarjeta(this)">
-                    <input type="text" id="nombre-tarjeta" placeholder="Nombre del titular">
+                    <input type="text" id="numero-tarjeta" placeholder="Número de tarjeta" maxlength="19" oninput="formatearTarjeta(this)" class="form-input">
+                    <input type="text" id="nombre-tarjeta" placeholder="Nombre del titular" class="form-input">
                     <div class="tarjeta-row">
-                        <input type="text" id="vencimiento" placeholder="MM/AA" maxlength="5">
-                        <input type="text" id="cvv" placeholder="CVV" maxlength="3">
+                        <input type="text" id="vencimiento" placeholder="MM/AA" maxlength="5" class="form-input">
+                        <input type="text" id="cvv" placeholder="CVV" maxlength="3" class="form-input">
                     </div>
-                    <button onclick="procesarPago()" class="btn-pagar-ahora">Pagar Ahora</button>
-                    <p class="nota-simulacion">⚠️ ESTO ES UNA SIMULACIÓN - NO SE REALIZARÁ NINGÚN COBRO REAL</p>
+                    <button onclick="procesarPago()" class="btn-guardar">Pagar</button>
                 </div>
             </div>
             <div id="pago-exitoso" style="display:none;">
                 <div class="exito-icono">✅</div>
-                <h3>¡Pago Exitoso!</h3>
-                <p>Tu pedido ha sido confirmado</p>
+                <h3>¡Pedido Confirmado!</h3>
                 <p>Número de orden: <strong id="numero-orden"></strong></p>
-                <button onclick="cerrarPago()">Cerrar</button>
+                <button onclick="cerrarPago()" class="btn-guardar">Cerrar</button>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <p>&copy; 2024 NITROPEAK - Todos los derechos reservados</p>
-        <p>Energía natural, sin cafeína, más vitaminas, menos conservantes</p>
     </footer>
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
