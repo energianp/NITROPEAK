@@ -6,7 +6,7 @@
     <title>NITROPEAK - Energía Natural Sin Cafeína</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <!-- Header -->
@@ -45,60 +45,37 @@
     <!-- Productos -->
     <section id="productos" class="productos">
         <h2>Nuestros Productos</h2>
-        <div class="productos-grid" id="productos-lista">
-            <!-- Cargado dinámicamente -->
-        </div>
+        <div class="productos-grid" id="productos-lista"></div>
     </section>
 
     <!-- Nuestra Historia -->
     <section id="historia" class="historia">
         <h2>Nuestra Historia</h2>
-        <div class="historia-content" id="historia-contenido">
-            <!-- Cargado dinámicamente -->
-        </div>
+        <div class="historia-content" id="historia-contenido"></div>
     </section>
 
     <!-- Valoraciones -->
     <section id="valoraciones" class="valoraciones">
         <h2>Lo que dicen nuestros clientes</h2>
-        <div class="valoraciones-grid" id="valoraciones-lista">
-            <!-- Cargado dinámicamente -->
-        </div>
-        <div class="agregar-valoracion">
-            <h3>Deja tu valoración</h3>
-            <div class="estrellas">
-                <span onclick="calificar(1)">★</span>
-                <span onclick="calificar(2)">★</span>
-                <span onclick="calificar(3)">★</span>
-                <span onclick="calificar(4)">★</span>
-                <span onclick="calificar(5)">★</span>
-            </div>
-            <textarea id="comentario-valoracion" placeholder="Tu comentario"></textarea>
-            <input type="text" id="nombre-valoracion" placeholder="Tu nombre">
-            <button onclick="enviarValoracion()">Enviar Valoración</button>
-        </div>
+        <div class="valoraciones-grid" id="valoraciones-lista"></div>
     </section>
 
     <!-- Dónde Comprar -->
-<section id="ubicaciones" class="ubicaciones">
-    <h2>Dónde Comprar NITROPEAK</h2>
-    
-    <div class="mapa-buscador">
-        <select id="buscar-departamento" onchange="cargarMunicipiosSelect(); buscarPorDepartamento();">
-            <option value="">Seleccionar departamento</option>
-        </select>
-        <select id="buscar-municipio" onchange="buscarPorDepartamento();">
-            <option value="">Todos los municipios</option>
-        </select>
-        <button onclick="buscarPorDepartamento()">
-            <i class="fas fa-search"></i> Buscar
-        </button>
-    </div>
-    
-    <div id="mapa"></div>
-    <div class="ubicaciones-lista" id="ubicaciones-contenido"></div>
-</section>
-    
+    <section id="ubicaciones" class="ubicaciones">
+        <h2>Dónde Comprar NITROPEAK</h2>
+        <div class="mapa-buscador">
+            <select id="buscar-departamento" onchange="cargarMunicipiosSelect(); buscarPorDepartamento();">
+                <option value="">Seleccionar departamento</option>
+            </select>
+            <select id="buscar-municipio" onchange="buscarPorDepartamento();">
+                <option value="">Todos los municipios</option>
+            </select>
+            <button onclick="buscarPorDepartamento()"><i class="fas fa-search"></i> Buscar</button>
+        </div>
+        <div id="mapa"></div>
+        <div class="ubicaciones-lista" id="ubicaciones-contenido"></div>
+    </section>
+
     <!-- Personalizar Producto -->
     <section id="personalizar" class="personalizar">
         <h2>Personaliza tu NITROPEAK</h2>
@@ -111,13 +88,26 @@
     <!-- Contacto -->
     <section id="contacto" class="contacto">
         <h2>Contáctanos</h2>
-        <form id="formulario-contacto" onsubmit="enviarContacto(event)">
-            <input type="text" id="nombre-contacto" placeholder="Tu nombre" required>
-            <input type="email" id="email-contacto" placeholder="Tu email" required>
-            <input type="tel" id="telefono-contacto" placeholder="Tu teléfono">
-            <textarea id="mensaje-contacto" placeholder="Tu mensaje" required></textarea>
-            <button type="submit">Enviar Mensaje</button>
-        </form>
+        <div class="contacto-container">
+            <form id="formulario-contacto" onsubmit="enviarContacto(event)">
+                <input type="text" id="nombre-contacto" placeholder="Tu nombre" required>
+                <input type="email" id="email-contacto" placeholder="Tu email" required>
+                <input type="tel" id="telefono-contacto" placeholder="Tu teléfono">
+                <textarea id="mensaje-contacto" placeholder="Tu mensaje" required></textarea>
+                <button type="submit">Enviar Mensaje</button>
+            </form>
+            <div class="redes-sociales-contacto">
+                <h3>Síguenos en redes</h3>
+                <div class="iconos-redes">
+                    <a href="https://www.instagram.com/nitropeak_?utm_source=qr&igsh=MXJrcGhpMjc2cHhxdg==" target="_blank" class="icono-red instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://wa.me/50361727059" target="_blank" class="icono-red whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Carrito Modal -->
@@ -127,7 +117,53 @@
             <h2>Tu Carrito</h2>
             <div id="carrito-items"></div>
             <div id="carrito-total"></div>
-            <button onclick="realizarPedido()">Realizar Pedido</button>
+            <button onclick="irAPagar()" id="btn-pagar" class="btn-pagar">Proceder al Pago</button>
+        </div>
+    </div>
+
+    <!-- Modal de Valoración de Producto -->
+    <div id="valoracion-producto-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarValoracionProducto()">&times;</span>
+            <h2>Valorar Producto</h2>
+            <div id="valoracion-producto-contenido"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Pago Simulado -->
+    <div id="pago-modal" class="modal">
+        <div class="modal-content pago-content">
+            <span class="close" onclick="cerrarPago()">&times;</span>
+            <h2>Finalizar Compra</h2>
+            <div id="pago-form">
+                <div class="resumen-compra" id="resumen-compra"></div>
+                <div class="tarjeta-form">
+                    <h3>Datos de Tarjeta (Simulación)</h3>
+                    <div class="tarjeta-visual">
+                        <div class="chip">💳</div>
+                        <div class="numero-tarjeta" id="numero-tarjeta-visual">•••• •••• •••• ••••</div>
+                        <div class="tarjeta-detalles">
+                            <span id="nombre-tarjeta-visual">NOMBRE DEL TITULAR</span>
+                            <span id="vencimiento-visual">MM/AA</span>
+                        </div>
+                    </div>
+                    <input type="text" id="numero-tarjeta" placeholder="Número de tarjeta" maxlength="19" oninput="formatearTarjeta(this)">
+                    <input type="text" id="nombre-tarjeta" placeholder="Nombre del titular">
+                    <div class="tarjeta-row">
+                        <input type="text" id="vencimiento" placeholder="MM/AA" maxlength="5">
+                        <input type="text" id="cvv" placeholder="CVV" maxlength="3">
+                    </div>
+                    <button onclick="procesarPago()" class="btn-pagar-ahora">Pagar Ahora</button>
+                    <p class="nota-simulacion">⚠️ ESTO ES UNA SIMULACIÓN - NO SE REALIZARÁ NINGÚN COBRO REAL</p>
+                </div>
+            </div>
+            <div id="pago-exitoso" style="display:none;">
+                <div class="exito-icono">✅</div>
+                <h3>¡Pago Exitoso!</h3>
+                <p>Tu pedido ha sido confirmado</p>
+                <p>Número de orden: <strong id="numero-orden"></strong></p>
+                <button onclick="cerrarPago()">Cerrar</button>
+            </div>
         </div>
     </div>
 
@@ -139,8 +175,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/cliente.js"></script>
-    <script src="lib/leaflet/leaflet.js"></script>
 </body>
 </html>
