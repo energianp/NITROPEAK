@@ -257,21 +257,21 @@ section h2::after {
 
 .producto-precio {
     color: var(--color-acento);
-    font-size: 1.3em;
+    font-size: 1.4em;
     font-weight: bold;
-    flex: 1;
+    flex: 2;
     text-align: left;
 }
 
 .cantidad-input-compacto {
-    width: 50px;
-    padding: 8px;
+    width: 40px;
+    padding: 5px;
     border: 2px solid var(--color-secundario);
-    border-radius: 8px;
+    border-radius: 6px;
     background: var(--color-oscuro);
     color: var(--color-texto);
     text-align: center;
-    font-size: 0.9em;
+    font-size: 0.75em;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: all 0.3s;
 }
@@ -287,9 +287,9 @@ section h2::after {
     color: var(--color-principal);
     border: none;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     cursor: pointer;
-    font-size: 1.1em;
+    font-size: 1em;
     transition: all 0.3s;
 }
 
@@ -1017,4 +1017,28 @@ button[type="submit"]:hover,
     .productos-grid { grid-template-columns: 1fr; }
     .carrusel-item { min-width: 220px; }
     .producto-card-compacto img { height: 150px; }
+}
+
+.comentario-item .estrellas-valoracion,
+.comentario-item div:first-child {
+    font-size: 0.9em !important;
+    color: #ffd700;
+}
+
+.comentario-item .estrellas-valoracion span,
+.comentario-item div:first-child span {
+    font-size: 0.9em !important;
+}
+
+.mapa-buscador .form-input {
+    flex: 1;
+    min-width: 130px;
+    max-width: 200px;
+}
+
+@media (max-width: 768px) {
+    .mapa-buscador .form-input {
+        max-width: 100%;
+        min-width: 100%;
+    }
 }
