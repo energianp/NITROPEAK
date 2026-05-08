@@ -777,3 +777,294 @@ section h2::after {
     color: #48bb78 !important;
     border: 1px solid #48bb78 !important;
 }
+
+/* ============ NUEVOS ESTILOS ============ */
+
+/* Stock */
+.stock-disponible { color: #48bb78; }
+.stock-bajo { color: #f6e05e; }
+.stock-agotado { color: #ff6b6b; }
+
+/* Cantidad en carrito */
+.producto-cantidad {
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.cantidad-input {
+    width: 60px;
+    padding: 5px;
+    border: 2px solid #2d5a3d;
+    border-radius: 5px;
+    background: #0d1f14;
+    color: #e0e0e0;
+    text-align: center;
+}
+
+.btn-valorar {
+    width: calc(100% - 40px);
+    margin: 0 20px 20px;
+    padding: 8px;
+    background: #ffd700;
+    color: #1a472a;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Redes sociales en contacto */
+.contacto-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.redes-sociales-contacto {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.redes-sociales-contacto h3 {
+    color: #48bb78;
+    margin-bottom: 20px;
+}
+
+.iconos-redes {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.icono-red {
+    font-size: 3em;
+    transition: transform 0.3s;
+}
+
+.icono-red:hover {
+    transform: scale(1.2);
+}
+
+.icono-red.instagram {
+    color: #e1306c;
+}
+
+.icono-red.whatsapp {
+    color: #25d366;
+}
+
+/* Pago simulado */
+.pago-content {
+    max-width: 500px !important;
+}
+
+.tarjeta-visual {
+    background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+    border-radius: 15px;
+    padding: 30px;
+    margin: 20px 0;
+    color: white;
+    border: 2px solid #48bb78;
+}
+
+.tarjeta-visual .chip {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+.numero-tarjeta {
+    font-size: 1.4em;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    font-family: monospace;
+}
+
+.tarjeta-detalles {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+}
+
+.tarjeta-form h3 {
+    color: #48bb78;
+    margin-bottom: 15px;
+}
+
+.tarjeta-form input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 2px solid #2d5a3d;
+    border-radius: 8px;
+    background: #0d1f14;
+    color: #e0e0e0;
+    font-size: 1em;
+}
+
+.tarjeta-row {
+    display: flex;
+    gap: 15px;
+}
+
+.tarjeta-row input {
+    flex: 1;
+}
+
+.btn-pagar-ahora {
+    width: 100%;
+    padding: 15px;
+    background: #48bb78;
+    color: #1a472a;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.nota-simulacion {
+    color: #f6e05e;
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.9em;
+}
+
+.exito-icono {
+    font-size: 5em;
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Notificaciones admin */
+.notificaciones-bell {
+    position: fixed;
+    top: 20px;
+    right: 30px;
+    font-size: 1.5em;
+    color: #48bb78;
+    cursor: pointer;
+    z-index: 100;
+    background: #1a2f1f;
+    padding: 10px;
+    border-radius: 50%;
+    border: 2px solid #48bb78;
+}
+
+.badge-notificacion {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel-notificaciones {
+    position: fixed;
+    top: 70px;
+    right: 30px;
+    background: #1a2f1f;
+    border: 2px solid #48bb78;
+    border-radius: 10px;
+    width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 99;
+}
+
+.notificacion-item {
+    padding: 15px;
+    border-bottom: 1px solid rgba(72,187,120,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notificacion-item:hover {
+    background: rgba(72,187,120,0.1);
+}
+
+.notificacion-item.no-leida {
+    border-left: 3px solid #f6e05e;
+}
+
+/* Órdenes */
+.ordenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.orden-card {
+    background: #243828;
+    border: 1px solid rgba(72,187,120,0.2);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.orden-total {
+    color: #48bb78;
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.estado-orden {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+.estado-orden.confirmada { background: #48bb78; color: #1a472a; }
+.estado-orden.pendiente { background: #f6e05e; color: #1a472a; }
+
+/* Contacto admin */
+.contacto-acciones {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-input-small {
+    padding: 8px;
+    border: 1px solid #2d5a3d;
+    border-radius: 5px;
+    background: #0d1f14;
+    color: #e0e0e0;
+    font-size: 0.9em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .contacto-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .panel-notificaciones {
+        width: 90%;
+        right: 5%;
+    }
+    
+    .ordenes-grid {
+        grid-template-columns: 1fr;
+    }
+}
