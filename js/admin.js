@@ -17,6 +17,61 @@ function verificarAdmin() {
     return true;
 }
 
+// ============ SUBIR IMAGEN A IMGUR (GRATIS) ============
+async function subirImagenImgur(file) {
+    const progressBar = document.getElementById('progress-bar');
+    if (progressBar) {
+        progressBar.style.display = 'block';
+        progressBar.querySelector('.progress-fill').style.width = '50%';
+    }
+    
+    try {
+        // Convertir imagen a base64
+        const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        
+        // Subir a Imgur (gratis, sin API key necesaria para cantidades pequeñas)
+        const response = await fetch('https://api.imgur.com/3/image', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Client-ID 546c25a59c58ad7', // Client ID público de Imgur
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: base64,
+                type: 'base64'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (progressBar) {
+            progressBar.querySelector('.progress-fill').style.width = '100%';
+            setTimeout(() => { progressBar.style.display = 'none'; }, 500);
+        }
+        
+        if (data.success) {
+            return data.data.link;
+        } else {
+            throw new Error('Error al subir imagen');
+        }
+    } catch (error) {
+        console.error('Error subiendo imagen:', error);
+        if (progressBar) progressBar.style.display = 'none';
+        
+        // Fallback: guardar como base64 directamente en Firestore
+        return await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
 // ============ CAMBIAR SECCIONES ============
 function mostrarSeccion(seccion, elemento) {
     document.querySelectorAll('.seccion').forEach(s => s.style.display = 'none');
@@ -36,14 +91,13 @@ function mostrarSeccion(seccion, elemento) {
     }
 }
 
-// ============ GESTIÓN DE PRODUCTOS CON IMAGEN ============
+// ============ GESTIÓN DE PRODUCTOS ============
 let editandoProducto = null;
-let imagenProductoFile = null;
 
 function previewImagen(event) {
     const file = event.target.files[0];
     if (file) {
-        imagenProductoFile = file;
+        window.productoImagenFile = file;
         const reader = new FileReader();
         reader.onload = function(e) {
             const preview = document.getElementById('imagen-preview');
@@ -52,39 +106,6 @@ function previewImagen(event) {
             document.getElementById('imagen-texto').textContent = file.name;
         };
         reader.readAsDataURL(file);
-    }
-}
-
-async function subirImagen(file, carpeta) {
-    const storageRef = storage.ref();
-    const fileName = `${carpeta}/${Date.now()}_${file.name}`;
-    const fileRef = storageRef.child(fileName);
-    
-    const progressBar = document.getElementById('progress-bar');
-    const progressFill = progressBar.querySelector('.progress-fill');
-    progressBar.style.display = 'block';
-    
-    try {
-        const uploadTask = fileRef.put(file);
-        
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressFill.style.width = progress + '%';
-            },
-            (error) => {
-                console.error('Error al subir:', error);
-                progressBar.style.display = 'none';
-            }
-        );
-        
-        await uploadTask;
-        progressBar.style.display = 'none';
-        return await fileRef.getDownloadURL();
-    } catch (error) {
-        console.error('Error:', error);
-        progressBar.style.display = 'none';
-        return null;
     }
 }
 
@@ -105,9 +126,6 @@ function cargarProductos() {
                             <span class="precio">$${producto.precio}</span>
                             <span class="stock">Stock: ${producto.stock}</span>
                             <span class="categoria">${producto.categoria || 'Sin categoría'}</span>
-                            <span class="estado ${producto.activo ? 'activo' : 'inactivo-texto'}">
-                                ${producto.activo ? 'Activo' : 'Inactivo'}
-                            </span>
                         </div>
                     </div>
                     <div class="producto-acciones">
@@ -136,9 +154,8 @@ async function guardarProducto() {
     let imagenURL = document.getElementById('imagen-preview').src;
     
     // Si hay nueva imagen, subirla
-    if (imagenProductoFile) {
-        const url = await subirImagen(imagenProductoFile, 'productos');
-        if (url) imagenURL = url;
+    if (window.productoImagenFile) {
+        imagenURL = await subirImagenImgur(window.productoImagenFile);
     }
     
     const datos = {
@@ -148,8 +165,7 @@ async function guardarProducto() {
         categoria: document.getElementById('categoria-producto').value,
         imagen: imagenURL || '../img/default-product.jpg',
         descripcion: document.getElementById('descripcion-producto').value,
-        activo: document.getElementById('activo-producto').checked,
-        fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+        activo: document.getElementById('activo-producto').checked
     };
     
     try {
@@ -157,14 +173,13 @@ async function guardarProducto() {
             await db.collection('productos').doc(editandoProducto).update(datos);
             alert('Producto actualizado exitosamente');
         } else {
-            datos.fechaCreacion = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('productos').add(datos);
             alert('Producto creado exitosamente');
         }
         cancelarEdicion();
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al guardar el producto');
+        alert('Error al guardar: ' + error.message);
     }
 }
 
@@ -189,7 +204,7 @@ async function editarProducto(id) {
         document.getElementById('form-titulo').textContent = 'Editar Producto';
         document.querySelector('.btn-cancelar').style.display = 'inline-block';
         editandoProducto = id;
-        imagenProductoFile = null;
+        window.productoImagenFile = null;
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
@@ -199,7 +214,7 @@ async function editarProducto(id) {
 
 function cancelarEdicion() {
     editandoProducto = null;
-    imagenProductoFile = null;
+    window.productoImagenFile = null;
     document.getElementById('producto-id').value = '';
     document.getElementById('nombre-producto').value = '';
     document.getElementById('precio-producto').value = '';
@@ -225,7 +240,7 @@ async function eliminarProducto(id) {
     }
 }
 
-// ============ GESTIÓN DE HISTORIA CON IMAGEN ============
+// ============ HISTORIA ============
 async function cargarHistoriaAdmin() {
     try {
         const doc = await db.collection('configuracion').doc('historia').get();
@@ -246,6 +261,7 @@ async function cargarHistoriaAdmin() {
 function previewImagenHistoria(event) {
     const file = event.target.files[0];
     if (file) {
+        window.historiaImagenFile = file;
         const reader = new FileReader();
         reader.onload = function(e) {
             const preview = document.getElementById('historia-imagen-preview');
@@ -253,7 +269,6 @@ function previewImagenHistoria(event) {
             preview.style.display = 'block';
         };
         reader.readAsDataURL(file);
-        window.historiaImagenFile = file;
     }
 }
 
@@ -261,15 +276,13 @@ async function guardarHistoria() {
     let imagenURL = document.getElementById('historia-imagen-preview').src;
     
     if (window.historiaImagenFile) {
-        const url = await subirImagen(window.historiaImagenFile, 'historia');
-        if (url) imagenURL = url;
+        imagenURL = await subirImagenImgur(window.historiaImagenFile);
     }
     
     const datos = {
         titulo: document.getElementById('historia-titulo').value,
         contenido: document.getElementById('historia-contenido').value,
-        imagen: imagenURL,
-        fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+        imagen: imagenURL
     };
     
     try {
@@ -277,11 +290,10 @@ async function guardarHistoria() {
         alert('Historia guardada exitosamente');
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al guardar la historia');
     }
 }
 
-// ============ GESTIÓN DE UBICACIONES CON MAPS ============
+// ============ UBICACIONES ============
 function cargarDepartamentos() {
     const departamentos = [
         'Ahuachapán', 'Cabañas', 'Chalatenango', 'Cuscatlán', 'La Libertad',
@@ -290,10 +302,12 @@ function cargarDepartamentos() {
     ];
     
     const select = document.getElementById('ubicacion-departamento');
-    select.innerHTML = '<option value="">Seleccionar departamento</option>';
-    departamentos.forEach(dep => {
-        select.innerHTML += `<option value="${dep}">${dep}</option>`;
-    });
+    if (select) {
+        select.innerHTML = '<option value="">Seleccionar departamento</option>';
+        departamentos.forEach(dep => {
+            select.innerHTML += `<option value="${dep}">${dep}</option>`;
+        });
+    }
 }
 
 function cargarMunicipios() {
@@ -337,8 +351,6 @@ function cargarUbicacionesAdmin() {
                     <h3>${ubicacion.nombre}</h3>
                     <p><i class="fas fa-map-marker-alt"></i> ${ubicacion.direccion}</p>
                     <p><i class="fas fa-phone"></i> ${ubicacion.telefono || 'N/A'}</p>
-                    <p><i class="fas fa-location-dot"></i> ${ubicacion.departamento}, ${ubicacion.municipio}</p>
-                    ${ubicacion.mapsLink ? `<a href="${ubicacion.mapsLink}" target="_blank" class="maps-link"><i class="fas fa-map"></i> Ver en Google Maps</a>` : ''}
                     <span class="tipo-badge" style="background: ${ubicacion.color || '#48bb78'}">${ubicacion.tipo}</span>
                     <button onclick="eliminarUbicacion('${doc.id}')" class="btn-eliminar">
                         <i class="fas fa-trash"></i>
@@ -369,13 +381,8 @@ async function guardarUbicacion() {
     try {
         await db.collection('ubicaciones').add(datos);
         alert('Ubicación guardada exitosamente');
-        document.getElementById('ubicacion-nombre').value = '';
-        document.getElementById('ubicacion-direccion').value = '';
-        document.getElementById('ubicacion-telefono').value = '';
-        document.getElementById('ubicacion-maps').value = '';
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al guardar la ubicación');
     }
 }
 
@@ -389,63 +396,7 @@ async function eliminarUbicacion(id) {
     }
 }
 
-// ============ GESTIÓN DE SECCIONES ============
-function cambiarTipoSeccion() {
-    const tipo = document.getElementById('seccion-tipo').value;
-    const mediaContainer = document.getElementById('seccion-media');
-    const videoUrlInput = document.getElementById('seccion-video-url');
-    const archivoInput = document.getElementById('seccion-archivo');
-    
-    mediaContainer.style.display = 'block';
-    videoUrlInput.style.display = 'none';
-    archivoInput.accept = 'image/*,video/*';
-    
-    switch(tipo) {
-        case 'texto':
-            mediaContainer.style.display = 'none';
-            break;
-        case 'imagen':
-            archivoInput.accept = 'image/*';
-            document.getElementById('upload-label-text').innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Subir imagen</span>';
-            break;
-        case 'video':
-            videoUrlInput.style.display = 'block';
-            archivoInput.accept = 'video/*';
-            document.getElementById('upload-label-text').innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Subir video o usar URL</span>';
-            break;
-        case 'galeria':
-            archivoInput.accept = 'image/*';
-            archivoInput.multiple = true;
-            document.getElementById('upload-label-text').innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Subir imágenes (múltiples)</span>';
-            break;
-    }
-}
-
-function previewSeccionMedia(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const previewImg = document.getElementById('seccion-media-preview');
-    const previewVideo = document.getElementById('seccion-video-preview');
-    
-    previewImg.style.display = 'none';
-    previewVideo.style.display = 'none';
-    
-    if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            previewImg.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    } else if (file.type.startsWith('video/')) {
-        previewVideo.src = URL.createObjectURL(file);
-        previewVideo.style.display = 'block';
-    }
-    
-    window.seccionArchivoFile = file;
-}
-
+// ============ SECCIONES ============
 function cargarSecciones() {
     db.collection('secciones').orderBy('orden', 'asc').onSnapshot((snapshot) => {
         const contenedor = document.getElementById('lista-secciones');
@@ -454,104 +405,33 @@ function cargarSecciones() {
         snapshot.forEach((doc) => {
             const seccion = doc.data();
             contenedor.innerHTML += `
-                <div class="seccion-card ${seccion.activo ? '' : 'inactivo'}">
+                <div class="seccion-card">
                     <h3>${seccion.titulo}</h3>
                     <span class="tipo-badge">${seccion.tipo}</span>
-                    <p>${seccion.contenido?.substring(0, 100)}...</p>
-                    <div class="producto-acciones">
-                        <button onclick="editarSeccion('${doc.id}')" class="btn-editar">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                        <button onclick="eliminarSeccion('${doc.id}')" class="btn-eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                    <button onclick="eliminarSeccion('${doc.id}')" class="btn-eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             `;
         });
     });
 }
 
-let editandoSeccion = null;
-
 async function guardarSeccion() {
-    const titulo = document.getElementById('seccion-titulo').value;
-    const tipo = document.getElementById('seccion-tipo').value;
-    const contenido = document.getElementById('seccion-contenido').value;
-    
-    if (!titulo) {
-        alert('El título es obligatorio');
-        return;
-    }
-    
-    let mediaURL = '';
-    
-    if (tipo !== 'texto' && window.seccionArchivoFile) {
-        mediaURL = await subirImagen(window.seccionArchivoFile, 'secciones');
-    }
-    
-    if (tipo === 'video' && !mediaURL) {
-        mediaURL = document.getElementById('seccion-video-url').value;
-    }
-    
     const datos = {
-        titulo,
-        tipo,
-        contenido,
-        mediaURL,
+        titulo: document.getElementById('seccion-titulo').value,
+        tipo: document.getElementById('seccion-tipo').value,
+        contenido: document.getElementById('seccion-contenido').value,
         activo: document.getElementById('seccion-activo').checked,
-        fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+        orden: Date.now()
     };
     
     try {
-        if (editandoSeccion) {
-            await db.collection('secciones').doc(editandoSeccion).update(datos);
-            alert('Sección actualizada');
-        } else {
-            datos.orden = Date.now();
-            await db.collection('secciones').add(datos);
-            alert('Sección creada');
-        }
-        cancelarEdicionSeccion();
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al guardar la sección');
-    }
-}
-
-async function editarSeccion(id) {
-    try {
-        const doc = await db.collection('secciones').doc(id).get();
-        const seccion = doc.data();
-        
-        document.getElementById('seccion-id').value = id;
-        document.getElementById('seccion-titulo').value = seccion.titulo;
-        document.getElementById('seccion-tipo').value = seccion.tipo;
-        document.getElementById('seccion-contenido').value = seccion.contenido || '';
-        document.getElementById('seccion-activo').checked = seccion.activo;
-        
-        if (seccion.tipo === 'video') {
-            document.getElementById('seccion-video-url').value = seccion.mediaURL || '';
-            document.getElementById('seccion-video-url').style.display = 'block';
-        }
-        
-        editandoSeccion = id;
-        cambiarTipoSeccion();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        await db.collection('secciones').add(datos);
+        alert('Sección guardada');
     } catch (error) {
         console.error('Error:', error);
     }
-}
-
-function cancelarEdicionSeccion() {
-    editandoSeccion = null;
-    window.seccionArchivoFile = null;
-    document.getElementById('seccion-id').value = '';
-    document.getElementById('seccion-titulo').value = '';
-    document.getElementById('seccion-contenido').value = '';
-    document.getElementById('seccion-video-url').value = '';
-    document.getElementById('seccion-media-preview').style.display = 'none';
-    document.getElementById('seccion-video-preview').style.display = 'none';
 }
 
 async function eliminarSeccion(id) {
@@ -564,33 +444,21 @@ async function eliminarSeccion(id) {
     }
 }
 
-// ============ GESTIÓN DE VALORACIONES ============
+// ============ VALORACIONES ============
 function cargarValoracionesAdmin() {
     db.collection('valoraciones').orderBy('fecha', 'desc').onSnapshot((snapshot) => {
         const contenedor = document.getElementById('lista-valoraciones');
         contenedor.innerHTML = '';
         
         snapshot.forEach((doc) => {
-            const valoracion = doc.data();
-            const estrellas = '★'.repeat(valoracion.estrellas) + '☆'.repeat(5 - valoracion.estrellas);
-            
+            const v = doc.data();
             contenedor.innerHTML += `
-                <div class="valoracion-card ${valoracion.aprobada ? 'aprobada' : 'pendiente'}">
-                    <div class="estrellas">${estrellas}</div>
-                    <p>"${valoracion.comentario}"</p>
-                    <span class="autor">- ${valoracion.nombre}</span>
-                    <div class="valoracion-acciones">
-                        <span class="estado-badge ${valoracion.aprobada ? 'aprobado' : 'pendiente-texto'}">
-                            ${valoracion.aprobada ? 'Aprobada' : 'Pendiente'}
-                        </span>
-                        ${!valoracion.aprobada ? 
-                            `<button onclick="aprobarValoracion('${doc.id}')" class="btn-aprobar">
-                                <i class="fas fa-check"></i> Aprobar
-                            </button>` : ''}
-                        <button onclick="eliminarValoracion('${doc.id}')" class="btn-eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                <div class="valoracion-card ${v.aprobada ? 'aprobada' : 'pendiente'}">
+                    <div class="estrellas">${'★'.repeat(v.estrellas)}</div>
+                    <p>"${v.comentario}"</p>
+                    <span>- ${v.nombre}</span>
+                    ${!v.aprobada ? `<button onclick="aprobarValoracion('${doc.id}')" class="btn-aprobar">Aprobar</button>` : ''}
+                    <button onclick="eliminarValoracion('${doc.id}')" class="btn-eliminar">Eliminar</button>
                 </div>
             `;
         });
@@ -598,41 +466,30 @@ function cargarValoracionesAdmin() {
 }
 
 async function aprobarValoracion(id) {
-    try {
-        await db.collection('valoraciones').doc(id).update({ aprobada: true });
-    } catch (error) {
-        console.error('Error:', error);
-    }
+    await db.collection('valoraciones').doc(id).update({ aprobada: true });
 }
 
 async function eliminarValoracion(id) {
-    if (confirm('¿Eliminar esta valoración?')) {
-        try {
-            await db.collection('valoraciones').doc(id).delete();
-        } catch (error) {
-            console.error('Error:', error);
-        }
+    if (confirm('¿Eliminar?')) {
+        await db.collection('valoraciones').doc(id).delete();
     }
 }
 
-// ============ GESTIÓN DE CONTACTOS ============
+// ============ CONTACTOS ============
 function cargarContactos() {
     db.collection('contactos').orderBy('fecha', 'desc').onSnapshot((snapshot) => {
         const contenedor = document.getElementById('lista-contactos');
         contenedor.innerHTML = '';
         
         snapshot.forEach((doc) => {
-            const contacto = doc.data();
+            const c = doc.data();
             contenedor.innerHTML += `
                 <div class="contacto-card">
-                    <h3>${contacto.nombre}</h3>
-                    <p><i class="fas fa-envelope"></i> ${contacto.email}</p>
-                    <p><i class="fas fa-phone"></i> ${contacto.telefono || 'No proporcionado'}</p>
-                    <p><i class="fas fa-comment"></i> ${contacto.mensaje}</p>
-                    <span class="fecha">${new Date(contacto.fecha).toLocaleDateString()}</span>
-                    <button onclick="eliminarContacto('${doc.id}')" class="btn-eliminar">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
+                    <h3>${c.nombre}</h3>
+                    <p>📧 ${c.email}</p>
+                    <p>📞 ${c.telefono || 'N/A'}</p>
+                    <p>💬 ${c.mensaje}</p>
+                    <button onclick="eliminarContacto('${doc.id}')" class="btn-eliminar">Eliminar</button>
                 </div>
             `;
         });
@@ -640,16 +497,12 @@ function cargarContactos() {
 }
 
 async function eliminarContacto(id) {
-    if (confirm('¿Eliminar este mensaje?')) {
-        try {
-            await db.collection('contactos').doc(id).delete();
-        } catch (error) {
-            console.error('Error:', error);
-        }
+    if (confirm('¿Eliminar?')) {
+        await db.collection('contactos').doc(id).delete();
     }
 }
 
-// ============ CONFIGURACIÓN ============
+// ============ CONFIGURACIÓN (LOGO) ============
 function cargarConfiguracion() {
     db.collection('configuracion').doc('sitio').onSnapshot((doc) => {
         if (doc.exists) {
@@ -657,11 +510,7 @@ function cargarConfiguracion() {
             if (config.logo) {
                 document.getElementById('logo-preview').src = config.logo;
                 document.getElementById('logo-preview').style.display = 'block';
-            }
-            if (config.colorPrincipal) {
-                document.getElementById('color-principal').value = config.colorPrincipal;
-                document.getElementById('color-secundario').value = config.colorSecundario;
-                document.getElementById('color-acento').value = config.colorAcento;
+                document.getElementById('sidebar-logo').src = config.logo;
             }
         }
     });
@@ -670,43 +519,32 @@ function cargarConfiguracion() {
 function previewLogo(event) {
     const file = event.target.files[0];
     if (file) {
+        window.logoFile = file;
         const reader = new FileReader();
         reader.onload = function(e) {
-            const preview = document.getElementById('logo-preview');
-            preview.src = e.target.result;
-            preview.style.display = 'block';
+            document.getElementById('logo-preview').src = e.target.result;
+            document.getElementById('logo-preview').style.display = 'block';
         };
         reader.readAsDataURL(file);
-        window.logoFile = file;
     }
 }
 
 async function actualizarLogo() {
     if (!window.logoFile) {
-        alert('Selecciona una imagen para el logo');
+        alert('Selecciona una imagen primero');
         return;
     }
     
-    const url = await subirImagen(window.logoFile, 'configuracion');
-    if (url) {
+    try {
+        const url = await subirImagenImgur(window.logoFile);
+        
         await db.collection('configuracion').doc('sitio').set({ logo: url }, { merge: true });
+        
         document.getElementById('sidebar-logo').src = url;
         alert('Logo actualizado exitosamente');
-    }
-}
-
-async function guardarColores() {
-    const datos = {
-        colorPrincipal: document.getElementById('color-principal').value,
-        colorSecundario: document.getElementById('color-secundario').value,
-        colorAcento: document.getElementById('color-acento').value
-    };
-    
-    try {
-        await db.collection('configuracion').doc('sitio').set(datos, { merge: true });
-        alert('Colores guardados. Los cambios se reflejarán al recargar la página.');
     } catch (error) {
         console.error('Error:', error);
+        alert('Error al subir el logo: ' + error.message);
     }
 }
 
