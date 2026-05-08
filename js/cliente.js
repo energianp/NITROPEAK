@@ -24,6 +24,7 @@ function initMap() {
     marcadoresLayer = L.layerGroup().addTo(mapa);
     cargarUbicaciones();
     cargarDepartamentosSelect();
+    cargarTiposSelect();
     cargarProductos();
     cargarHistoria();
     cargarValoracionesCliente();
@@ -37,12 +38,25 @@ function cargarDepartamentosSelect() {
     s.innerHTML = '<option value="">Departamento</option>' + ['Todos','Ahuachapán','Cabañas','Chalatenango','Cuscatlán','La Libertad','La Paz','La Unión','Morazán','San Miguel','San Salvador','San Vicente','Santa Ana','Sonsonate','Usulután'].map(d => `<option>${d}</option>`).join('');
 }
 
+function cargarTiposSelect() {
+    const s = document.getElementById('buscar-tipo');
+    if (!s) return;
+    s.innerHTML = '<option value="">Tipo de lugar</option>' + ['Todos','Supermercado','Gimnasio','Tienda de conveniencia','Farmacia'].map(t => `<option>${t}</option>`).join('');
+}
+
 function buscarPorDepartamento() {
     const d = document.getElementById('buscar-departamento').value;
     const m = document.getElementById('buscar-municipio')?.value || '';
+    const t = document.getElementById('buscar-tipo')?.value || '';
     db.collection('ubicaciones').get().then(snap => {
         const u = [];
-        snap.forEach(doc => { const x = doc.data(); if (d==='Todos'||x.departamento===d) if(!m||x.municipio===m) u.push(x); });
+        snap.forEach(doc => {
+            const x = doc.data();
+            if (d !== 'Todos' && x.departamento !== d) return;
+            if (m && x.municipio !== m) return;
+            if (t && t !== 'Todos' && x.tipo !== t) return;
+            u.push(x);
+        });
         actualizarMapa(u); mostrarListaUbicaciones(u);
     });
 }
@@ -72,7 +86,7 @@ function actualizarMapa(ubis) {
         .then(r=>r.json()).then(data=>{if(data.length){const lat=+data[0].lat,lng=+data[0].lon;
             const icon = L.divIcon({className:'custom-marker',html:`<div style="width:22px;height:22px;background:${u.color||'#48bb78'};border:3px solid #1a472a;border-radius:50%"></div>`,iconSize:[22,22],iconAnchor:[11,11]});
             const m = L.marker([lat,lng],{icon}).addTo(marcadoresLayer);
-            m.bindPopup(`<div style="color:#1a472a"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p></div>`);
+            m.bindPopup(`<div style="color:#1a472a"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p><p><strong>${u.tipo}</strong></p></div>`);
             bounds.push([lat,lng]); if(bounds.length>1)mapa.fitBounds(bounds,{padding:[30,30]}); else mapa.setView([lat,lng],15);
         }});
     });
@@ -84,7 +98,7 @@ function mostrarListaUbicaciones(ubis) {
     c.innerHTML = ubis.map(u => `<div class="ubicacion-item" style="border-left:4px solid ${u.color||'#48bb78'}"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p><p>🗺️${u.departamento}, ${u.municipio||''}</p><span class="tipo-ubicacion" style="background:${u.color||'#48bb78'}">${u.tipo}</span></div>`).join('');
 }
 
-// ============ PRODUCTOS COMPACTOS ============
+// ============ PRODUCTOS ============
 function cargarProductos() {
     db.collection('productos').where('activo','==',true).onSnapshot(snap => {
         const c = document.getElementById('productos-lista');
@@ -110,31 +124,24 @@ function cargarProductos() {
                 </div>
             </div>`;
             
-            // Calcular estrellas promedio
             db.collection('valoraciones').where('productoId','==',doc.id).where('aprobada','==',true).get().then(vs => {
                 let t=0,n=0; vs.forEach(v=>{t+=v.data().estrellas;n++;});
                 const prom = n>0?t/n:0;
                 const el = document.getElementById('estrellas-comp-'+doc.id);
-                if (el) el.innerHTML = generarEstrellas(prom, '1em');
+                if (el) el.innerHTML = generarEstrellas(prom, '0.85em');
             });
         });
     });
 }
 
-function generarEstrellas(prom, size='1em') {
+function generarEstrellas(prom, size='0.85em') {
     let h='';
     for(let i=1;i<=5;i++){
         if(prom>=i) h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
-        else if(prom>=i-0.5) h+=`<span style="color:#ffd700;font-size:${size}">⭐</span>`;
+        else if(prom>=i-0.5) h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
         else h+=`<span style="color:#2d5a3d;font-size:${size}">★</span>`;
     }
-    return h+` <small>(${prom.toFixed(1)})</small>`;
-}
-
-function getStockStatus(stock) {
-    if (stock<=0) return {t:'Agotado',c:'stock-agotado'};
-    if (stock<12) return {t:'Stock bajo',c:'stock-bajo'};
-    return {t:'Disponible',c:'stock-disponible'};
+    return h+` <small style="font-size:${size}">(${prom.toFixed(1)})</small>`;
 }
 
 function cargarHistoria() {
@@ -146,7 +153,7 @@ function cargarHistoria() {
     });
 }
 
-// ============ CARRUSEL DE VALORACIONES ============
+// ============ CARRUSEL VALORACIONES ============
 function cargarValoracionesCliente() {
     db.collection('valoraciones').where('aprobada','==',true).orderBy('fecha','desc').onSnapshot(snap => {
         todasValoracionesCliente = [];
@@ -206,6 +213,7 @@ async function enviarValoracionGeneral() {
     document.getElementById('comentario-general').value = '';
     document.getElementById('nombre-general').value = '';
     calificacionGeneralActual = 0;
+    document.querySelectorAll('#estrellas-general span').forEach(s => s.style.color = '#2d5a3d');
 }
 
 // ============ VALORACIÓN PRODUCTO ============
@@ -230,7 +238,7 @@ async function enviarValoracionProducto() {
     cerrarValoracionProducto();
 }
 
-// ============ COMENTARIOS ============
+// ============ COMENTARIOS (muestra valoración + comentario) ============
 function verComentarios(id, nombre) {
     document.getElementById('comentarios-producto-nombre').textContent = nombre;
     document.getElementById('comentarios-modal').style.display = 'block';
@@ -238,11 +246,12 @@ function verComentarios(id, nombre) {
         let t=0; const coms=[];
         snap.forEach(d => { const v=d.data(); t+=v.estrellas; coms.push(v); });
         const prom = coms.length?t/coms.length:0;
-        document.getElementById('promedio-estrellas').innerHTML = `<h4>Promedio: ${generarEstrellas(prom, '1.2em')} (${coms.length})</h4>`;
+        document.getElementById('promedio-estrellas').innerHTML = `<h4>Promedio: ${generarEstrellas(prom, '0.9em')} (${coms.length} valoraciones)</h4>`;
         document.getElementById('comentarios-lista').innerHTML = coms.length ? coms.map(v => `
             <div class="comentario-item">
-                <div>${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div>
-                <p>"${v.comentario}"</p><span>- ${v.nombre}</span>
+                <div class="estrellas-valoracion" style="font-size:0.9em;">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div>
+                <p>"${v.comentario}"</p>
+                <span class="nombre-valorador">- ${v.nombre}</span>
             </div>
         `).join('') : '<p>Sin comentarios aún.</p>';
     });
