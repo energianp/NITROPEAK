@@ -20,6 +20,9 @@
                 <li class="active" onclick="mostrarSeccion('productos', this)">
                     <i class="fas fa-box"></i> Productos
                 </li>
+                <li onclick="mostrarSeccion('ordenes', this)">
+                    <i class="fas fa-shopping-cart"></i> Órdenes
+                </li>
                 <li onclick="mostrarSeccion('historia', this)">
                     <i class="fas fa-book"></i> Historia
                 </li>
@@ -46,6 +49,13 @@
 
         <!-- Contenido Principal -->
         <main class="main-content">
+            <!-- Notificaciones -->
+            <div class="notificaciones-bell" onclick="mostrarNotificaciones()">
+                <i class="fas fa-bell"></i>
+                <span id="contador-notificaciones" class="badge-notificacion">0</span>
+            </div>
+            <div id="panel-notificaciones" class="panel-notificaciones" style="display:none;"></div>
+
             <!-- Sección Productos -->
             <section id="seccion-productos" class="seccion">
                 <h2><i class="fas fa-box"></i> Gestión de Productos</h2>
@@ -57,7 +67,6 @@
                         <input type="text" id="nombre-producto" placeholder="Nombre del producto" class="form-input">
                         <input type="number" id="precio-producto" placeholder="Precio ($)" step="0.01" class="form-input">
                         <input type="number" id="stock-producto" placeholder="Stock disponible" class="form-input">
-                        <input type="text" id="categoria-producto" placeholder="Categoría" class="form-input">
                         <div class="upload-container">
                             <label for="imagen-producto" class="upload-label">
                                 <i class="fas fa-cloud-upload-alt"></i>
@@ -65,9 +74,6 @@
                             </label>
                             <input type="file" id="imagen-producto" accept="image/*" class="form-input-file" onchange="previewImagen(event)">
                             <img id="imagen-preview" class="imagen-preview" style="display:none;">
-                            <div id="progress-bar" class="progress-bar" style="display:none;">
-                                <div class="progress-fill"></div>
-                            </div>
                         </div>
                         <textarea id="descripcion-producto" placeholder="Descripción del producto" class="form-input" rows="3"></textarea>
                         <label class="checkbox-label">
@@ -87,6 +93,12 @@
                 <div class="productos-grid" id="lista-productos"></div>
             </section>
 
+            <!-- Sección Órdenes -->
+            <section id="seccion-ordenes" class="seccion" style="display:none;">
+                <h2><i class="fas fa-shopping-cart"></i> Órdenes de Compra</h2>
+                <div class="ordenes-grid" id="lista-ordenes"></div>
+            </section>
+
             <!-- Sección Historia -->
             <section id="seccion-historia" class="seccion" style="display:none;">
                 <h2><i class="fas fa-book"></i> Nuestra Historia</h2>
@@ -97,7 +109,7 @@
                     <div class="upload-container">
                         <label for="historia-imagen" class="upload-label">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <span id="historia-imagen-texto">Subir imagen de la historia</span>
+                            <span>Subir imagen</span>
                         </label>
                         <input type="file" id="historia-imagen" accept="image/*" class="form-input-file" onchange="previewImagenHistoria(event)">
                         <img id="historia-imagen-preview" class="imagen-preview" style="display:none;">
@@ -132,15 +144,12 @@
                             <option value="">Seleccionar municipio</option>
                         </select>
                         <input type="text" id="ubicacion-maps" placeholder="Link de Google Maps" class="form-input">
-                        <div id="mapa-busqueda" class="mapa-busqueda"></div>
                         <select id="ubicacion-color" class="form-input">
                             <option value="">Color del marcador</option>
                             <option value="#FF6B6B">Rojo - Supermercado</option>
                             <option value="#4ECDC4">Turquesa - Gimnasio</option>
                             <option value="#45B7D1">Azul - Tienda</option>
                             <option value="#96CEB4">Verde - Farmacia</option>
-                            <option value="#FFEAA7">Amarillo</option>
-                            <option value="#DDA0DD">Morado</option>
                         </select>
                     </div>
                     <button onclick="guardarUbicacion()" class="btn-guardar">
@@ -151,7 +160,7 @@
                 <div class="ubicaciones-grid" id="lista-ubicaciones"></div>
             </section>
 
-            <!-- Sección Secciones Personalizadas -->
+            <!-- Sección Secciones -->
             <section id="seccion-secciones" class="seccion" style="display:none;">
                 <h2><i class="fas fa-puzzle-piece"></i> Gestión de Secciones</h2>
                 
@@ -160,23 +169,20 @@
                     <input type="hidden" id="seccion-id">
                     <div class="form-grid">
                         <input type="text" id="seccion-titulo" placeholder="Título de la sección" class="form-input">
-                        <select id="seccion-tipo" class="form-input" onchange="cambiarTipoSeccion()">
+                        <select id="seccion-tipo" class="form-input">
                             <option value="texto">Solo texto</option>
                             <option value="imagen">Imagen + texto</option>
                             <option value="video">Video + texto</option>
-                            <option value="galeria">Galería de imágenes</option>
                         </select>
-                        <textarea id="seccion-contenido" placeholder="Contenido de la sección" class="form-input" rows="4"></textarea>
-                        <div id="seccion-media" class="upload-container">
-                            <label for="seccion-archivo" class="upload-label" id="upload-label-text">
+                        <textarea id="seccion-contenido" placeholder="Contenido" class="form-input" rows="4"></textarea>
+                        <div class="upload-container">
+                            <label for="seccion-archivo" class="upload-label">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <span>Subir archivo</span>
                             </label>
-                            <input type="file" id="seccion-archivo" accept="image/*,video/*" class="form-input-file" onchange="previewSeccionMedia(event)">
+                            <input type="file" id="seccion-archivo" class="form-input-file" onchange="previewSeccionMedia(event)">
                             <img id="seccion-media-preview" class="imagen-preview" style="display:none;">
-                            <video id="seccion-video-preview" class="video-preview" style="display:none;" controls></video>
                         </div>
-                        <input type="text" id="seccion-video-url" placeholder="O URL de YouTube/Vimeo" class="form-input" style="display:none;">
                         <label class="checkbox-label">
                             <input type="checkbox" id="seccion-activo" checked> Sección activa
                         </label>
@@ -217,6 +223,17 @@
                     </div>
                     <button onclick="actualizarLogo()" class="btn-guardar">
                         <i class="fas fa-save"></i> Actualizar Logo
+                    </button>
+                </div>
+
+                <div class="form-container">
+                    <h3>Redes Sociales</h3>
+                    <div class="form-grid">
+                        <input type="text" id="config-instagram" placeholder="Link de Instagram" class="form-input">
+                        <input type="text" id="config-whatsapp" placeholder="Número de WhatsApp (ej: 50361727059)" class="form-input">
+                    </div>
+                    <button onclick="guardarRedes()" class="btn-guardar">
+                        <i class="fas fa-save"></i> Guardar Redes
                     </button>
                 </div>
 
