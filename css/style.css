@@ -412,10 +412,12 @@ section h2::after {
 }
 
 #mapa {
-    height: 400px;
+    height: 400px !important;
+    width: 100%;
     border-radius: 15px;
     margin-bottom: 40px;
     border: 2px solid rgba(72, 187, 120, 0.3);
+    z-index: 1;
 }
 
 /* Buscador de mapa */
@@ -487,6 +489,10 @@ section h2::after {
     font-weight: bold;
     color: #1a472a;
     margin-top: 10px;
+}
+
+.leaflet-container {
+    background: #1a2f1f !important;
 }
 
 /* ============ PERSONALIZAR ============ */
