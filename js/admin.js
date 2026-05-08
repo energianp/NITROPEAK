@@ -1,8 +1,10 @@
-// Credenciales de administrador
+// Credenciales
 const ADMIN_CREDENTIALS = {
     usuario: 'NitroPeak',
     password: 'Nitropeak26'
 };
+
+let notificaciones = [];
 
 // Verificar autenticación
 function verificarAdmin() {
@@ -23,7 +25,7 @@ function verificarAdmin() {
     return true;
 }
 
-// Convertir imagen a Base64 (sin depender de Storage)
+// Convertir imagen a Base64
 function imagenToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -31,6 +33,122 @@ function imagenToBase64(file) {
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
+}
+
+// ============ NOTIFICACIONES ============
+function inicializarNotificaciones() {
+    // Escuchar valoraciones nuevas
+    db.collection('valoraciones').where('aprobada', '==', false)
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const v = change.doc.data();
+                    agregarNotificacion({
+                        tipo: 'valoracion',
+                        mensaje: `Nueva valoración de ${v.nombre}`,
+                        icono: '⭐',
+                        id: change.doc.id,
+                        seccion: 'valoraciones'
+                    });
+                }
+            });
+        });
+    
+    // Escuchar contactos nuevos
+    db.collection('contactos').where('contactado', '==', false)
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const c = change.doc.data();
+                    agregarNotificacion({
+                        tipo: 'contacto',
+                        mensaje: `Nuevo mensaje de ${c.nombre}`,
+                        icono: '📧',
+                        id: change.doc.id,
+                        seccion: 'contactos'
+                    });
+                }
+            });
+        });
+    
+    // Escuchar stock bajo
+    db.collection('productos').where('activo', '==', true)
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const p = change.doc.data();
+                if (p.stock < 12 && p.stock > 0) {
+                    agregarNotificacion({
+                        tipo: 'stock',
+                        mensaje: `Stock bajo: ${p.nombre} (${p.stock} unidades)`,
+                        icono: '📦',
+                        id: change.doc.id,
+                        seccion: 'productos'
+                    });
+                }
+            });
+        });
+    
+    // Escuchar nuevas órdenes
+    db.collection('ordenes').where('estado', '==', 'confirmada')
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const o = change.doc.data();
+                    agregarNotificacion({
+                        tipo: 'orden',
+                        mensaje: `Nueva orden: ${o.id} - $${o.total.toFixed(2)}`,
+                        icono: '🛒',
+                        id: change.doc.id,
+                        seccion: 'ordenes'
+                    });
+                }
+            });
+        });
+}
+
+function agregarNotificacion(notif) {
+    notif.fecha = new Date();
+    notif.leida = false;
+    notificaciones.unshift(notif);
+    actualizarContadorNotificaciones();
+}
+
+function actualizarContadorNotificaciones() {
+    const contador = document.getElementById('contador-notificaciones');
+    if (contador) {
+        const noLeidas = notificaciones.filter(n => !n.leida).length;
+        contador.textContent = noLeidas;
+        contador.style.display = noLeidas > 0 ? 'flex' : 'none';
+    }
+}
+
+function mostrarNotificaciones() {
+    const panel = document.getElementById('panel-notificaciones');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        panel.innerHTML = notificaciones.length === 0 ? 
+            '<p style="padding:15px;">No hay notificaciones</p>' :
+            notificaciones.map((n, i) => `
+                <div class="notificacion-item ${n.leida ? 'leida' : 'no-leida'}" 
+                     onclick="irANotificacion(${i})">
+                    <span class="notif-icono">${n.icono}</span>
+                    <div>
+                        <p>${n.mensaje}</p>
+                        <small>${n.fecha.toLocaleString()}</small>
+                    </div>
+                </div>
+            `).join('');
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function irANotificacion(index) {
+    const notif = notificaciones[index];
+    notif.leida = true;
+    actualizarContadorNotificaciones();
+    document.getElementById('panel-notificaciones').style.display = 'none';
+    mostrarSeccion(notif.seccion, document.querySelector(`[onclick*="${notif.seccion}"]`));
 }
 
 // ============ CAMBIAR SECCIONES ============
@@ -43,6 +161,7 @@ function mostrarSeccion(seccion, elemento) {
     
     switch(seccion) {
         case 'productos': cargarProductos(); break;
+        case 'ordenes': cargarOrdenes(); break;
         case 'historia': cargarHistoriaAdmin(); break;
         case 'ubicaciones': cargarUbicacionesAdmin(); cargarDepartamentos(); break;
         case 'secciones': cargarSecciones(); break;
@@ -75,16 +194,19 @@ function cargarProductos() {
         contenedor.innerHTML = '';
         
         snapshot.forEach((doc) => {
-            const producto = doc.data();
+            const p = doc.data();
+            const stockClass = p.stock <= 0 ? 'stock-agotado' : p.stock < 12 ? 'stock-bajo' : 'stock-disponible';
+            const stockText = p.stock <= 0 ? 'Agotado' : p.stock < 12 ? `Stock bajo: ${p.stock}` : `Disponible: ${p.stock}`;
+            
             contenedor.innerHTML += `
-                <div class="producto-card ${producto.activo ? '' : 'inactivo'}">
-                    <img src="${producto.imagen || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%231a472a%22 width=%22200%22 height=%22200%22/><text x=%22100%22 y=%22110%22 text-anchor=%22middle%22 fill=%22%2348bb78%22 font-size=%2260%22>⚡</text></svg>'}" alt="${producto.nombre}">
+                <div class="producto-card ${p.activo ? '' : 'inactivo'}">
+                    <img src="${p.imagen || ''}" alt="${p.nombre}">
                     <div class="producto-info">
-                        <h3>${producto.nombre}</h3>
-                        <p>${producto.descripcion || 'Sin descripción'}</p>
+                        <h3>${p.nombre}</h3>
+                        <p>${p.descripcion || 'Sin descripción'}</p>
                         <div class="producto-detalles">
-                            <span class="precio">$${producto.precio}</span>
-                            <span class="stock">Stock: ${producto.stock}</span>
+                            <span class="precio">$${p.precio}</span>
+                            <span class="stock ${stockClass}">${stockText}</span>
                         </div>
                     </div>
                     <div class="producto-acciones">
@@ -116,7 +238,6 @@ async function guardarProducto() {
         nombre,
         precio,
         stock: parseInt(document.getElementById('stock-producto').value) || 0,
-        categoria: document.getElementById('categoria-producto').value,
         imagen: imagenURL,
         descripcion: document.getElementById('descripcion-producto').value,
         activo: document.getElementById('activo-producto').checked
@@ -140,20 +261,19 @@ async function guardarProducto() {
 async function editarProducto(id) {
     try {
         const doc = await db.collection('productos').doc(id).get();
-        const producto = doc.data();
+        const p = doc.data();
         
         document.getElementById('producto-id').value = id;
-        document.getElementById('nombre-producto').value = producto.nombre;
-        document.getElementById('precio-producto').value = producto.precio;
-        document.getElementById('stock-producto').value = producto.stock;
-        document.getElementById('categoria-producto').value = producto.categoria || '';
-        document.getElementById('descripcion-producto').value = producto.descripcion || '';
-        document.getElementById('activo-producto').checked = producto.activo;
+        document.getElementById('nombre-producto').value = p.nombre;
+        document.getElementById('precio-producto').value = p.precio;
+        document.getElementById('stock-producto').value = p.stock;
+        document.getElementById('descripcion-producto').value = p.descripcion || '';
+        document.getElementById('activo-producto').checked = p.activo;
         document.getElementById('form-titulo').textContent = 'Editar Producto';
         document.querySelector('.btn-cancelar').style.display = 'inline-block';
         
-        if (producto.imagen) {
-            document.getElementById('imagen-preview').src = producto.imagen;
+        if (p.imagen) {
+            document.getElementById('imagen-preview').src = p.imagen;
             document.getElementById('imagen-preview').style.display = 'block';
         }
         
@@ -168,13 +288,10 @@ async function editarProducto(id) {
 function cancelarEdicion() {
     editandoProducto = null;
     window.productoImagenFile = null;
-    document.getElementById('producto-id').value = '';
-    document.getElementById('nombre-producto').value = '';
-    document.getElementById('precio-producto').value = '';
-    document.getElementById('stock-producto').value = '';
-    document.getElementById('categoria-producto').value = '';
+    ['producto-id', 'nombre-producto', 'precio-producto', 'stock-producto', 'descripcion-producto'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
     document.getElementById('imagen-producto').value = '';
-    document.getElementById('descripcion-producto').value = '';
     document.getElementById('activo-producto').checked = true;
     document.getElementById('imagen-preview').style.display = 'none';
     document.getElementById('imagen-texto').textContent = 'Subir imagen del producto';
@@ -186,6 +303,30 @@ async function eliminarProducto(id) {
     if (confirm('¿Eliminar este producto?')) {
         await db.collection('productos').doc(id).delete();
     }
+}
+
+// ============ ÓRDENES ============
+function cargarOrdenes() {
+    db.collection('ordenes').orderBy('fecha', 'desc').onSnapshot((snapshot) => {
+        const contenedor = document.getElementById('lista-ordenes');
+        contenedor.innerHTML = '';
+        
+        snapshot.forEach((doc) => {
+            const o = doc.data();
+            contenedor.innerHTML += `
+                <div class="orden-card">
+                    <h3>Orden: ${o.id}</h3>
+                    <p>Fecha: ${o.fecha?.toDate().toLocaleString() || 'N/A'}</p>
+                    <p>Cliente: ${o.cliente || 'N/A'}</p>
+                    <div class="orden-items">
+                        ${o.items?.map(i => `<p>${i.nombre} x${i.cantidad} - $${(i.precio * i.cantidad).toFixed(2)}</p>`).join('') || ''}
+                    </div>
+                    <p class="orden-total">Total: $${o.total?.toFixed(2) || '0.00'}</p>
+                    <span class="estado-orden ${o.estado}">${o.estado}</span>
+                </div>
+            `;
+        });
+    });
 }
 
 // ============ HISTORIA ============
@@ -238,11 +379,20 @@ function cargarDepartamentos() {
 
 function cargarMunicipios() {
     const data = {
-        'San Salvador': ['San Salvador', 'Santa Tecla', 'Antiguo Cuscatlán', 'Soyapango'],
-        'La Libertad': ['Santa Tecla', 'Antiguo Cuscatlán', 'Colón'],
-        'Santa Ana': ['Santa Ana', 'Chalchuapa', 'Metapán'],
-        'San Miguel': ['San Miguel', 'Ciudad Barrios'],
-        'Sonsonate': ['Sonsonate', 'Izalco', 'Acajutla']
+        'San Salvador': ['San Salvador', 'Santa Tecla', 'Antiguo Cuscatlán', 'Soyapango', 'Ilopango', 'Mejicanos', 'San Marcos'],
+        'La Libertad': ['Santa Tecla', 'Antiguo Cuscatlán', 'Colón', 'Quezaltepeque', 'San Juan Opico'],
+        'Santa Ana': ['Santa Ana', 'Chalchuapa', 'Metapán', 'El Congo'],
+        'San Miguel': ['San Miguel', 'Ciudad Barrios', 'Chinameca'],
+        'Sonsonate': ['Sonsonate', 'Izalco', 'Nahuizalco', 'Acajutla'],
+        'Usulután': ['Usulután', 'Santiago de María', 'Jucuapa'],
+        'La Paz': ['Zacatecoluca', 'Santiago Nonualco'],
+        'Cabañas': ['Sensuntepeque', 'Ilobasco'],
+        'Chalatenango': ['Chalatenango', 'Nueva Concepción'],
+        'Cuscatlán': ['Cojutepeque', 'Suchitoto'],
+        'Morazán': ['San Francisco Gotera', 'Corinto'],
+        'San Vicente': ['San Vicente', 'Tecoluca'],
+        'Ahuachapán': ['Ahuachapán', 'Atiquizaya'],
+        'La Unión': ['La Unión', 'Santa Rosa de Lima']
     };
     const dep = document.getElementById('ubicacion-departamento').value;
     const select = document.getElementById('ubicacion-municipio');
@@ -263,6 +413,7 @@ function cargarUbicacionesAdmin() {
                     <h3>${u.nombre}</h3>
                     <p>📍 ${u.direccion}</p>
                     <p>📞 ${u.telefono || 'N/A'}</p>
+                    <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
                     <span class="tipo-badge" style="background:${u.color || '#48bb78'}">${u.tipo}</span>
                     <button onclick="eliminarUbicacion('${doc.id}')" class="btn-eliminar">🗑️</button>
                 </div>
@@ -295,6 +446,19 @@ async function eliminarUbicacion(id) {
 }
 
 // ============ SECCIONES ============
+function previewSeccionMedia(event) {
+    const file = event.target.files[0];
+    if (file) {
+        window.seccionArchivoFile = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('seccion-media-preview').src = e.target.result;
+            document.getElementById('seccion-media-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
 function cargarSecciones() {
     db.collection('secciones').onSnapshot((snapshot) => {
         const contenedor = document.getElementById('lista-secciones');
@@ -305,6 +469,8 @@ function cargarSecciones() {
                 <div class="seccion-card">
                     <h3>${s.titulo}</h3>
                     <span class="tipo-badge">${s.tipo}</span>
+                    <p>${s.contenido?.substring(0, 80) || ''}...</p>
+                    <button onclick="editarSeccion('${doc.id}')" class="btn-editar">Editar</button>
                     <button onclick="eliminarSeccion('${doc.id}')" class="btn-eliminar">🗑️</button>
                 </div>
             `;
@@ -312,15 +478,55 @@ function cargarSecciones() {
     });
 }
 
+let editandoSeccionId = null;
+
 async function guardarSeccion() {
-    await db.collection('secciones').add({
+    let mediaURL = document.getElementById('seccion-media-preview').src;
+    if (window.seccionArchivoFile) {
+        mediaURL = await imagenToBase64(window.seccionArchivoFile);
+    }
+    
+    const datos = {
         titulo: document.getElementById('seccion-titulo').value,
         tipo: document.getElementById('seccion-tipo').value,
         contenido: document.getElementById('seccion-contenido').value,
+        mediaURL: mediaURL,
         activo: document.getElementById('seccion-activo').checked,
         orden: Date.now()
-    });
-    alert('Sección guardada');
+    };
+    
+    try {
+        if (editandoSeccionId) {
+            await db.collection('secciones').doc(editandoSeccionId).update(datos);
+            alert('Sección actualizada');
+            editandoSeccionId = null;
+        } else {
+            await db.collection('secciones').add(datos);
+            alert('Sección guardada');
+        }
+        document.getElementById('seccion-titulo').value = '';
+        document.getElementById('seccion-contenido').value = '';
+        document.getElementById('seccion-media-preview').style.display = 'none';
+        window.seccionArchivoFile = null;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function editarSeccion(id) {
+    const doc = await db.collection('secciones').doc(id).get();
+    const s = doc.data();
+    document.getElementById('seccion-id').value = id;
+    document.getElementById('seccion-titulo').value = s.titulo || '';
+    document.getElementById('seccion-tipo').value = s.tipo || 'texto';
+    document.getElementById('seccion-contenido').value = s.contenido || '';
+    document.getElementById('seccion-activo').checked = s.activo;
+    if (s.mediaURL) {
+        document.getElementById('seccion-media-preview').src = s.mediaURL;
+        document.getElementById('seccion-media-preview').style.display = 'block';
+    }
+    editandoSeccionId = id;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function eliminarSeccion(id) {
@@ -336,8 +542,9 @@ function cargarValoracionesAdmin() {
             const v = doc.data();
             contenedor.innerHTML += `
                 <div class="valoracion-card ${v.aprobada ? 'aprobada' : 'pendiente'}">
-                    <div>${'★'.repeat(v.estrellas)}</div>
+                    <div>${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div>
                     <p>"${v.comentario}"</p>
+                    ${v.productoNombre ? `<p><small>Producto: ${v.productoNombre}</small></p>` : ''}
                     <span>- ${v.nombre}</span>
                     ${!v.aprobada ? `<button onclick="aprobarValoracion('${doc.id}')" class="btn-aprobar">Aprobar</button>` : ''}
                     <button onclick="eliminarValoracion('${doc.id}')" class="btn-eliminar">Eliminar</button>
@@ -363,23 +570,40 @@ function cargarContactos() {
         snapshot.forEach((doc) => {
             const c = doc.data();
             contenedor.innerHTML += `
-                <div class="contacto-card">
+                <div class="contacto-card ${c.contactado ? 'contactado' : 'pendiente'}">
                     <h3>${c.nombre}</h3>
                     <p>📧 ${c.email}</p>
                     <p>📞 ${c.telefono || 'N/A'}</p>
                     <p>💬 ${c.mensaje}</p>
-                    <button onclick="eliminarContacto('${doc.id}')" class="btn-eliminar">Eliminar</button>
+                    <span class="fecha">${new Date(c.fecha).toLocaleDateString()}</span>
+                    <div class="contacto-acciones">
+                        <label class="checkbox-label">
+                            <input type="checkbox" ${c.contactado ? 'checked' : ''} 
+                                   onchange="toggleContactado('${doc.id}', this.checked)"> Contactado
+                        </label>
+                        <input type="text" placeholder="Comentario (opcional)" value="${c.comentarioAdmin || ''}"
+                               onchange="guardarComentarioContacto('${doc.id}', this.value)" class="form-input-small">
+                        <button onclick="eliminarContacto('${doc.id}')" class="btn-eliminar">Eliminar</button>
+                    </div>
                 </div>
             `;
         });
     });
 }
 
+async function toggleContactado(id, valor) {
+    await db.collection('contactos').doc(id).update({ contactado: valor });
+}
+
+async function guardarComentarioContacto(id, comentario) {
+    await db.collection('contactos').doc(id).update({ comentarioAdmin: comentario });
+}
+
 async function eliminarContacto(id) {
     if (confirm('¿Eliminar?')) await db.collection('contactos').doc(id).delete();
 }
 
-// ============ CONFIGURACIÓN - LOGO ============
+// ============ CONFIGURACIÓN ============
 function cargarConfiguracion() {
     db.collection('configuracion').doc('sitio').onSnapshot((doc) => {
         if (doc.exists) {
@@ -389,6 +613,14 @@ function cargarConfiguracion() {
                 document.getElementById('logo-preview').style.display = 'block';
                 document.getElementById('sidebar-logo').src = config.logo;
             }
+        }
+    });
+    
+    db.collection('configuracion').doc('redes').onSnapshot((doc) => {
+        if (doc.exists) {
+            const redes = doc.data();
+            document.getElementById('config-instagram').value = redes.instagram || '';
+            document.getElementById('config-whatsapp').value = redes.whatsapp || '';
         }
     });
 }
@@ -413,19 +645,33 @@ async function actualizarLogo() {
     }
     
     try {
-        // Convertir a Base64 y guardar directamente en Firestore
         const base64 = await imagenToBase64(window.logoFile);
-        
-        await db.collection('configuracion').doc('sitio').set({
-            logo: base64
-        }, { merge: true });
-        
+        await db.collection('configuracion').doc('sitio').set({ logo: base64 }, { merge: true });
         document.getElementById('sidebar-logo').src = base64;
         alert('✅ Logo actualizado exitosamente!');
     } catch (error) {
         console.error('Error:', error);
         alert('Error al actualizar el logo: ' + error.message);
     }
+}
+
+async function guardarRedes() {
+    const datos = {
+        instagram: document.getElementById('config-instagram').value,
+        whatsapp: document.getElementById('config-whatsapp').value
+    };
+    await db.collection('configuracion').doc('redes').set(datos, { merge: true });
+    alert('Redes sociales guardadas');
+}
+
+async function guardarColores() {
+    const datos = {
+        colorPrincipal: document.getElementById('color-principal').value,
+        colorSecundario: document.getElementById('color-secundario').value,
+        colorAcento: document.getElementById('color-acento').value
+    };
+    await db.collection('configuracion').doc('sitio').set(datos, { merge: true });
+    alert('Colores guardados');
 }
 
 // ============ CERRAR SESIÓN ============
@@ -438,5 +684,6 @@ function logout() {
 window.onload = function() {
     if (verificarAdmin()) {
         cargarProductos();
+        inicializarNotificaciones();
     }
 };
