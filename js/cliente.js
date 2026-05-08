@@ -1,94 +1,65 @@
+// Variables globales
 let carrito = [];
 let calificacionActual = 0;
 let mapa;
-let marcadores = [];
-
-// ============ CARGAR DATOS ============
-function cargarProductos() {
-    db.collection('productos').where('activo', '==', true).onSnapshot((snapshot) => {
-        const contenedor = document.getElementById('productos-lista');
-        contenedor.innerHTML = '';
-        
-        if (snapshot.empty) {
-            contenedor.innerHTML = '<p class="sin-datos">No hay productos disponibles</p>';
-            return;
-        }
-        
-        snapshot.forEach((doc) => {
-            const producto = doc.data();
-            contenedor.innerHTML += `
-                <div class="producto-card">
-                    <img src="${producto.imagen || 'img/default-product.jpg'}" alt="${producto.nombre}">
-                    <h3>${producto.nombre}</h3>
-                    <p>${producto.descripcion || ''}</p>
-                    <div class="producto-precio">$${producto.precio}</div>
-                    <div class="producto-stock">Stock: ${producto.stock}</div>
-                    <button onclick="agregarAlCarrito('${doc.id}', '${producto.nombre}', ${producto.precio})" 
-                            ${producto.stock <= 0 ? 'disabled' : ''}>
-                        ${producto.stock <= 0 ? 'Agotado' : 'Agregar al Carrito'}
-                    </button>
-                </div>
-            `;
-        });
-    });
-}
-
-function cargarHistoria() {
-    db.collection('configuracion').doc('historia').onSnapshot((doc) => {
-        const contenedor = document.getElementById('historia-contenido');
-        if (doc.exists) {
-            const historia = doc.data();
-            contenedor.innerHTML = `
-                <div class="historia-texto">
-                    <h3>${historia.titulo || 'Nuestra Historia'}</h3>
-                    <p>${historia.contenido || 'NITROPEAK nació de la necesidad de una energía limpia...'}</p>
-                </div>
-                ${historia.imagen ? `<img src="${historia.imagen}" alt="Historia NITROPEAK" style="width:100%; border-radius:15px;">` : ''}
-            `;
-        }
-    });
-}
-
-// ============ MAPA Y UBICACIONES (Leaflet + OpenStreetMap) ============
-let mapa;
 let marcadoresLayer;
 
+// ============ INICIALIZACIÓN DEL MAPA ============
 function initMap() {
+    // Verificar que el elemento existe
+    const mapaElement = document.getElementById('mapa');
+    if (!mapaElement) {
+        console.error('Elemento #mapa no encontrado');
+        return;
+    }
+    
     // Crear el mapa centrado en El Salvador
     mapa = L.map('mapa').setView([13.7942, -88.8965], 8);
     
-    // Agregar capa de OpenStreetMap (gratis, sin API Key)
+    // Agregar capa de OpenStreetMap (gratis)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(mapa);
     
     // Capa para los marcadores
     marcadoresLayer = L.layerGroup().addTo(mapa);
     
-    // Cargar ubicaciones
+    // Cargar datos
     cargarUbicaciones();
     cargarDepartamentosSelect();
+    cargarProductos();
+    cargarHistoria();
+    cargarValoraciones();
+    cargarSeccionesDinamicas();
+    
+    console.log('Mapa inicializado correctamente');
 }
 
+// ============ DEPARTAMENTOS Y MUNICIPIOS ============
 function cargarDepartamentosSelect() {
+    const select = document.getElementById('buscar-departamento');
+    if (!select) {
+        console.error('Select de departamento no encontrado');
+        return;
+    }
+    
     const departamentos = [
         'Todos', 'Ahuachapán', 'Cabañas', 'Chalatenango', 'Cuscatlán', 'La Libertad',
         'La Paz', 'La Unión', 'Morazán', 'San Miguel', 'San Salvador',
         'San Vicente', 'Santa Ana', 'Sonsonate', 'Usulután'
     ];
     
-    const select = document.getElementById('buscar-departamento');
-    if (select) {
-        select.innerHTML = departamentos.map(d => `<option value="${d}">${d}</option>`).join('');
-    }
+    select.innerHTML = departamentos.map(d => `<option value="${d}">${d}</option>`).join('');
 }
 
 function buscarPorDepartamento() {
     const departamento = document.getElementById('buscar-departamento').value;
     const municipio = document.getElementById('buscar-municipio')?.value || '';
     
-    db.collection('ubicaciones').onSnapshot((snapshot) => {
+    console.log('Buscando:', departamento, municipio);
+    
+    db.collection('ubicaciones').get().then((snapshot) => {
         const ubicaciones = [];
         snapshot.forEach((doc) => {
             const u = doc.data();
@@ -99,6 +70,7 @@ function buscarPorDepartamento() {
             }
         });
         
+        console.log('Ubicaciones encontradas:', ubicaciones.length);
         actualizarMapa(ubicaciones);
         mostrarListaUbicaciones(ubicaciones);
     });
@@ -136,19 +108,63 @@ function cargarMunicipiosSelect() {
     }
 }
 
+// ============ CARGAR UBICACIONES Y MAPA ============
 function cargarUbicaciones() {
-    db.collection('ubicaciones').onSnapshot((snapshot) => {
+    db.collection('ubicaciones').get().then((snapshot) => {
         const ubicaciones = [];
         snapshot.forEach((doc) => {
             ubicaciones.push(doc.data());
         });
         
-        actualizarMapa(ubicaciones);
-        mostrarListaUbicaciones(ubicaciones);
+        console.log('Total ubicaciones:', ubicaciones.length);
+        
+        if (ubicaciones.length === 0) {
+            // Si no hay ubicaciones, mostrar unas de ejemplo
+            const ejemplo = [
+                {
+                    nombre: 'Supermercado La Despensa',
+                    direccion: 'Boulevard Los Héroes, San Salvador',
+                    telefono: '2234-5678',
+                    tipo: 'Supermercado',
+                    departamento: 'San Salvador',
+                    municipio: 'San Salvador',
+                    color: '#FF6B6B',
+                    mapsLink: 'https://maps.google.com'
+                },
+                {
+                    nombre: 'Smart Fit Gym',
+                    direccion: 'Centro Comercial Galerías, San Salvador',
+                    telefono: '2245-6789',
+                    tipo: 'Gimnasio',
+                    departamento: 'San Salvador',
+                    municipio: 'San Salvador',
+                    color: '#4ECDC4',
+                    mapsLink: 'https://maps.google.com'
+                }
+            ];
+            
+            // Guardar ejemplos en Firebase
+            ejemplo.forEach(async (e) => {
+                await db.collection('ubicaciones').add(e);
+            });
+            
+            actualizarMapa(ejemplo);
+            mostrarListaUbicaciones(ejemplo);
+        } else {
+            actualizarMapa(ubicaciones);
+            mostrarListaUbicaciones(ubicaciones);
+        }
+    }).catch(error => {
+        console.error('Error cargando ubicaciones:', error);
     });
 }
 
 function actualizarMapa(ubicaciones) {
+    if (!marcadoresLayer) {
+        console.error('marcadoresLayer no inicializado');
+        return;
+    }
+    
     // Limpiar marcadores anteriores
     marcadoresLayer.clearLayers();
     
@@ -157,8 +173,7 @@ function actualizarMapa(ubicaciones) {
     const bounds = [];
     
     ubicaciones.forEach(ubicacion => {
-        // Geocodificar la dirección usando Nominatim (gratis)
-        const direccionCompleta = `${ubicacion.direccion}, ${ubicacion.municipio}, ${ubicacion.departamento}, El Salvador`;
+        const direccionCompleta = `${ubicacion.direccion}, ${ubicacion.municipio || ''}, ${ubicacion.departamento}, El Salvador`;
         
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccionCompleta)}&limit=1`)
             .then(response => response.json())
@@ -167,41 +182,39 @@ function actualizarMapa(ubicaciones) {
                     const lat = parseFloat(data[0].lat);
                     const lng = parseFloat(data[0].lon);
                     
-                    // Crear marcador con color personalizado
                     const markerColor = ubicacion.color || '#48bb78';
                     
                     const markerIcon = L.divIcon({
                         className: 'custom-marker',
                         html: `<div style="
-                            width: 20px;
-                            height: 20px;
+                            width: 24px;
+                            height: 24px;
                             background: ${markerColor};
                             border: 3px solid #1a472a;
                             border-radius: 50%;
-                            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+                            box-shadow: 0 0 10px rgba(0,0,0,0.5);
                         "></div>`,
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10]
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
                     });
                     
                     const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(marcadoresLayer);
                     
                     marker.bindPopup(`
-                        <div style="color:#1a472a; font-family:sans-serif;">
+                        <div style="color:#1a472a;">
                             <h4 style="margin:0 0 5px 0;">${ubicacion.nombre}</h4>
                             <p style="margin:2px 0;">📍 ${ubicacion.direccion}</p>
                             <p style="margin:2px 0;">📞 ${ubicacion.telefono || 'N/A'}</p>
                             <p style="margin:2px 0;"><strong>${ubicacion.tipo}</strong></p>
-                            ${ubicacion.mapsLink ? 
-                                `<a href="${ubicacion.mapsLink}" target="_blank" style="color:#48bb78;">Ver en Google Maps</a>` : ''}
+                            <p style="margin:2px 0;">🗺️ ${ubicacion.departamento}, ${ubicacion.municipio || ''}</p>
+                            ${ubicacion.mapsLink ? `<a href="${ubicacion.mapsLink}" target="_blank" style="color:#48bb78;">Ver en Google Maps</a>` : ''}
                         </div>
                     `);
                     
                     bounds.push([lat, lng]);
                     
-                    // Ajustar el mapa para mostrar todos los marcadores
                     if (bounds.length > 1) {
-                        mapa.fitBounds(bounds);
+                        mapa.fitBounds(bounds, { padding: [30, 30] });
                     } else {
                         mapa.setView([lat, lng], 15);
                     }
@@ -216,7 +229,7 @@ function mostrarListaUbicaciones(ubicaciones) {
     if (!contenedor) return;
     
     if (ubicaciones.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center; color:#a0d8b0;">No se encontraron ubicaciones</p>';
+        contenedor.innerHTML = '<p style="text-align:center; color:#a0d8b0;">Cargando ubicaciones...</p>';
         return;
     }
     
@@ -225,32 +238,87 @@ function mostrarListaUbicaciones(ubicaciones) {
             <h4>${u.nombre}</h4>
             <p>📍 ${u.direccion}</p>
             <p>📞 ${u.telefono || 'N/A'}</p>
-            <p>🗺️ ${u.departamento}, ${u.municipio}</p>
+            <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
             <span class="tipo-ubicacion" style="background: ${u.color || '#48bb78'}">${u.tipo}</span>
             ${u.mapsLink ? `<br><a href="${u.mapsLink}" target="_blank" style="color:#48bb78;">Ver en Google Maps</a>` : ''}
         </div>
     `).join('');
 }
 
-// ============ CARRITO ============
-function agregarAlCarrito(id, nombre, precio) {
-    const itemExistente = carrito.find(item => item.id === id);
-    if (itemExistente) {
-        itemExistente.cantidad++;
-    } else {
-        carrito.push({ id, nombre, precio, cantidad: 1 });
-    }
-    actualizarContadorCarrito();
-    mostrarNotificacion(`${nombre} agregado al carrito`);
+// ============ PRODUCTOS ============
+function cargarProductos() {
+    db.collection('productos').where('activo', '==', true).onSnapshot((snapshot) => {
+        const contenedor = document.getElementById('productos-lista');
+        if (!contenedor) return;
+        contenedor.innerHTML = '';
+        
+        if (snapshot.empty) {
+            contenedor.innerHTML = '<p style="text-align:center; color:#a0d8b0;">No hay productos disponibles</p>';
+            return;
+        }
+        
+        snapshot.forEach((doc) => {
+            const producto = doc.data();
+            contenedor.innerHTML += `
+                <div class="producto-card">
+                    <img src="${producto.imagen || 'img/default-product.jpg'}" alt="${producto.nombre}">
+                    <h3>${producto.nombre}</h3>
+                    <p>${producto.descripcion || ''}</p>
+                    <div class="producto-precio">$${producto.precio}</div>
+                    <div class="producto-stock">Stock: ${producto.stock}</div>
+                    <button onclick="agregarAlCarrito('${doc.id}', '${producto.nombre}', ${producto.precio})" 
+                            ${producto.stock <= 0 ? 'disabled' : ''}>
+                        ${producto.stock <= 0 ? 'Agotado' : 'Agregar al Carrito'}
+                    </button>
+                </div>
+            `;
+        });
+    });
 }
 
-function actualizarContadorCarrito() {
-    const contador = document.getElementById('contador-carrito');
-    const total = carrito.reduce((sum, item) => sum + item.cantidad, 0);
-    contador.textContent = total;
+// ============ HISTORIA ============
+function cargarHistoria() {
+    db.collection('configuracion').doc('historia').onSnapshot((doc) => {
+        const contenedor = document.getElementById('historia-contenido');
+        if (!contenedor) return;
+        
+        if (doc.exists) {
+            const historia = doc.data();
+            contenedor.innerHTML = `
+                <div class="historia-texto">
+                    <h3>${historia.titulo || 'Nuestra Historia'}</h3>
+                    <p>${historia.contenido || 'NITROPEAK nació de la necesidad de una energía limpia...'}</p>
+                </div>
+                ${historia.imagen ? `<img src="${historia.imagen}" alt="Historia NITROPEAK" style="width:100%; border-radius:15px;">` : ''}
+            `;
+        }
+    });
 }
 
 // ============ VALORACIONES ============
+function cargarValoraciones() {
+    db.collection('valoraciones').where('aprobada', '==', true)
+        .orderBy('fecha', 'desc')
+        .limit(10)
+        .onSnapshot((snapshot) => {
+            const contenedor = document.getElementById('valoraciones-lista');
+            if (!contenedor) return;
+            contenedor.innerHTML = '';
+            
+            snapshot.forEach((doc) => {
+                const v = doc.data();
+                const estrellas = '★'.repeat(v.estrellas) + '☆'.repeat(5 - v.estrellas);
+                contenedor.innerHTML += `
+                    <div class="valoracion-card">
+                        <div class="estrellas-valoracion">${estrellas}</div>
+                        <p>"${v.comentario}"</p>
+                        <span class="nombre-valorador">- ${v.nombre}</span>
+                    </div>
+                `;
+            });
+        });
+}
+
 function calificar(estrellas) {
     calificacionActual = estrellas;
     const estrellasElements = document.querySelectorAll('.estrellas span');
@@ -281,32 +349,60 @@ async function enviarValoracion() {
         document.getElementById('comentario-valoracion').value = '';
         document.getElementById('nombre-valoracion').value = '';
         calificacionActual = 0;
-        document.querySelectorAll('.estrellas span').forEach(s => s.style.color = '#2d5a3d');
     } catch (error) {
         console.error('Error:', error);
     }
 }
 
-function cargarValoraciones() {
-    db.collection('valoraciones').where('aprobada', '==', true)
-        .orderBy('fecha', 'desc')
-        .limit(10)
-        .onSnapshot((snapshot) => {
-            const contenedor = document.getElementById('valoraciones-lista');
-            contenedor.innerHTML = '';
-            
-            snapshot.forEach((doc) => {
-                const v = doc.data();
-                const estrellas = '★'.repeat(v.estrellas) + '☆'.repeat(5 - v.estrellas);
-                contenedor.innerHTML += `
-                    <div class="valoracion-card">
-                        <div class="estrellas-valoracion">${estrellas}</div>
-                        <p>"${v.comentario}"</p>
-                        <span class="nombre-valorador">- ${v.nombre}</span>
-                    </div>
-                `;
-            });
-        });
+// ============ CARRITO ============
+function agregarAlCarrito(id, nombre, precio) {
+    const itemExistente = carrito.find(item => item.id === id);
+    if (itemExistente) {
+        itemExistente.cantidad++;
+    } else {
+        carrito.push({ id, nombre, precio, cantidad: 1 });
+    }
+    actualizarContadorCarrito();
+    mostrarNotificacion(`${nombre} agregado al carrito`);
+}
+
+function actualizarContadorCarrito() {
+    const contador = document.getElementById('contador-carrito');
+    if (!contador) return;
+    const total = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+    contador.textContent = total;
+}
+
+function mostrarCarrito() {
+    const modal = document.getElementById('carrito-modal');
+    const itemsContainer = document.getElementById('carrito-items');
+    const totalContainer = document.getElementById('carrito-total');
+    
+    if (!modal || !itemsContainer || !totalContainer) return;
+    
+    if (carrito.length === 0) {
+        itemsContainer.innerHTML = '<p>Tu carrito está vacío</p>';
+        totalContainer.innerHTML = '';
+    } else {
+        itemsContainer.innerHTML = carrito.map((item, index) => `
+            <div class="carrito-item">
+                <span>${item.nombre} x${item.cantidad}</span>
+                <span>$${(item.precio * item.cantidad).toFixed(2)}</span>
+                <button onclick="eliminarDelCarrito(${index})">Eliminar</button>
+            </div>
+        `).join('');
+        
+        const total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+        totalContainer.innerHTML = `<h3>Total: $${total.toFixed(2)}</h3>`;
+    }
+    
+    modal.style.display = 'block';
+}
+
+function eliminarDelCarrito(index) {
+    carrito.splice(index, 1);
+    mostrarCarrito();
+    actualizarContadorCarrito();
 }
 
 // ============ CONTACTO ============
@@ -331,74 +427,23 @@ async function enviarContacto(event) {
     }
 }
 
-// ============ CARRITO MODAL ============
-document.querySelector('.carrito-icon')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    mostrarCarrito();
-});
-
-function mostrarCarrito() {
-    const modal = document.getElementById('carrito-modal');
-    const itemsContainer = document.getElementById('carrito-items');
-    const totalContainer = document.getElementById('carrito-total');
-    
-    if (carrito.length === 0) {
-        itemsContainer.innerHTML = '<p>Tu carrito está vacío</p>';
-        totalContainer.innerHTML = '';
-    } else {
-        itemsContainer.innerHTML = carrito.map((item, index) => `
-            <div class="carrito-item">
-                <span>${item.nombre} x${item.cantidad}</span>
-                <span>$${(item.precio * item.cantidad).toFixed(2)}</span>
-                <button onclick="eliminarDelCarrito(${index})" class="btn-eliminar">Eliminar</button>
-            </div>
-        `).join('');
-        
-        const total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-        totalContainer.innerHTML = `<h3>Total: $${total.toFixed(2)}</h3>`;
-    }
-    
-    modal.style.display = 'block';
-}
-
-function eliminarDelCarrito(index) {
-    carrito.splice(index, 1);
-    mostrarCarrito();
-    actualizarContadorCarrito();
-}
-
-document.querySelector('.close')?.addEventListener('click', () => {
-    document.getElementById('carrito-modal').style.display = 'none';
-});
-
-// ============ CARGAR SECCIONES DINÁMICAS ============
+// ============ SECCIONES DINÁMICAS ============
 function cargarSeccionesDinamicas() {
     db.collection('secciones').where('activo', '==', true)
         .orderBy('orden', 'asc')
         .onSnapshot((snapshot) => {
-            const main = document.querySelector('main') || document.body;
-            // Eliminar secciones dinámicas anteriores
             document.querySelectorAll('.seccion-dinamica').forEach(s => s.remove());
             
             snapshot.forEach((doc) => {
                 const seccion = doc.data();
                 const seccionHTML = document.createElement('section');
                 seccionHTML.className = 'seccion-dinamica';
-                seccionHTML.id = `seccion-${doc.id}`;
                 
                 let mediaHTML = '';
-                switch(seccion.tipo) {
-                    case 'imagen':
-                        mediaHTML = seccion.mediaURL ? 
-                            `<img src="${seccion.mediaURL}" alt="${seccion.titulo}" style="max-width:100%;">` : '';
-                        break;
-                    case 'video':
-                        mediaHTML = seccion.mediaURL ? 
-                            `<video controls style="max-width:100%;"><source src="${seccion.mediaURL}"></video>` : '';
-                        break;
-                    case 'galeria':
-                        mediaHTML = '<div class="galeria-grid">Cargando galería...</div>';
-                        break;
+                if (seccion.tipo === 'imagen' && seccion.mediaURL) {
+                    mediaHTML = `<img src="${seccion.mediaURL}" alt="${seccion.titulo}" style="max-width:100%; border-radius:15px;">`;
+                } else if (seccion.tipo === 'video' && seccion.mediaURL) {
+                    mediaHTML = `<video controls style="max-width:100%; border-radius:15px;"><source src="${seccion.mediaURL}"></video>`;
                 }
                 
                 seccionHTML.innerHTML = `
@@ -409,7 +454,6 @@ function cargarSeccionesDinamicas() {
                     </div>
                 `;
                 
-                // Insertar antes del footer
                 const footer = document.querySelector('.footer');
                 if (footer) {
                     footer.parentNode.insertBefore(seccionHTML, footer);
@@ -418,6 +462,7 @@ function cargarSeccionesDinamicas() {
         });
 }
 
+// ============ UTILIDADES ============
 function mostrarNotificacion(mensaje) {
     const notificacion = document.createElement('div');
     notificacion.className = 'notificacion';
@@ -426,11 +471,25 @@ function mostrarNotificacion(mensaje) {
     setTimeout(() => notificacion.remove(), 3000);
 }
 
-// ============ INICIALIZACIÓN ============
+// Event listeners
+document.querySelector('.carrito-icon')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    mostrarCarrito();
+});
+
+document.querySelector('.close')?.addEventListener('click', () => {
+    document.getElementById('carrito-modal').style.display = 'none';
+});
+
+window.onclick = function(event) {
+    const modal = document.getElementById('carrito-modal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+};
+
+// ============ INICIAR TODO ============
 window.onload = function() {
+    console.log('Iniciando NITROPEAK...');
     initMap();
-    cargarProductos();
-    cargarHistoria();
-    cargarValoraciones();
-    cargarSeccionesDinamicas();
 };
