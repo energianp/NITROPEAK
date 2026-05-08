@@ -4,6 +4,21 @@ let calificacionActual = 0;
 let mapa;
 let marcadoresLayer;
 
+// ============ CARGAR LOGO DESDE FIREBASE ============
+function cargarLogo() {
+    db.collection('configuracion').doc('sitio').onSnapshot((doc) => {
+        if (doc.exists) {
+            const config = doc.data();
+            if (config.logo) {
+                const logoImg = document.getElementById('logo-img');
+                if (logoImg) {
+                    logoImg.src = config.logo;
+                }
+            }
+        }
+    });
+}
+
 // ============ INICIALIZACIÓN DEL MAPA ============
 function initMap() {
     // Verificar que el elemento existe
@@ -491,5 +506,6 @@ window.onclick = function(event) {
 // ============ INICIAR TODO ============
 window.onload = function() {
     console.log('Iniciando NITROPEAK...');
+    cargarLogo(); 
     initMap();
 };
