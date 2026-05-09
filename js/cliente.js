@@ -97,24 +97,23 @@ function mostrarListaUbicaciones(ubis) {
     if (!contenedor) return;
     
     contenedor.innerHTML = `
-        <div style="display:flex;justify-content:center;align-items:center;gap:20px;margin-bottom:25px;width:100%;">
-            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel"><i class="fas fa-chevron-left"></i></button>
-            <span style="color:var(--color-texto-secundario);font-size:0.9em;">Desliza para ver más ubicaciones</span>
-            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel"><i class="fas fa-chevron-right"></i></button>
-        </div>
-        <div style="overflow:hidden;max-width:1200px;margin:0 auto;padding:10px 0;">
-            <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="carrusel-ubicaciones-track">
-                ${ubis.map(u => `
-                    <div class="ubicacion-item" style="border-left:4px solid ${u.color || '#48bb78'};min-width:280px;flex-shrink:0;">
-                        <h4>${u.nombre}</h4>
-                        <p>📍 ${u.direccion}</p>
-                        <p>📞 ${u.telefono || 'N/A'}</p>
-                        <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
-                        <span class="tipo-ubicacion" style="background:${u.color || '#48bb78'}">${u.tipo}</span>
-                        ${u.mapsLink ? `<br><a href="${u.mapsLink}" target="_blank" style="color:#48bb78;font-size:0.85em;">Ver en Google Maps</a>` : ''}
-                    </div>
-                `).join('')}
+        <div style="position:relative;max-width:1200px;margin:0 auto;padding:0 50px;">
+            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel" style="position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:10;">◀</button>
+            <div style="overflow:hidden;">
+                <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="carrusel-ubicaciones-track">
+                    ${ubis.map(u => `
+                        <div class="ubicacion-item" style="border-left:4px solid ${u.color || '#48bb78'};min-width:280px;flex-shrink:0;">
+                            <h4>${u.nombre}</h4>
+                            <p>📍 ${u.direccion}</p>
+                            <p>📞 ${u.telefono || 'N/A'}</p>
+                            <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
+                            <span class="tipo-ubicacion" style="background:${u.color || '#48bb78'}">${u.tipo}</span>
+                            ${u.mapsLink ? `<br><a href="${u.mapsLink}" target="_blank" style="color:#48bb78;font-size:0.85em;">Ver en Google Maps</a>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
             </div>
+            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel" style="position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:10;">▶</button>
         </div>
     `;
     
