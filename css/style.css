@@ -264,14 +264,15 @@ section h2::after {
 }
 
 .cantidad-input-compacto {
-    width: 40px;
-    padding: 5px;
+    width: 28px;
+    height: 28px;
+    padding: 2px;
     border: 2px solid var(--color-secundario);
     border-radius: 6px;
     background: var(--color-oscuro);
     color: var(--color-texto);
     text-align: center;
-    font-size: 0.75em;
+    font-size: 0.7em;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: all 0.3s;
 }
