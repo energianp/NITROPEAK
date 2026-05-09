@@ -93,9 +93,45 @@ function actualizarMapa(ubis) {
 }
 
 function mostrarListaUbicaciones(ubis) {
-    const c = document.getElementById('ubicaciones-contenido');
-    if (!c) return;
-    c.innerHTML = ubis.map(u => `<div class="ubicacion-item" style="border-left:4px solid ${u.color||'#48bb78'}"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p><p>🗺️${u.departamento}, ${u.municipio||''}</p><span class="tipo-ubicacion" style="background:${u.color||'#48bb78'}">${u.tipo}</span></div>`).join('');
+    const contenedor = document.getElementById('ubicaciones-contenido');
+    if (!contenedor) return;
+    
+    // Limpiar y crear estructura del carrusel
+    contenedor.innerHTML = `
+        <div class="carrusel-ubicaciones-container">
+            <div class="carrusel-ubicaciones-track" id="carrusel-ubicaciones-track">
+                ${ubis.map(u => `
+                    <div class="carrusel-item ubicacion-carrusel-item" style="border-left:4px solid ${u.color || '#48bb78'}">
+                        <h4>${u.nombre}</h4>
+                        <p>📍 ${u.direccion}</p>
+                        <p>📞 ${u.telefono || 'N/A'}</p>
+                        <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
+                        <span class="tipo-ubicacion" style="background:${u.color || '#48bb78'}">${u.tipo}</span>
+                        ${u.mapsLink ? `<br><a href="${u.mapsLink}" target="_blank" style="color:#48bb78;font-size:0.85em;">Ver en Google Maps</a>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        <div class="carrusel-ubicaciones-nav">
+            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    `;
+    
+    window.ubicacionesCarruselIndex = 0;
+}
+
+function moverCarruselUbicaciones(dir) {
+    const track = document.getElementById('carrusel-ubicaciones-track');
+    if (!track) return;
+    const items = track.querySelectorAll('.ubicacion-carrusel-item');
+    if (!items.length) return;
+    
+    const maxIndex = Math.max(0, items.length - 4);
+    window.ubicacionesCarruselIndex = Math.max(0, Math.min((window.ubicacionesCarruselIndex || 0) + dir, maxIndex));
+    
+    const offset = window.ubicacionesCarruselIndex * 295;
+    track.style.transform = `translateX(-${offset}px)`;
 }
 
 // ============ PRODUCTOS CON ESTRELLAS PARCIALES ============
