@@ -102,20 +102,27 @@ function filtrarProductos() {
     const t = document.getElementById('buscar-producto').value.toLowerCase();
     renderProd(allProd.filter(p => p.nombre.toLowerCase().includes(t) || (p.descripcion||'').toLowerCase().includes(t)));
 }
+
 async function guardarProducto() {
     const n = document.getElementById('nombre-producto').value;
     let pr = document.getElementById('precio-producto').value;
     pr = parseFloat(pr).toFixed(2);
     if (!n||isNaN(pr)) { alert('Nombre y precio obligatorios'); return; }
+    
     let img = document.getElementById('imagen-preview').src;
-    if (window.prodImg) img = await imgToB64(window.prodImg);
+    if (window.prodImg) {
+        img = await comprimirImagen(window.prodImg, 600, 0.6);
+    }
+    
     const datos = { nombre:n, precio:parseFloat(pr), stock:parseInt(document.getElementById('stock-producto').value)||0, imagen:img, descripcion:document.getElementById('descripcion-producto').value, activo:document.getElementById('activo-producto').checked };
+    
     try {
         if (editProd) await db.collection('productos').doc(editProd).update(datos);
         else await db.collection('productos').add(datos);
         alert('Guardado'); cancelarEdicionProd();
-    } catch(ex) { alert('Error'); }
+    } catch(ex) { alert('Error: ' + ex.message); }
 }
+
 async function editProducto(id) {
     const d = await db.collection('productos').doc(id).get();
     const p = d.data();
@@ -196,10 +203,26 @@ function previewImagenHistoria(e) {
     if (f) { window.histImg = f; const r = new FileReader(); r.onload = ev => { document.getElementById('historia-imagen-preview').src = ev.target.result; document.getElementById('historia-imagen-preview').style.display = 'block'; }; r.readAsDataURL(f); }
 }
 async function guardarHistoria() {
-    let img = document.getElementById('historia-imagen-preview').src;
-    if (window.histImg) img = await imgToB64(window.histImg);
-    await db.collection('configuracion').doc('historia').set({titulo:document.getElementById('historia-titulo').value, contenido:document.getElementById('historia-contenido').value, imagen:img}, {merge:true});
-    alert('Guardado');
+    let imagenURL = document.getElementById('historia-imagen-preview').src;
+    
+    if (window.histImg) {
+        // Reducir tamaño de imagen si es muy grande
+        imagenURL = await comprimirImagen(window.histImg, 800, 0.7);
+    }
+    
+    const datos = {
+        titulo: document.getElementById('historia-titulo').value,
+        contenido: document.getElementById('historia-contenido').value,
+        imagen: imagenURL
+    };
+    
+    try {
+        await db.collection('configuracion').doc('historia').set(datos, { merge: true });
+        alert('✅ Historia guardada exitosamente');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al guardar: ' + error.message);
+    }
 }
 
 // ============ UBICACIONES ============
@@ -404,10 +427,11 @@ function previewLogo(e) {
 }
 async function actualizarLogo() {
     if (!window.logoFile) { alert('Selecciona una imagen'); return; }
-    const b64 = await imgToB64(window.logoFile);
+    
+    const b64 = await comprimirImagen(window.logoFile, 400, 0.5);
     await db.collection('configuracion').doc('sitio').set({logo:b64},{merge:true});
     document.getElementById('sidebar-logo').src = b64;
-    alert('Logo actualizado!');
+    alert('✅ Logo actualizado!');
 }
 async function guardarRedes() {
     await db.collection('configuracion').doc('redes').set({instagram:document.getElementById('config-instagram').value, whatsapp:document.getElementById('config-whatsapp').value},{merge:true});
@@ -415,6 +439,37 @@ async function guardarRedes() {
 }
 
 function logout() { sessionStorage.removeItem('admin'); window.location.href = '../index.html'; }
+
+// Comprimir imagen antes de guardar
+function comprimirImagen(file, maxWidth, calidad) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Reducir si es más ancha que maxWidth
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                resolve(canvas.toDataURL('image/jpeg', calidad));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
 window.onload = function() {
     if (verificarAdmin()) { cargarProductos(); initNotifs(); }
