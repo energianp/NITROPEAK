@@ -114,7 +114,7 @@ function cargarProductos() {
                 <div class="producto-stock ${st.c}">${st.t}</div>
                 <div class="producto-estrellas-compactas" id="estrellas-comp-${doc.id}"></div>
                 <div class="producto-row">
-                    <span class="producto-precio">$${p.precio}</span>
+                    <span class="producto-precio">$${p.precio.toFixed(2)}</span>
                     <input type="number" id="cant-${doc.id}" value="1" min="1" max="${p.stock}" ${p.stock<=0?'disabled':''} class="cantidad-input-compacto">
                     <button onclick="agregarAlCarrito('${doc.id}','${p.nombre}',${p.precio},${p.stock})" ${p.stock<=0?'disabled':''} class="btn-carrito-compacto"><i class="fas fa-cart-plus"></i></button>
                 </div>
@@ -124,22 +124,29 @@ function cargarProductos() {
                 </div>
             </div>`;
             
-            db.collection('valoraciones').where('productoId','==',doc.id).where('aprobada','==',true).get().then(vs => {
-                let t=0,n=0; vs.forEach(v=>{t+=v.data().estrellas;n++;});
+            // Cargar estrellas promedio SIN índice (consulta simple)
+            db.collection('valoraciones').where('productoId','==',doc.id).get().then(vs => {
+                let t=0,n=0;
+                vs.forEach(v=>{ const d=v.data(); if(d.aprobada){ t+=d.estrellas; n++; } });
                 const prom = n>0?t/n:0;
                 const el = document.getElementById('estrellas-comp-'+doc.id);
-                if (el) el.innerHTML = generarEstrellas(prom, '0.85em');
+                if (el) el.innerHTML = generarEstrellas(prom, '0.8em');
             });
         });
     });
 }
 
-function generarEstrellas(prom, size='0.85em') {
+function generarEstrellas(prom, size='0.8em') {
     let h='';
     for(let i=1;i<=5;i++){
-        if(prom>=i) h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
-        else if(prom>=i-0.5) h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
-        else h+=`<span style="color:#2d5a3d;font-size:${size}">★</span>`;
+        if(prom >= i) {
+            h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
+        } else if(prom >= i - 0.5) {
+            // Media estrella usando Unicode
+            h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
+        } else {
+            h+=`<span style="color:#2d5a3d;font-size:${size}">★</span>`;
+        }
     }
     return h+` <small style="font-size:${size}">(${prom.toFixed(1)})</small>`;
 }
@@ -155,9 +162,14 @@ function cargarHistoria() {
 
 // ============ CARRUSEL VALORACIONES ============
 function cargarValoracionesCliente() {
-    db.collection('valoraciones').where('aprobada','==',true).orderBy('fecha','desc').onSnapshot(snap => {
+    // Consulta simple sin índice
+    db.collection('valoraciones').get().then(snap => {
         todasValoracionesCliente = [];
-        snap.forEach(d => todasValoracionesCliente.push(d.data()));
+        snap.forEach(d => {
+            const v = d.data();
+            if (v.aprobada) todasValoracionesCliente.push(v);
+        });
+        todasValoracionesCliente.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
         filtrarValoracionesCliente();
     });
 }
@@ -171,14 +183,14 @@ function filtrarValoracionesCliente() {
 function renderizarCarrusel(lista) {
     const track = document.getElementById('carrusel-valoraciones');
     if (!track) return;
-    track.innerHTML = lista.map(v => `
+    track.innerHTML = lista.length ? lista.map(v => `
         <div class="carrusel-item">
             <div class="estrellas-valoracion">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div>
             <p>"${v.comentario}"</p>
             ${v.productoNombre ? `<small>Producto: ${v.productoNombre}</small>` : ''}
             <span class="nombre-valorador">- ${v.nombre}</span>
         </div>
-    `).join('');
+    `).join('') : '<div class="carrusel-item"><p>No hay valoraciones aún</p></div>';
     carruselIndex = 0;
     actualizarPosicionCarrusel();
 }
@@ -238,13 +250,15 @@ async function enviarValoracionProducto() {
     cerrarValoracionProducto();
 }
 
-// ============ COMENTARIOS (muestra valoración + comentario) ============
+// ============ COMENTARIOS ============
 function verComentarios(id, nombre) {
     document.getElementById('comentarios-producto-nombre').textContent = nombre;
     document.getElementById('comentarios-modal').style.display = 'block';
-    db.collection('valoraciones').where('productoId','==',id).where('aprobada','==',true).orderBy('fecha','desc').get().then(snap => {
+    // Consulta simple sin índice compuesto
+    db.collection('valoraciones').where('productoId','==',id).get().then(snap => {
         let t=0; const coms=[];
-        snap.forEach(d => { const v=d.data(); t+=v.estrellas; coms.push(v); });
+        snap.forEach(d => { const v=d.data(); if(v.aprobada){ t+=v.estrellas; coms.push(v); } });
+        coms.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
         const prom = coms.length?t/coms.length:0;
         document.getElementById('promedio-estrellas').innerHTML = `<h4>Promedio: ${generarEstrellas(prom, '0.9em')} (${coms.length} valoraciones)</h4>`;
         document.getElementById('comentarios-lista').innerHTML = coms.length ? coms.map(v => `
@@ -305,7 +319,7 @@ function cambiarCantidad(idx, cambio) {
 }
 function eliminarDelCarrito(idx) { carrito.splice(idx,1); mostrarCarrito(); actualizarContador(); }
 
-// ============ PAGO ============
+// ============ PAGO CON WHATSAPP ============
 function irAPagar() {
     document.getElementById('carrito-modal').style.display = 'none';
     document.getElementById('pago-modal').style.display = 'block';
@@ -337,7 +351,9 @@ function irAPaso2() {
     window.datosEntrega = datos;
     document.getElementById('pago-paso1').style.display = 'none';
     document.getElementById('pago-paso2').style.display = 'block';
-    document.getElementById('resumen-compra').innerHTML = `<h3>Resumen</h3>${carrito.map(i=>`<p>${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}</p>`).join('')}<h4>Total: $${carrito.reduce((s,i)=>s+i.precio*i.cantidad,0).toFixed(2)}</h4>`;
+    const total = carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
+    document.getElementById('resumen-compra').innerHTML = `<h3>Resumen</h3>${carrito.map(i=>`<p>${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}</p>`).join('')}<h4>Total: $${total.toFixed(2)}</h4>`;
+    window.totalCompra = total;
 }
 function formatearTarjeta(input) {
     let v = input.value.replace(/\D/g,'').replace(/(\d{4})/g,'$1 ').trim();
@@ -345,27 +361,51 @@ function formatearTarjeta(input) {
     document.getElementById('numero-tarjeta-visual').textContent = v || '•••• •••• •••• ••••';
 }
 function procesarPago() {
-    if (!document.getElementById('numero-tarjeta').value || !document.getElementById('nombre-tarjeta').value) { alert('Completa los datos'); return; }
+    const nombreCliente = document.getElementById('nombre-tarjeta').value;
+    const telefonoCliente = document.getElementById('envio-contacto')?.value || '';
+    
+    if (!nombreCliente) { alert('Completa el nombre del titular'); return; }
+    
     document.getElementById('pago-paso2').style.display = 'none';
     document.getElementById('pago-exitoso').style.display = 'block';
     const ordId = 'ORD-'+Date.now().toString(36).toUpperCase();
     document.getElementById('numero-orden').textContent = ordId;
+    
+    const total = window.totalCompra || carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
+    
     db.collection('ordenes').add({
         id: ordId, items: carrito,
-        total: carrito.reduce((s,i)=>s+i.precio*i.cantidad,0),
+        total: total,
         fecha: firebase.firestore.FieldValue.serverTimestamp(),
-        estado: 'confirmada', cliente: document.getElementById('nombre-tarjeta').value,
-        entrega: window.datosEntrega
+        estado: 'confirmada', cliente: nombreCliente,
+        entrega: window.datosEntrega,
+        telefono: telefonoCliente
     }).then(() => {
+        // Descontar stock
         carrito.forEach(i => db.collection('productos').doc(i.id).get().then(d => {
             if(d.exists) db.collection('productos').doc(i.id).update({stock:Math.max(0,d.data().stock-i.cantidad)});
         }));
+        
+        // Enviar mensaje por WhatsApp
+        if (telefonoCliente) {
+            const mensaje = encodeURIComponent(
+                `✅ *PEDIDO CONFIRMADO - NITROPEAK*\n\n` +
+                `📦 Orden: *${ordId}*\n` +
+                `👤 Cliente: *${nombreCliente}*\n` +
+                `💰 Total: *$${total.toFixed(2)}*\n\n` +
+                `📋 Productos:\n` +
+                carrito.map(i => `• ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}`).join('\n') +
+                `\n\nGracias por tu compra ⚡`
+            );
+            window.open(`https://wa.me/50361727059?text=${mensaje}`, '_blank');
+        }
     });
+    
     carrito = []; actualizarContador();
 }
 function cerrarPago() {
     document.getElementById('pago-modal').style.display = 'none';
-    ['numero-tarjeta','nombre-tarjeta','vencimiento','cvv'].forEach(id => document.getElementById(id).value = '');
+    ['numero-tarjeta','nombre-tarjeta','vencimiento','cvv'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('numero-tarjeta-visual').textContent = '•••• •••• •••• ••••';
 }
 
@@ -394,10 +434,11 @@ async function enviarContacto(e) {
 
 // ============ SECCIONES DINÁMICAS ============
 function cargarSeccionesDinamicas() {
-    db.collection('secciones').where('activo','==',true).orderBy('orden','asc').onSnapshot(snap => {
+    db.collection('secciones').get().then(snap => {
         document.querySelectorAll('.seccion-dinamica').forEach(s => s.remove());
         snap.forEach(d => {
             const s = d.data();
+            if (!s.activo) return;
             const div = document.createElement('section');
             div.className = 'seccion-dinamica';
             let media = '';
