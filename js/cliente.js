@@ -98,7 +98,7 @@ function mostrarListaUbicaciones(ubis) {
     
     contenedor.innerHTML = `
         <div style="position:relative;max-width:1200px;margin:0 auto;padding:0 50px;">
-            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel" style="position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:10;">◀</button>
+            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel" style="position:absolute;left:0;top:-20px;transform:translateY(-50%);z-index:10;">◀</button>
             <div style="overflow:hidden;">
                 <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="carrusel-ubicaciones-track">
                     ${ubis.map(u => `
@@ -113,7 +113,7 @@ function mostrarListaUbicaciones(ubis) {
                     `).join('')}
                 </div>
             </div>
-            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel" style="position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:10;">▶</button>
+            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel" style="position:absolute;right:0;top:-20px;transform:translateY(-50%);z-index:10;">▶</button>
         </div>
     `;
     
