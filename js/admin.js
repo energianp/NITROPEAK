@@ -173,7 +173,13 @@ function filtrarOrdenes() {
     const e = document.getElementById('filtro-estado-orden').value;
     renderOrd(allOrd.filter(o => (!t||o.id.toLowerCase().includes(t)) && (!e||o.estado===e)));
 }
-async function cambiarEstadoOrden(id, e) { if (e) await db.collection('ordenes').doc(id).update({estado:e}); }
+
+async function cambiarEstadoOrden(id, e) { 
+    if (e) {
+        await db.collection('ordenes').doc(id).update({estado: e});
+        cargarOrdenes();
+    }
+}
 
 // ============ HISTORIA ============
 async function cargarHistoriaAdmin() {
