@@ -96,13 +96,13 @@ function mostrarListaUbicaciones(ubis) {
     const contenedor = document.getElementById('ubicaciones-contenido');
     if (!contenedor) return;
     
-    // Limpiar y crear estructura del carrusel
     contenedor.innerHTML = `
-        <div class="carrusel-ubicaciones-nav" style="display:flex;justify-content:center;gap:15px;margin-bottom:20px;">
+        <div style="display:flex;justify-content:center;align-items:center;gap:20px;margin-bottom:25px;width:100%;">
             <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel"><i class="fas fa-chevron-left"></i></button>
+            <span style="color:var(--color-texto-secundario);font-size:0.9em;">Desliza para ver más ubicaciones</span>
             <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel"><i class="fas fa-chevron-right"></i></button>
         </div>
-        <div style="overflow:hidden;max-width:1200px;margin:0 auto;">
+        <div style="overflow:hidden;max-width:1200px;margin:0 auto;padding:10px 0;">
             <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="carrusel-ubicaciones-track">
                 ${ubis.map(u => `
                     <div class="ubicacion-item" style="border-left:4px solid ${u.color || '#48bb78'};min-width:280px;flex-shrink:0;">
