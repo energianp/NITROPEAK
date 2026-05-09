@@ -10,23 +10,27 @@
 </head>
 <body>
     <header class="header">
-        <nav class="nav">
-            <div class="logo">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Ccircle cx='25' cy='25' r='23' fill='%231a472a' stroke='%2348bb78' stroke-width='2'/%3E%3Ctext x='25' y='32' text-anchor='middle' fill='%2348bb78' font-size='20' font-weight='bold'%3E⚡%3C/text%3E%3C/svg%3E" alt="NITROPEAK" id="logo-img">
-                <h1>NITROPEAK</h1>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#productos">Productos</a></li>
-                <li><a href="#historia">Historia</a></li>
-                <li><a href="#valoraciones">Valoraciones</a></li>
-                <li><a href="#ubicaciones">Dónde Comprar</a></li>
-                <li><a href="#personalizar">Personalizar</a></li>
-                <li><a href="#contacto">Contacto</a></li>
-                <li><a href="#" class="carrito-icon"><i class="fas fa-shopping-cart"></i><span id="contador-carrito">0</span></a></li>
-            </ul>
-        </nav>
-    </header>
+    <nav class="nav">
+        <div class="logo">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Ccircle cx='25' cy='25' r='23' fill='%231a472a' stroke='%2348bb78' stroke-width='2'/%3E%3Ctext x='25' y='32' text-anchor='middle' fill='%2348bb78' font-size='20' font-weight='bold'%3E⚡%3C/text%3E%3C/svg%3E" alt="NITROPEAK" id="logo-img">
+            <h1>NITROPEAK</h1>
+        </div>
+        <div class="buscador-header">
+            <input type="text" id="buscar-producto-header" placeholder="🔍 Buscar producto..." class="form-input buscar-input" oninput="filtrarProductosHeader()">
+            <div id="resultados-busqueda" class="resultados-busqueda" style="display:none;"></div>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#inicio">Inicio</a></li>
+            <li><a href="#productos">Productos</a></li>
+            <li><a href="#historia">Historia</a></li>
+            <li><a href="#valoraciones">Valoraciones</a></li>
+            <li><a href="#ubicaciones">Dónde Comprar</a></li>
+            <li><a href="#personalizar">Personalizar</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+            <li><a href="#" class="carrito-icon"><i class="fas fa-shopping-cart"></i><span id="contador-carrito">0</span></a></li>
+        </ul>
+    </nav>
+</header>
 
     <section id="inicio" class="hero">
         <div class="hero-content">
@@ -42,10 +46,10 @@
     </section>
 
     <section id="historia" class="historia">
-        <h2>Nuestra Historia</h2>
-        <div class="historia-content" id="historia-contenido"></div>
-    </section>
-
+    <h2>Nuestra Historia</h2>
+    <div class="historia-content" id="historia-contenido"></div>
+</section>
+    
     <section id="valoraciones" class="valoraciones">
         <h2>Lo que dicen nuestros clientes</h2>
         <div class="filtro-valoraciones">
