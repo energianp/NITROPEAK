@@ -6,6 +6,7 @@ let marcadoresLayer;
 let productoActualValoracion = null;
 let carruselIndex = 0;
 let todasValoracionesCliente = [];
+let todosLosProductosCliente = [];
 
 function cargarLogo() {
     db.collection('configuracion').doc('sitio').onSnapshot(doc => {
@@ -201,7 +202,13 @@ function cargarHistoria() {
         const c = document.getElementById('historia-contenido');
         if (!c||!doc.exists) return;
         const h = doc.data();
-        c.innerHTML = `<div class="historia-texto"><h3>${h.titulo||''}</h3><p>${h.contenido||''}</p></div>${h.imagen?`<img src="${h.imagen}" alt="Historia">`:''}`;
+        c.innerHTML = `
+            <div class="historia-texto">
+                <h3>${h.titulo||''}</h3>
+                <p>${(h.contenido||'').replace(/\n/g, '<br>')}</p>
+            </div>
+            ${h.imagen ? `<img src="${h.imagen}" alt="Historia NITROPEAK">` : ''}
+        `;
     });
 }
 
