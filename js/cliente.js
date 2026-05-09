@@ -82,15 +82,77 @@ function actualizarMapa(ubis) {
     if (!marcadoresLayer||!mapa) return;
     marcadoresLayer.clearLayers();
     const bounds = [];
+    
+    // Usar coordenadas predefinidas para El Salvador sin geocodificación
+    const coordenadasPredefinidas = {
+        'San Salvador': { lat: 13.7209, lng: -89.2100 },
+        'Santa Tecla': { lat: 13.6769, lng: -89.2794 },
+        'Antiguo Cuscatlán': { lat: 13.6732, lng: -89.2533 },
+        'Soyapango': { lat: 13.7081, lng: -89.1473 },
+        'Mejicanos': { lat: 13.7254, lng: -89.2158 },
+        'Ilopango': { lat: 13.6944, lng: -89.1075 },
+        'San Marcos': { lat: 13.6586, lng: -89.1786 },
+        'La Libertad': { lat: 13.4883, lng: -89.3222 },
+        'Colón': { lat: 13.7044, lng: -89.3547 },
+        'Quezaltepeque': { lat: 13.8319, lng: -89.2681 },
+        'San Juan Opico': { lat: 13.8761, lng: -89.3567 },
+        'Santa Ana': { lat: 13.9778, lng: -89.5694 },
+        'Chalchuapa': { lat: 13.9867, lng: -89.6814 },
+        'Metapán': { lat: 14.3333, lng: -89.4500 },
+        'El Congo': { lat: 13.9089, lng: -89.4989 },
+        'San Miguel': { lat: 13.4833, lng: -88.1833 },
+        'Ciudad Barrios': { lat: 13.7667, lng: -88.2667 },
+        'Chinameca': { lat: 13.5000, lng: -88.3500 },
+        'Sonsonate': { lat: 13.7189, lng: -89.7258 },
+        'Izalco': { lat: 13.7447, lng: -89.6731 },
+        'Nahuizalco': { lat: 13.7758, lng: -89.7386 },
+        'Acajutla': { lat: 13.5903, lng: -89.8336 },
+        'Usulután': { lat: 13.3500, lng: -88.4500 },
+        'Santiago de María': { lat: 13.4833, lng: -88.4667 },
+        'Jucuapa': { lat: 13.5167, lng: -88.3833 },
+        'Zacatecoluca': { lat: 13.5000, lng: -88.8667 },
+        'Santiago Nonualco': { lat: 13.5167, lng: -88.9500 },
+        'Sensuntepeque': { lat: 13.8667, lng: -88.6333 },
+        'Ilobasco': { lat: 13.8500, lng: -88.8500 },
+        'Chalatenango': { lat: 14.0333, lng: -88.9333 },
+        'Nueva Concepción': { lat: 14.1333, lng: -89.3000 },
+        'Cojutepeque': { lat: 13.7167, lng: -88.9333 },
+        'Suchitoto': { lat: 13.9381, lng: -89.0278 },
+        'San Francisco Gotera': { lat: 13.7000, lng: -88.1000 },
+        'Corinto': { lat: 13.8000, lng: -87.9667 },
+        'San Vicente': { lat: 13.6458, lng: -88.7889 },
+        'Tecoluca': { lat: 13.5333, lng: -88.7833 },
+        'Ahuachapán': { lat: 13.9214, lng: -89.8458 },
+        'Atiquizaya': { lat: 13.9767, lng: -89.7517 },
+        'La Unión': { lat: 13.3369, lng: -87.8439 },
+        'Santa Rosa de Lima': { lat: 13.6194, lng: -87.8903 },
+        'Arcatao': { lat: 14.0833, lng: -88.7500 }
+    };
+    
     ubis.forEach(u => {
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(u.direccion+', '+u.municipio+', '+u.departamento+', El Salvador')}&limit=1`)
-        .then(r=>r.json()).then(data=>{if(data.length){const lat=+data[0].lat,lng=+data[0].lon;
-            const icon = L.divIcon({className:'custom-marker',html:`<div style="width:22px;height:22px;background:${u.color||'#48bb78'};border:3px solid #1a472a;border-radius:50%"></div>`,iconSize:[22,22],iconAnchor:[11,11]});
-            const m = L.marker([lat,lng],{icon}).addTo(marcadoresLayer);
-            m.bindPopup(`<div style="color:#1a472a"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p></div>`);
-            bounds.push([lat,lng]); if(bounds.length>1)mapa.fitBounds(bounds,{padding:[30,30]}); else mapa.setView([lat,lng],15);
-        }});
+        const municipio = u.municipio || u.departamento;
+        const coords = coordenadasPredefinidas[municipio] || coordenadasPredefinidas[u.departamento] || { lat: 13.7942, lng: -88.8965 };
+        
+        // Pequeña variación aleatoria para que no se superpongan
+        const lat = coords.lat + (Math.random() - 0.5) * 0.02;
+        const lng = coords.lng + (Math.random() - 0.5) * 0.02;
+        
+        const markerColor = u.color || '#48bb78';
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="width:22px;height:22px;background:${markerColor};border:3px solid #1a472a;border-radius:50%"></div>`,
+            iconSize: [22,22], iconAnchor: [11,11]
+        });
+        const m = L.marker([lat, lng], {icon}).addTo(marcadoresLayer);
+        m.bindPopup(`<div style="color:#1a472a"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p><p><strong>${u.tipo}</strong></p></div>`);
+        bounds.push([lat, lng]);
     });
+    
+    if (bounds.length > 1) {
+        mapa.fitBounds(bounds, { padding: [30, 30] });
+    } else if (bounds.length === 1) {
+        mapa.setView(bounds[0], 15);
+    }
 }
 
 function mostrarListaUbicaciones(ubis) {
@@ -400,6 +462,36 @@ async function enviarContacto(e){e.preventDefault();await db.collection('contact
 // ============ SECCIONES ============
 function cargarSeccionesDinamicas(){db.collection('secciones').get().then(snap=>{document.querySelectorAll('.seccion-dinamica').forEach(s=>s.remove());snap.forEach(d=>{const s=d.data();if(!s.activo)return;const div=document.createElement('section');div.className='seccion-dinamica';let media='';if(s.tipo==='imagen'&&s.mediaURL)media=`<img src="${s.mediaURL}" alt="${s.titulo}" style="max-width:100%;border-radius:15px;">`;else if(s.tipo==='video'&&s.mediaURL)media=`<video controls style="max-width:100%"><source src="${s.mediaURL}"></video>`;div.innerHTML=`<div class="contenido"><h2>${s.titulo}</h2><p>${s.contenido||''}</p>${media}</div>`;const footer=document.querySelector('.footer');if(footer)footer.parentNode.insertBefore(div,footer);});});}
 function mostrarNotificacion(msg){const n=document.createElement('div');n.className='notificacion';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),3000);}
+
+function filtrarProductosHeader() {
+    const texto = document.getElementById('buscar-producto-header')?.value?.toLowerCase() || '';
+    const resultados = document.getElementById('resultados-busqueda');
+    
+    if (!resultados) return;
+    
+    if (texto.length < 1) {
+        resultados.style.display = 'none';
+        renderizarProductosCarrusel(todosLosProductosCliente);
+        return;
+    }
+    
+    const filtrados = todosLosProductosCliente.filter(p => 
+        p.nombre.toLowerCase().includes(texto) || 
+        (p.descripcion||'').toLowerCase().includes(texto)
+    );
+    
+    resultados.innerHTML = filtrados.length ? filtrados.map(p => `
+        <div class="resultado-item" onclick="irAProducto('${p.id}')">
+            <img src="${p.imagen||''}" alt="${p.nombre}">
+            <div class="info">
+                <div class="nombre">${p.nombre}</div>
+                <div class="precio">$${p.precio.toFixed(2)}</div>
+            </div>
+        </div>
+    `).join('') : '<div class="resultado-item"><span style="color:#6b8f71;">No se encontraron productos</span></div>';
+    
+    resultados.style.display = 'block';
+}
 
 document.querySelector('.carrito-icon')?.addEventListener('click',e=>{e.preventDefault();mostrarCarrito();});
 document.querySelectorAll('.close').forEach(el=>el.addEventListener('click',function(){this.closest('.modal').style.display='none';}));
