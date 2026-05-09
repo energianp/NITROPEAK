@@ -187,43 +187,33 @@ function cargarProductos() {
     db.collection('productos').where('activo','==',true).onSnapshot(snap => {
         todosLosProductosCliente = [];
         snap.forEach(doc => todosLosProductosCliente.push({id: doc.id, ...doc.data()}));
-        renderizarProductosCarrusel(todosLosProductosCliente);
+        renderizarProductosGrid(todosLosProductosCliente);
     });
 }
 
-function renderizarProductosCarrusel(lista) {
+function renderizarProductosGrid(lista) {
     const c = document.getElementById('productos-lista');
     if (!c) return;
     
-    c.innerHTML = `
-        <div style="position:relative;max-width:1400px;margin:0 auto;padding:0 50px;">
-            <button onclick="moverCarruselProductos(-1)" class="btn-carrusel" style="position:absolute;left:0;top:-20px;transform:translateY(-50%);z-index:10;">◀</button>
-            <div style="overflow:hidden;">
-                <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="productos-carrusel-track">
-                    ${lista.map(p => {
-                        const st = p.stock<=0?{t:'Agotado',c:'stock-agotado'}:p.stock<12?{t:'Stock bajo',c:'stock-bajo'}:{t:'Disponible',c:'stock-disponible'};
-                        return `
-                        <div class="producto-card-compacto" id="prod-${p.id}" style="min-width:250px;flex-shrink:0;">
-                            <img src="${p.imagen||''}" alt="${p.nombre}">
-                            <h3>${p.nombre}</h3>
-                            <div class="producto-stock ${st.c}">${st.t}</div>
-                            <div class="producto-estrellas-compactas" id="estrellas-comp-${p.id}"></div>
-                            <div class="producto-row">
-                                <span class="producto-precio">$${p.precio.toFixed(2)}</span>
-                                <input type="number" id="cant-${p.id}" value="1" min="1" max="${p.stock}" ${p.stock<=0?'disabled':''} class="cantidad-input-compacto">
-                                <button onclick="agregarAlCarrito('${p.id}','${p.nombre}',${p.precio},${p.stock})" ${p.stock<=0?'disabled':''} class="btn-carrito-compacto"><i class="fas fa-cart-plus"></i></button>
-                            </div>
-                            <div class="producto-acciones-compactas">
-                                <button onclick="abrirValoracionProducto('${p.id}','${p.nombre}')" class="btn-icono" title="Valorar">⭐</button>
-                                <button onclick="verComentarios('${p.id}','${p.nombre}')" class="btn-icono" title="Comentarios">💬</button>
-                            </div>
-                        </div>`;
-                    }).join('')}
-                </div>
+    c.innerHTML = lista.map(p => {
+        const st = p.stock<=0?{t:'Agotado',c:'stock-agotado'}:p.stock<12?{t:'Stock bajo',c:'stock-bajo'}:{t:'Disponible',c:'stock-disponible'};
+        return `
+        <div class="producto-card-compacto" id="prod-${p.id}">
+            <img src="${p.imagen||''}" alt="${p.nombre}">
+            <h3>${p.nombre}</h3>
+            <div class="producto-stock ${st.c}">${st.t}</div>
+            <div class="producto-estrellas-compactas" id="estrellas-comp-${p.id}"></div>
+            <div class="producto-row">
+                <span class="producto-precio">$${p.precio.toFixed(2)}</span>
+                <input type="number" id="cant-${p.id}" value="1" min="1" max="${p.stock}" ${p.stock<=0?'disabled':''} class="cantidad-input-compacto">
+                <button onclick="agregarAlCarrito('${p.id}','${p.nombre}',${p.precio},${p.stock})" ${p.stock<=0?'disabled':''} class="btn-carrito-compacto"><i class="fas fa-cart-plus"></i></button>
             </div>
-            <button onclick="moverCarruselProductos(1)" class="btn-carrusel" style="position:absolute;right:0;top:-20px;transform:translateY(-50%);z-index:10;">▶</button>
-        </div>
-    `;
+            <div class="producto-acciones-compactas">
+                <button onclick="abrirValoracionProducto('${p.id}','${p.nombre}')" class="btn-icono" title="Valorar">⭐</button>
+                <button onclick="verComentarios('${p.id}','${p.nombre}')" class="btn-icono" title="Comentarios">💬</button>
+            </div>
+        </div>`;
+    }).join('');
     
     lista.forEach(p => {
         db.collection('valoraciones').where('productoId','==',p.id).get().then(vs => {
@@ -234,8 +224,6 @@ function renderizarProductosCarrusel(lista) {
             if (el) el.innerHTML = generarEstrellasParciales(prom);
         });
     });
-    
-    window.productosCarruselIndex = 0;
 }
 
 function moverCarruselProductos(dir) {
@@ -259,7 +247,7 @@ function filtrarProductosHeader() {
     
     if (texto.length < 1) {
         resultados.style.display = 'none';
-        renderizarProductosCarrusel(todosLosProductosCliente);
+        renderizarProductosGrid(todosLosProductosCliente);
         return;
     }
     
@@ -284,7 +272,7 @@ function irAProducto(id) {
     document.getElementById('resultados-busqueda').style.display = 'none';
     document.getElementById('buscar-producto-header').value = '';
     const producto = todosLosProductosCliente.find(p => p.id === id);
-    if (producto) renderizarProductosCarrusel([producto]);
+    if (producto) renderizarProductosGrid([producto]);
     document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
 }
 
