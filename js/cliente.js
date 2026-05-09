@@ -98,10 +98,14 @@ function mostrarListaUbicaciones(ubis) {
     
     // Limpiar y crear estructura del carrusel
     contenedor.innerHTML = `
-        <div class="carrusel-ubicaciones-container">
-            <div class="carrusel-ubicaciones-track" id="carrusel-ubicaciones-track">
+        <div class="carrusel-ubicaciones-nav" style="display:flex;justify-content:center;gap:15px;margin-bottom:20px;">
+            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div style="overflow:hidden;max-width:1200px;margin:0 auto;">
+            <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="carrusel-ubicaciones-track">
                 ${ubis.map(u => `
-                    <div class="carrusel-item ubicacion-carrusel-item" style="border-left:4px solid ${u.color || '#48bb78'}">
+                    <div class="ubicacion-item" style="border-left:4px solid ${u.color || '#48bb78'};min-width:280px;flex-shrink:0;">
                         <h4>${u.nombre}</h4>
                         <p>📍 ${u.direccion}</p>
                         <p>📞 ${u.telefono || 'N/A'}</p>
@@ -112,10 +116,6 @@ function mostrarListaUbicaciones(ubis) {
                 `).join('')}
             </div>
         </div>
-        <div class="carrusel-ubicaciones-nav">
-            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel"><i class="fas fa-chevron-left"></i></button>
-            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel"><i class="fas fa-chevron-right"></i></button>
-        </div>
     `;
     
     window.ubicacionesCarruselIndex = 0;
@@ -124,13 +124,15 @@ function mostrarListaUbicaciones(ubis) {
 function moverCarruselUbicaciones(dir) {
     const track = document.getElementById('carrusel-ubicaciones-track');
     if (!track) return;
-    const items = track.querySelectorAll('.ubicacion-carrusel-item');
+    const items = track.querySelectorAll('.ubicacion-item');
     if (!items.length) return;
     
-    const maxIndex = Math.max(0, items.length - 4);
+    const visibleCards = window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 4;
+    const maxIndex = Math.max(0, items.length - visibleCards);
     window.ubicacionesCarruselIndex = Math.max(0, Math.min((window.ubicacionesCarruselIndex || 0) + dir, maxIndex));
     
-    const offset = window.ubicacionesCarruselIndex * 295;
+    const cardWidth = items[0].offsetWidth + 20; // ancho + gap
+    const offset = window.ubicacionesCarruselIndex * cardWidth;
     track.style.transform = `translateX(-${offset}px)`;
 }
 
