@@ -1043,3 +1043,24 @@ button[type="submit"]:hover,
         min-width: 100%;
     }
 }
+
+/* ============ CARRUSEL DE UBICACIONES ============ */
+.carrusel-ubicaciones-container {
+    overflow: hidden;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 0;
+}
+
+.carrusel-ubicaciones-track {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.4s ease;
+}
+
+.carrusel-ubicaciones-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
