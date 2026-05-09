@@ -86,7 +86,7 @@ function actualizarMapa(ubis) {
         .then(r=>r.json()).then(data=>{if(data.length){const lat=+data[0].lat,lng=+data[0].lon;
             const icon = L.divIcon({className:'custom-marker',html:`<div style="width:22px;height:22px;background:${u.color||'#48bb78'};border:3px solid #1a472a;border-radius:50%"></div>`,iconSize:[22,22],iconAnchor:[11,11]});
             const m = L.marker([lat,lng],{icon}).addTo(marcadoresLayer);
-            m.bindPopup(`<div style="color:#1a472a"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p><p><strong>${u.tipo}</strong></p></div>`);
+            m.bindPopup(`<div style="color:#1a472a"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p></div>`);
             bounds.push([lat,lng]); if(bounds.length>1)mapa.fitBounds(bounds,{padding:[30,30]}); else mapa.setView([lat,lng],15);
         }});
     });
@@ -98,7 +98,7 @@ function mostrarListaUbicaciones(ubis) {
     c.innerHTML = ubis.map(u => `<div class="ubicacion-item" style="border-left:4px solid ${u.color||'#48bb78'}"><h4>${u.nombre}</h4><p>📍${u.direccion}</p><p>📞${u.telefono||''}</p><p>🗺️${u.departamento}, ${u.municipio||''}</p><span class="tipo-ubicacion" style="background:${u.color||'#48bb78'}">${u.tipo}</span></div>`).join('');
 }
 
-// ============ PRODUCTOS ============
+// ============ PRODUCTOS CON ESTRELLAS PARCIALES ============
 function cargarProductos() {
     db.collection('productos').where('activo','==',true).onSnapshot(snap => {
         const c = document.getElementById('productos-lista');
@@ -124,31 +124,39 @@ function cargarProductos() {
                 </div>
             </div>`;
             
-            // Cargar estrellas promedio SIN índice (consulta simple)
             db.collection('valoraciones').where('productoId','==',doc.id).get().then(vs => {
                 let t=0,n=0;
                 vs.forEach(v=>{ const d=v.data(); if(d.aprobada){ t+=d.estrellas; n++; } });
                 const prom = n>0?t/n:0;
                 const el = document.getElementById('estrellas-comp-'+doc.id);
-                if (el) el.innerHTML = generarEstrellas(prom, '0.8em');
+                if (el) el.innerHTML = generarEstrellasParciales(prom);
             });
         });
     });
 }
 
-function generarEstrellas(prom, size='0.8em') {
-    let h='';
+function generarEstrellasParciales(prom) {
+    let h = '<span style="display:inline-flex;gap:2px;align-items:center;">';
     for(let i=1;i<=5;i++){
         if(prom >= i) {
-            h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
+            h += '<span style="color:#ffd700;font-size:0.9em;">★</span>';
+        } else if(prom >= i - 0.9) {
+            // Estrella casi llena (90%)
+            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:90%;color:#ffd700;">★</span></span>';
+        } else if(prom >= i - 0.7) {
+            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:70%;color:#ffd700;">★</span></span>';
         } else if(prom >= i - 0.5) {
-            // Media estrella usando Unicode
-            h+=`<span style="color:#ffd700;font-size:${size}">★</span>`;
+            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:50%;color:#ffd700;">★</span></span>';
+        } else if(prom >= i - 0.3) {
+            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:30%;color:#ffd700;">★</span></span>';
+        } else if(prom >= i - 0.1) {
+            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:10%;color:#ffd700;">★</span></span>';
         } else {
-            h+=`<span style="color:#2d5a3d;font-size:${size}">★</span>`;
+            h += '<span style="color:#2d5a3d;font-size:0.9em;">★</span>';
         }
     }
-    return h+` <small style="font-size:${size}">(${prom.toFixed(1)})</small>`;
+    h += `<small style="font-size:0.8em;margin-left:4px;">(${prom.toFixed(1)})</small></span>`;
+    return h;
 }
 
 function cargarHistoria() {
@@ -162,308 +170,194 @@ function cargarHistoria() {
 
 // ============ CARRUSEL VALORACIONES ============
 function cargarValoracionesCliente() {
-    // Consulta simple sin índice
     db.collection('valoraciones').get().then(snap => {
         todasValoracionesCliente = [];
-        snap.forEach(d => {
-            const v = d.data();
-            if (v.aprobada) todasValoracionesCliente.push(v);
-        });
-        todasValoracionesCliente.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
+        snap.forEach(d => { const v=d.data(); if(v.aprobada) todasValoracionesCliente.push(v); });
+        todasValoracionesCliente.sort((a,b) => (b.fecha?.toDate?.()||0)-(a.fecha?.toDate?.()||0));
         filtrarValoracionesCliente();
     });
 }
-
 function filtrarValoracionesCliente() {
-    const f = parseInt(document.getElementById('filtro-estrellas').value) || 0;
-    const filtradas = f ? todasValoracionesCliente.filter(v => v.estrellas === f) : todasValoracionesCliente;
+    const f = parseInt(document.getElementById('filtro-estrellas').value)||0;
+    const filtradas = f ? todasValoracionesCliente.filter(v=>v.estrellas===f) : todasValoracionesCliente;
     renderizarCarrusel(filtradas);
 }
-
 function renderizarCarrusel(lista) {
     const track = document.getElementById('carrusel-valoraciones');
     if (!track) return;
-    track.innerHTML = lista.length ? lista.map(v => `
-        <div class="carrusel-item">
-            <div class="estrellas-valoracion">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div>
-            <p>"${v.comentario}"</p>
-            ${v.productoNombre ? `<small>Producto: ${v.productoNombre}</small>` : ''}
-            <span class="nombre-valorador">- ${v.nombre}</span>
-        </div>
-    `).join('') : '<div class="carrusel-item"><p>No hay valoraciones aún</p></div>';
-    carruselIndex = 0;
-    actualizarPosicionCarrusel();
+    track.innerHTML = lista.length ? lista.map(v=>`<div class="carrusel-item"><div class="estrellas-valoracion">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div><p>"${v.comentario}"</p>${v.productoNombre?`<small>Producto: ${v.productoNombre}</small>`:''}<span class="nombre-valorador">- ${v.nombre}</span></div>`).join('') : '<div class="carrusel-item"><p>No hay valoraciones aún</p></div>';
+    carruselIndex=0; actualizarPosicionCarrusel();
 }
-
 function moverCarrusel(dir) {
-    const track = document.getElementById('carrusel-valoraciones');
-    if (!track) return;
-    const items = track.querySelectorAll('.carrusel-item');
-    if (!items.length) return;
-    carruselIndex = Math.max(0, Math.min(carruselIndex + dir, items.length - 3));
+    const track=document.getElementById('carrusel-valoraciones');
+    if(!track)return;
+    const items=track.querySelectorAll('.carrusel-item');
+    if(!items.length)return;
+    carruselIndex=Math.max(0,Math.min(carruselIndex+dir,items.length-3));
     actualizarPosicionCarrusel();
 }
-
 function actualizarPosicionCarrusel() {
-    const track = document.getElementById('carrusel-valoraciones');
-    if (!track) return;
-    const offset = carruselIndex * 320;
-    track.style.transform = `translateX(-${offset}px)`;
+    const track=document.getElementById('carrusel-valoraciones');
+    if(!track)return;
+    track.style.transform=`translateX(-${carruselIndex*320}px)`;
 }
-
-function calificarGeneral(e) {
-    calificacionGeneralActual = e;
-    document.querySelectorAll('#estrellas-general span').forEach((s,i) => s.style.color = i<e?'#ffd700':'#2d5a3d');
-}
-
-async function enviarValoracionGeneral() {
-    const c = document.getElementById('comentario-general').value;
-    const n = document.getElementById('nombre-general').value;
-    if (!c||!n||!calificacionGeneralActual) { alert('Completa todos los campos'); return; }
-    await db.collection('valoraciones').add({nombre:n,comentario:c,estrellas:calificacionGeneralActual,fecha:firebase.firestore.FieldValue.serverTimestamp(),aprobada:false});
-    alert('¡Gracias!');
-    document.getElementById('comentario-general').value = '';
-    document.getElementById('nombre-general').value = '';
-    calificacionGeneralActual = 0;
-    document.querySelectorAll('#estrellas-general span').forEach(s => s.style.color = '#2d5a3d');
+function calificarGeneral(e){calificacionGeneralActual=e;document.querySelectorAll('#estrellas-general span').forEach((s,i)=>s.style.color=i<e?'#ffd700':'#2d5a3d');}
+async function enviarValoracionGeneral(){
+    const c=document.getElementById('comentario-general').value,n=document.getElementById('nombre-general').value;
+    if(!c||!n||!calificacionGeneralActual){alert('Completa todos los campos');return;}
+    await db.collection('valoraciones').add({nombre:n,comentario:c,estrellas:calificacionGeneralActual,fecha:firebase.firestore.FieldValue.serverTimestamp(),aprobada:true});
+    alert('¡Gracias!');document.getElementById('comentario-general').value='';document.getElementById('nombre-general').value='';calificacionGeneralActual=0;
+    document.querySelectorAll('#estrellas-general span').forEach(s=>s.style.color='#2d5a3d');
 }
 
 // ============ VALORACIÓN PRODUCTO ============
-function abrirValoracionProducto(id, nombre) {
-    productoActualValoracion = {id, nombre};
-    document.getElementById('valoracion-producto-nombre').textContent = nombre;
-    document.getElementById('valoracion-producto-modal').style.display = 'block';
-    calificacionActual = 0;
-    document.querySelectorAll('#estrellas-producto span').forEach(s => s.style.color = '#2d5a3d');
-}
-function calificarProducto(e) {
-    calificacionActual = e;
-    document.querySelectorAll('#estrellas-producto span').forEach((s,i) => s.style.color = i<e?'#ffd700':'#2d5a3d');
-}
-function cerrarValoracionProducto() { document.getElementById('valoracion-producto-modal').style.display = 'none'; }
-async function enviarValoracionProducto() {
-    const c = document.getElementById('comentario-producto-modal').value;
-    const n = document.getElementById('nombre-valorador-producto').value;
-    if (!c||!n||!calificacionActual) { alert('Completa todos los campos'); return; }
-    await db.collection('valoraciones').add({nombre:n,comentario:c,estrellas:calificacionActual,productoId:productoActualValoracion.id,productoNombre:productoActualValoracion.nombre,fecha:firebase.firestore.FieldValue.serverTimestamp(),aprobada:false});
-    alert('¡Gracias!');
-    cerrarValoracionProducto();
+function abrirValoracionProducto(id,nombre){productoActualValoracion={id,nombre};document.getElementById('valoracion-producto-nombre').textContent=nombre;document.getElementById('valoracion-producto-modal').style.display='block';calificacionActual=0;document.querySelectorAll('#estrellas-producto span').forEach(s=>s.style.color='#2d5a3d');}
+function calificarProducto(e){calificacionActual=e;document.querySelectorAll('#estrellas-producto span').forEach((s,i)=>s.style.color=i<e?'#ffd700':'#2d5a3d');}
+function cerrarValoracionProducto(){document.getElementById('valoracion-producto-modal').style.display='none';}
+async function enviarValoracionProducto(){
+    const c=document.getElementById('comentario-producto-modal').value,n=document.getElementById('nombre-valorador-producto').value;
+    if(!c||!n||!calificacionActual){alert('Completa todos los campos');return;}
+    await db.collection('valoraciones').add({nombre:n,comentario:c,estrellas:calificacionActual,productoId:productoActualValoracion.id,productoNombre:productoActualValoracion.nombre,fecha:firebase.firestore.FieldValue.serverTimestamp(),aprobada:true});
+    alert('¡Gracias!');cerrarValoracionProducto();
 }
 
 // ============ COMENTARIOS ============
-function verComentarios(id, nombre) {
-    document.getElementById('comentarios-producto-nombre').textContent = nombre;
-    document.getElementById('comentarios-modal').style.display = 'block';
-    // Consulta simple sin índice compuesto
-    db.collection('valoraciones').where('productoId','==',id).get().then(snap => {
-        let t=0; const coms=[];
-        snap.forEach(d => { const v=d.data(); if(v.aprobada){ t+=v.estrellas; coms.push(v); } });
-        coms.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
-        const prom = coms.length?t/coms.length:0;
-        document.getElementById('promedio-estrellas').innerHTML = `<h4>Promedio: ${generarEstrellas(prom, '0.9em')} (${coms.length} valoraciones)</h4>`;
-        document.getElementById('comentarios-lista').innerHTML = coms.length ? coms.map(v => `
-            <div class="comentario-item">
-                <div class="estrellas-valoracion" style="font-size:0.9em;">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div>
-                <p>"${v.comentario}"</p>
-                <span class="nombre-valorador">- ${v.nombre}</span>
-            </div>
-        `).join('') : '<p>Sin comentarios aún.</p>';
+function verComentarios(id,nombre){
+    document.getElementById('comentarios-producto-nombre').textContent=nombre;
+    document.getElementById('comentarios-modal').style.display='block';
+    db.collection('valoraciones').where('productoId','==',id).get().then(snap=>{
+        let t=0;const coms=[];
+        snap.forEach(d=>{const v=d.data();if(v.aprobada){t+=v.estrellas;coms.push(v);}});
+        coms.sort((a,b)=>(b.fecha?.toDate?.()||0)-(a.fecha?.toDate?.()||0));
+        const prom=coms.length?t/coms.length:0;
+        document.getElementById('promedio-estrellas').innerHTML=`<h4>Promedio: ${generarEstrellasParciales(prom)} (${coms.length} valoraciones)</h4>`;
+        document.getElementById('comentarios-lista').innerHTML=coms.length?coms.map(v=>`<div class="comentario-item"><div class="estrellas-valoracion" style="font-size:0.9em;">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div><p>"${v.comentario}"</p><span class="nombre-valorador">- ${v.nombre}</span></div>`).join(''):'<p>Sin comentarios aún.</p>';
     });
 }
-function cerrarComentarios() { document.getElementById('comentarios-modal').style.display = 'none'; }
+function cerrarComentarios(){document.getElementById('comentarios-modal').style.display='none';}
 
 // ============ CARRITO ============
-function agregarAlCarrito(id, nombre, precio, stock) {
-    const cant = parseInt(document.getElementById('cant-'+id)?.value) || 1;
-    const c = Math.min(cant, stock);
-    if (c<=0) { alert('Cantidad inválida'); return; }
-    const item = carrito.find(i=>i.id===id);
-    if (item) item.cantidad = Math.min(item.cantidad+c, stock);
-    else carrito.push({id, nombre, precio, cantidad: c});
-    actualizarContador();
-    mostrarNotificacion(`${nombre} x${c} agregado`);
+function agregarAlCarrito(id,nombre,precio,stock){
+    const cant=parseInt(document.getElementById('cant-'+id)?.value)||1,c=Math.min(cant,stock);
+    if(c<=0){alert('Cantidad inválida');return;}
+    const item=carrito.find(i=>i.id===id);
+    if(item)item.cantidad=Math.min(item.cantidad+c,stock);else carrito.push({id,nombre,precio,cantidad:c});
+    actualizarContador();mostrarNotificacion(`${nombre} x${c} agregado`);
 }
-function actualizarContador() {
-    const el = document.getElementById('contador-carrito');
-    if (el) el.textContent = carrito.reduce((s,i)=>s+i.cantidad,0);
+function actualizarContador(){const el=document.getElementById('contador-carrito');if(el)el.textContent=carrito.reduce((s,i)=>s+i.cantidad,0);}
+function mostrarCarrito(){
+    const m=document.getElementById('carrito-modal');if(!m)return;
+    const ic=document.getElementById('carrito-items'),tc=document.getElementById('carrito-total');
+    if(carrito.length===0){ic.innerHTML='<p>Carrito vacío</p>';tc.innerHTML='';document.getElementById('btn-pagar').style.display='none';}
+    else{ic.innerHTML=carrito.map((item,i)=>`<div class="carrito-item"><span>${item.nombre}</span><span><button onclick="cambiarCantidad(${i},-1)">-</button> ${item.cantidad} <button onclick="cambiarCantidad(${i},1)">+</button></span><span>$${(item.precio*item.cantidad).toFixed(2)}</span><button onclick="eliminarDelCarrito(${i})">🗑️</button></div>`).join('');tc.innerHTML=`<h3>Total: $${carrito.reduce((s,i)=>s+i.precio*i.cantidad,0).toFixed(2)}</h3>`;document.getElementById('btn-pagar').style.display='block';}
+    m.style.display='block';
 }
-function mostrarCarrito() {
-    const m = document.getElementById('carrito-modal');
-    if (!m) return;
-    const ic = document.getElementById('carrito-items');
-    const tc = document.getElementById('carrito-total');
-    if (carrito.length===0) {
-        ic.innerHTML = '<p>Carrito vacío</p>'; tc.innerHTML = '';
-        document.getElementById('btn-pagar').style.display = 'none';
-    } else {
-        ic.innerHTML = carrito.map((item,i) => `
-            <div class="carrito-item">
-                <span>${item.nombre}</span>
-                <span><button onclick="cambiarCantidad(${i},-1)">-</button> ${item.cantidad} <button onclick="cambiarCantidad(${i},1)">+</button></span>
-                <span>$${(item.precio*item.cantidad).toFixed(2)}</span>
-                <button onclick="eliminarDelCarrito(${i})">🗑️</button>
-            </div>`).join('');
-        tc.innerHTML = `<h3>Total: $${carrito.reduce((s,i)=>s+i.precio*i.cantidad,0).toFixed(2)}</h3>`;
-        document.getElementById('btn-pagar').style.display = 'block';
-    }
-    m.style.display = 'block';
-}
-function cambiarCantidad(idx, cambio) {
-    const item = carrito[idx];
-    const nc = item.cantidad + cambio;
-    if (nc<=0) { eliminarDelCarrito(idx); return; }
-    db.collection('productos').doc(item.id).get().then(d => {
-        if (d.exists) item.cantidad = Math.min(nc, d.data().stock);
-        mostrarCarrito(); actualizarContador();
-    });
-}
-function eliminarDelCarrito(idx) { carrito.splice(idx,1); mostrarCarrito(); actualizarContador(); }
+function cambiarCantidad(idx,cambio){const item=carrito[idx],nc=item.cantidad+cambio;if(nc<=0){eliminarDelCarrito(idx);return;}db.collection('productos').doc(item.id).get().then(d=>{if(d.exists)item.cantidad=Math.min(nc,d.data().stock);mostrarCarrito();actualizarContador();});}
+function eliminarDelCarrito(idx){carrito.splice(idx,1);mostrarCarrito();actualizarContador();}
 
-// ============ PAGO CON WHATSAPP ============
-function irAPagar() {
-    document.getElementById('carrito-modal').style.display = 'none';
-    document.getElementById('pago-modal').style.display = 'block';
-    document.getElementById('pago-paso1').style.display = 'block';
-    document.getElementById('pago-paso2').style.display = 'none';
-    document.getElementById('pago-exitoso').style.display = 'none';
-    db.collection('ubicaciones').get().then(snap => {
-        const s = document.getElementById('punto-distribucion');
-        s.innerHTML = '<option value="">Seleccionar punto</option>';
-        snap.forEach(d => { const u=d.data(); s.innerHTML += `<option value="${u.nombre}|${u.direccion}|${u.departamento}|${u.municipio}">${u.nombre} - ${u.direccion}</option>`; });
+// ============ PAGO MEJORADO ============
+const depsSV = ['Ahuachapán','Cabañas','Chalatenango','Cuscatlán','La Libertad','La Paz','La Unión','Morazán','San Miguel','San Salvador','San Vicente','Santa Ana','Sonsonate','Usulután'];
+const munisSV = {'San Salvador':['San Salvador','Santa Tecla','Antiguo Cuscatlán','Soyapango','Ilopango','Mejicanos','San Marcos'],'La Libertad':['Santa Tecla','Antiguo Cuscatlán','Colón','Quezaltepeque','San Juan Opico'],'Santa Ana':['Santa Ana','Chalchuapa','Metapán','El Congo'],'San Miguel':['San Miguel','Ciudad Barrios','Chinameca'],'Sonsonate':['Sonsonate','Izalco','Nahuizalco','Acajutla'],'Usulután':['Usulután','Santiago de María','Jucuapa'],'La Paz':['Zacatecoluca','Santiago Nonualco'],'Cabañas':['Sensuntepeque','Ilobasco'],'Chalatenango':['Chalatenango','Nueva Concepción'],'Cuscatlán':['Cojutepeque','Suchitoto'],'Morazán':['San Francisco Gotera','Corinto'],'San Vicente':['San Vicente','Tecoluca'],'Ahuachapán':['Ahuachapán','Atiquizaya'],'La Unión':['La Unión','Santa Rosa de Lima']};
+
+function irAPagar(){
+    document.getElementById('carrito-modal').style.display='none';
+    document.getElementById('pago-modal').style.display='block';
+    document.getElementById('pago-paso1').style.display='block';
+    document.getElementById('pago-paso2').style.display='none';
+    document.getElementById('pago-exitoso').style.display='none';
+    cargarPuntosDistribucion();
+    cargarDepsEnvio();
+}
+function cargarPuntosDistribucion(){
+    db.collection('ubicaciones').get().then(snap=>{
+        const s=document.getElementById('punto-distribucion');
+        s.innerHTML='<option value="">Seleccionar punto</option>';
+        snap.forEach(d=>{const u=d.data();s.innerHTML+=`<option value="${u.nombre}|${u.direccion}|${u.departamento}|${u.municipio}">${u.nombre} - ${u.direccion} (${u.departamento})</option>`;});
     });
 }
-function mostrarPasoEntrega(t) {
-    document.getElementById('entrega-punto').style.display = t==='punto'?'block':'none';
-    document.getElementById('entrega-domicilio').style.display = t==='domicilio'?'block':'none';
+function cargarDepsEnvio(){
+    const s=document.getElementById('envio-departamento');
+    if(!s)return;
+    s.innerHTML='<option value="">Departamento</option>'+depsSV.map(d=>`<option>${d}</option>`).join('');
+    s.onchange=function(){cargarMunisEnvio(this.value);};
 }
-function irAPaso2() {
-    const tipo = document.querySelector('input[name="entrega"]:checked')?.value;
-    let datos = {tipo};
-    if (tipo==='punto') {
-        const p = document.getElementById('punto-distribucion').value;
-        if (!p) { alert('Selecciona un punto'); return; }
-        const [nombre, direccion, departamento, municipio] = p.split('|');
-        datos = {...datos, nombre, direccion, departamento, municipio};
-    } else {
-        ['envio-direccion','envio-departamento','envio-municipio','envio-referencia','envio-contacto'].forEach(id => datos[id.replace('envio-','')] = document.getElementById(id).value);
-        if (!datos.direccion||!datos.departamento||!datos.contacto) { alert('Completa los datos obligatorios'); return; }
+function cargarMunisEnvio(dep){
+    const s=document.getElementById('envio-municipio');
+    if(!s)return;
+    s.innerHTML='<option value="">Municipio</option>';
+    if(munisSV[dep])munisSV[dep].forEach(m=>s.innerHTML+=`<option>${m}</option>`);
+}
+function mostrarPasoEntrega(t){
+    document.getElementById('entrega-punto').style.display=t==='punto'?'block':'none';
+    document.getElementById('entrega-domicilio').style.display=t==='domicilio'?'block':'none';
+}
+function irAPaso2(){
+    const tipo=document.querySelector('input[name="entrega"]:checked')?.value;
+    const nombre=document.getElementById('nombre-cliente-pago').value;
+    const telefono=document.getElementById('telefono-cliente-pago').value;
+    if(!nombre||!telefono){alert('Completa tu nombre y teléfono');return;}
+    let datos={tipo,nombre,telefono};
+    if(tipo==='punto'){
+        const p=document.getElementById('punto-distribucion').value;
+        if(!p){alert('Selecciona un punto de distribución');return;}
+        const[ptNombre,ptDir,ptDep,ptMun]=p.split('|');
+        datos={...datos,ptoNombre:ptNombre,ptoDir:ptDir,ptoDep:ptDep,ptoMun:ptMun};
+    }else{
+        ['envio-direccion','envio-departamento','envio-municipio','envio-referencia'].forEach(id=>datos[id.replace('envio-','')]=document.getElementById(id).value);
+        if(!datos.direccion||!datos.departamento||!datos.contacto){alert('Completa los datos de envío');return;}
+        datos.contacto=telefono;
     }
-    window.datosEntrega = datos;
-    document.getElementById('pago-paso1').style.display = 'none';
-    document.getElementById('pago-paso2').style.display = 'block';
-    const total = carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
-    document.getElementById('resumen-compra').innerHTML = `<h3>Resumen</h3>${carrito.map(i=>`<p>${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}</p>`).join('')}<h4>Total: $${total.toFixed(2)}</h4>`;
-    window.totalCompra = total;
+    window.datosEntrega=datos;
+    document.getElementById('pago-paso1').style.display='none';
+    document.getElementById('pago-paso2').style.display='block';
+    const total=carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
+    document.getElementById('resumen-compra').innerHTML=`<h3>Resumen</h3>${carrito.map(i=>`<p>${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}</p>`).join('')}<h4>Total: $${total.toFixed(2)}</h4>`;
+    window.totalCompra=total;
 }
-function formatearTarjeta(input) {
-    let v = input.value.replace(/\D/g,'').replace(/(\d{4})/g,'$1 ').trim();
-    input.value = v;
-    document.getElementById('numero-tarjeta-visual').textContent = v || '•••• •••• •••• ••••';
-}
-function procesarPago() {
-    const nombreCliente = document.getElementById('nombre-tarjeta').value;
-    const telefonoCliente = document.getElementById('envio-contacto')?.value || '';
-    
-    if (!nombreCliente) { alert('Completa el nombre del titular'); return; }
-    
-    document.getElementById('pago-paso2').style.display = 'none';
-    document.getElementById('pago-exitoso').style.display = 'block';
-    const ordId = 'ORD-'+Date.now().toString(36).toUpperCase();
-    document.getElementById('numero-orden').textContent = ordId;
-    
-    const total = window.totalCompra || carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
+function formatearTarjeta(input){let v=input.value.replace(/\D/g,'').replace(/(\d{4})/g,'$1 ').trim();input.value=v;document.getElementById('numero-tarjeta-visual').textContent=v||'•••• •••• •••• ••••';}
+function procesarPago(){
+    const nombreCliente=window.datosEntrega?.nombre||'';
+    const telefonoCliente=window.datosEntrega?.telefono||'';
+    if(!nombreCliente||!telefonoCliente){alert('Faltan datos del cliente');return;}
+    document.getElementById('pago-paso2').style.display='none';
+    document.getElementById('pago-exitoso').style.display='block';
+    const ordId='ORD-'+Date.now().toString(36).toUpperCase();
+    document.getElementById('numero-orden').textContent=ordId;
+    const total=window.totalCompra||carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
     
     db.collection('ordenes').add({
-        id: ordId, items: carrito,
-        total: total,
-        fecha: firebase.firestore.FieldValue.serverTimestamp(),
-        estado: 'confirmada', cliente: nombreCliente,
-        entrega: window.datosEntrega,
-        telefono: telefonoCliente
-    }).then(() => {
+        id:ordId,items:carrito,total:total,
+        fecha:firebase.firestore.FieldValue.serverTimestamp(),
+        estado:'confirmada',cliente:nombreCliente,
+        entrega:window.datosEntrega,telefono:telefonoCliente
+    }).then(()=>{
         // Descontar stock
-        carrito.forEach(i => db.collection('productos').doc(i.id).get().then(d => {
-            if(d.exists) db.collection('productos').doc(i.id).update({stock:Math.max(0,d.data().stock-i.cantidad)});
-        }));
-        
-        // Enviar mensaje por WhatsApp
-        if (telefonoCliente) {
-            const mensaje = encodeURIComponent(
-                `✅ *PEDIDO CONFIRMADO - NITROPEAK*\n\n` +
-                `📦 Orden: *${ordId}*\n` +
-                `👤 Cliente: *${nombreCliente}*\n` +
-                `💰 Total: *$${total.toFixed(2)}*\n\n` +
-                `📋 Productos:\n` +
-                carrito.map(i => `• ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}`).join('\n') +
-                `\n\nGracias por tu compra ⚡`
-            );
-            window.open(`https://wa.me/50361727059?text=${mensaje}`, '_blank');
-        }
+        carrito.forEach(i=>{
+            db.collection('productos').doc(i.id).get().then(d=>{
+                if(d.exists){
+                    const nuevoStock=Math.max(0,d.data().stock-i.cantidad);
+                    db.collection('productos').doc(i.id).update({stock:nuevoStock});
+                }
+            });
+        });
+        // Enviar WhatsApp al número del CLIENTE
+        const itemsTexto=carrito.map(i=>`• ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}`).join('\n');
+        const mensaje=encodeURIComponent(`✅ *PEDIDO CONFIRMADO - NITROPEAK*\n\n📦 Orden: *${ordId}*\n👤 Cliente: *${nombreCliente}*\n💰 Total: *$${total.toFixed(2)}*\n\n📋 Productos:\n${itemsTexto}\n\nGracias por tu compra ⚡`);
+        window.open(`https://wa.me/${telefonoCliente.replace(/\D/g,'')}?text=${mensaje}`, '_blank');
     });
-    
-    carrito = []; actualizarContador();
+    carrito=[];actualizarContador();
 }
-function cerrarPago() {
-    document.getElementById('pago-modal').style.display = 'none';
-    ['numero-tarjeta','nombre-tarjeta','vencimiento','cvv'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    document.getElementById('numero-tarjeta-visual').textContent = '•••• •••• •••• ••••';
-}
+function cerrarPago(){document.getElementById('pago-modal').style.display='none';['numero-tarjeta','nombre-tarjeta','vencimiento','cvv'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('numero-tarjeta-visual').textContent='•••• •••• •••• ••••';}
 
 // ============ CONTACTO ============
-function cargarRedesSociales() {
-    db.collection('configuracion').doc('redes').onSnapshot(d => {
-        if (!d.exists) return;
-        const ig = document.querySelector('.icono-red.instagram');
-        const wa = document.querySelector('.icono-red.whatsapp');
-        if (ig && d.data().instagram) ig.href = d.data().instagram;
-        if (wa && d.data().whatsapp) wa.href = 'https://wa.me/' + d.data().whatsapp.replace(/\D/g,'');
-    });
-}
-async function enviarContacto(e) {
-    e.preventDefault();
-    await db.collection('contactos').add({
-        nombre: document.getElementById('nombre-contacto').value,
-        email: document.getElementById('email-contacto').value,
-        telefono: document.getElementById('telefono-contacto').value,
-        mensaje: document.getElementById('mensaje-contacto').value,
-        fecha: new Date().toISOString(), contactado: false, comentarioAdmin: ''
-    });
-    alert('Mensaje enviado');
-    document.getElementById('formulario-contacto').reset();
-}
+function cargarRedesSociales(){db.collection('configuracion').doc('redes').onSnapshot(d=>{if(!d.exists)return;const ig=document.querySelector('.icono-red.instagram'),wa=document.querySelector('.icono-red.whatsapp');if(ig&&d.data().instagram)ig.href=d.data().instagram;if(wa&&d.data().whatsapp)wa.href='https://wa.me/'+d.data().whatsapp.replace(/\D/g,'');});}
+async function enviarContacto(e){e.preventDefault();await db.collection('contactos').add({nombre:document.getElementById('nombre-contacto').value,email:document.getElementById('email-contacto').value,telefono:document.getElementById('telefono-contacto').value,mensaje:document.getElementById('mensaje-contacto').value,fecha:new Date().toISOString(),contactado:false,comentarioAdmin:''});alert('Mensaje enviado');document.getElementById('formulario-contacto').reset();}
 
-// ============ SECCIONES DINÁMICAS ============
-function cargarSeccionesDinamicas() {
-    db.collection('secciones').get().then(snap => {
-        document.querySelectorAll('.seccion-dinamica').forEach(s => s.remove());
-        snap.forEach(d => {
-            const s = d.data();
-            if (!s.activo) return;
-            const div = document.createElement('section');
-            div.className = 'seccion-dinamica';
-            let media = '';
-            if (s.tipo==='imagen'&&s.mediaURL) media = `<img src="${s.mediaURL}" alt="${s.titulo}" style="max-width:100%;border-radius:15px;">`;
-            else if (s.tipo==='video'&&s.mediaURL) media = `<video controls style="max-width:100%"><source src="${s.mediaURL}"></video>`;
-            div.innerHTML = `<div class="contenido"><h2>${s.titulo}</h2><p>${s.contenido||''}</p>${media}</div>`;
-            const footer = document.querySelector('.footer');
-            if (footer) footer.parentNode.insertBefore(div, footer);
-        });
-    });
-}
+// ============ SECCIONES ============
+function cargarSeccionesDinamicas(){db.collection('secciones').get().then(snap=>{document.querySelectorAll('.seccion-dinamica').forEach(s=>s.remove());snap.forEach(d=>{const s=d.data();if(!s.activo)return;const div=document.createElement('section');div.className='seccion-dinamica';let media='';if(s.tipo==='imagen'&&s.mediaURL)media=`<img src="${s.mediaURL}" alt="${s.titulo}" style="max-width:100%;border-radius:15px;">`;else if(s.tipo==='video'&&s.mediaURL)media=`<video controls style="max-width:100%"><source src="${s.mediaURL}"></video>`;div.innerHTML=`<div class="contenido"><h2>${s.titulo}</h2><p>${s.contenido||''}</p>${media}</div>`;const footer=document.querySelector('.footer');if(footer)footer.parentNode.insertBefore(div,footer);});});}
+function mostrarNotificacion(msg){const n=document.createElement('div');n.className='notificacion';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),3000);}
 
-function mostrarNotificacion(msg) {
-    const n = document.createElement('div');
-    n.className = 'notificacion';
-    n.textContent = msg;
-    document.body.appendChild(n);
-    setTimeout(() => n.remove(), 3000);
-}
-
-document.querySelector('.carrito-icon')?.addEventListener('click', e => { e.preventDefault(); mostrarCarrito(); });
-document.querySelectorAll('.close').forEach(el => el.addEventListener('click', function() { this.closest('.modal').style.display = 'none'; }));
-window.onclick = e => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
-
-window.onload = function() {
-    cargarLogo();
-    initMap();
-};
+document.querySelector('.carrito-icon')?.addEventListener('click',e=>{e.preventDefault();mostrarCarrito();});
+document.querySelectorAll('.close').forEach(el=>el.addEventListener('click',function(){this.closest('.modal').style.display='none';}));
+window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.display='none';};
+window.onload=function(){cargarLogo();initMap();};
