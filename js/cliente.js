@@ -83,7 +83,6 @@ function actualizarMapa(ubis) {
     marcadoresLayer.clearLayers();
     const bounds = [];
     
-    // Usar coordenadas predefinidas para El Salvador sin geocodificación
     const coordenadasPredefinidas = {
         'San Salvador': { lat: 13.7209, lng: -89.2100 },
         'Santa Tecla': { lat: 13.6769, lng: -89.2794 },
@@ -92,17 +91,14 @@ function actualizarMapa(ubis) {
         'Mejicanos': { lat: 13.7254, lng: -89.2158 },
         'Ilopango': { lat: 13.6944, lng: -89.1075 },
         'San Marcos': { lat: 13.6586, lng: -89.1786 },
-        'La Libertad': { lat: 13.4883, lng: -89.3222 },
         'Colón': { lat: 13.7044, lng: -89.3547 },
         'Quezaltepeque': { lat: 13.8319, lng: -89.2681 },
         'San Juan Opico': { lat: 13.8761, lng: -89.3567 },
         'Santa Ana': { lat: 13.9778, lng: -89.5694 },
         'Chalchuapa': { lat: 13.9867, lng: -89.6814 },
         'Metapán': { lat: 14.3333, lng: -89.4500 },
-        'El Congo': { lat: 13.9089, lng: -89.4989 },
         'San Miguel': { lat: 13.4833, lng: -88.1833 },
         'Ciudad Barrios': { lat: 13.7667, lng: -88.2667 },
-        'Chinameca': { lat: 13.5000, lng: -88.3500 },
         'Sonsonate': { lat: 13.7189, lng: -89.7258 },
         'Izalco': { lat: 13.7447, lng: -89.6731 },
         'Nahuizalco': { lat: 13.7758, lng: -89.7386 },
@@ -126,17 +122,15 @@ function actualizarMapa(ubis) {
         'Atiquizaya': { lat: 13.9767, lng: -89.7517 },
         'La Unión': { lat: 13.3369, lng: -87.8439 },
         'Santa Rosa de Lima': { lat: 13.6194, lng: -87.8903 },
-        'Arcatao': { lat: 14.0833, lng: -88.7500 }
+        'Arcatao': { lat: 14.0833, lng: -88.7500 },
+        'La Libertad': { lat: 13.4883, lng: -89.3222 }
     };
     
     ubis.forEach(u => {
         const municipio = u.municipio || u.departamento;
         const coords = coordenadasPredefinidas[municipio] || coordenadasPredefinidas[u.departamento] || { lat: 13.7942, lng: -88.8965 };
-        
-        // Pequeña variación aleatoria para que no se superpongan
         const lat = coords.lat + (Math.random() - 0.5) * 0.02;
         const lng = coords.lng + (Math.random() - 0.5) * 0.02;
-        
         const markerColor = u.color || '#48bb78';
         const icon = L.divIcon({
             className: 'custom-marker',
@@ -148,17 +142,13 @@ function actualizarMapa(ubis) {
         bounds.push([lat, lng]);
     });
     
-    if (bounds.length > 1) {
-        mapa.fitBounds(bounds, { padding: [30, 30] });
-    } else if (bounds.length === 1) {
-        mapa.setView(bounds[0], 15);
-    }
+    if (bounds.length > 1) mapa.fitBounds(bounds, { padding: [30, 30] });
+    else if (bounds.length === 1) mapa.setView(bounds[0], 15);
 }
 
 function mostrarListaUbicaciones(ubis) {
     const contenedor = document.getElementById('ubicaciones-contenido');
     if (!contenedor) return;
-    
     contenedor.innerHTML = `
         <div style="position:relative;max-width:1200px;margin:0 auto;padding:0 50px;">
             <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel" style="position:absolute;left:0;top:-20px;transform:translateY(-50%);z-index:10;">◀</button>
@@ -166,12 +156,9 @@ function mostrarListaUbicaciones(ubis) {
                 <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="carrusel-ubicaciones-track">
                     ${ubis.map(u => `
                         <div class="ubicacion-item" style="border-left:4px solid ${u.color || '#48bb78'};min-width:280px;flex-shrink:0;">
-                            <h4>${u.nombre}</h4>
-                            <p>📍 ${u.direccion}</p>
-                            <p>📞 ${u.telefono || 'N/A'}</p>
+                            <h4>${u.nombre}</h4><p>📍 ${u.direccion}</p><p>📞 ${u.telefono || 'N/A'}</p>
                             <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
                             <span class="tipo-ubicacion" style="background:${u.color || '#48bb78'}">${u.tipo}</span>
-                            ${u.mapsLink ? `<br><a href="${u.mapsLink}" target="_blank" style="color:#48bb78;font-size:0.85em;">Ver en Google Maps</a>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -179,7 +166,6 @@ function mostrarListaUbicaciones(ubis) {
             <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel" style="position:absolute;right:0;top:-20px;transform:translateY(-50%);z-index:10;">▶</button>
         </div>
     `;
-    
     window.ubicacionesCarruselIndex = 0;
 }
 
@@ -188,72 +174,139 @@ function moverCarruselUbicaciones(dir) {
     if (!track) return;
     const items = track.querySelectorAll('.ubicacion-item');
     if (!items.length) return;
-    
     const visibleCards = window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 4;
     const maxIndex = Math.max(0, items.length - visibleCards);
     window.ubicacionesCarruselIndex = Math.max(0, Math.min((window.ubicacionesCarruselIndex || 0) + dir, maxIndex));
-    
-    const cardWidth = items[0].offsetWidth + 20; // ancho + gap
+    const cardWidth = items[0].offsetWidth + 20;
     const offset = window.ubicacionesCarruselIndex * cardWidth;
     track.style.transform = `translateX(-${offset}px)`;
 }
 
-// ============ PRODUCTOS CON ESTRELLAS PARCIALES ============
+// ============ PRODUCTOS EN CARRUSEL ============
 function cargarProductos() {
     db.collection('productos').where('activo','==',true).onSnapshot(snap => {
-        const c = document.getElementById('productos-lista');
-        if (!c) return;
-        c.innerHTML = '';
-        snap.forEach(doc => {
-            const p = doc.data();
-            const st = p.stock<=0?{t:'Agotado',c:'stock-agotado'}:p.stock<12?{t:'Stock bajo',c:'stock-bajo'}:{t:'Disponible',c:'stock-disponible'};
-            c.innerHTML += `
-            <div class="producto-card-compacto" id="prod-${doc.id}">
-                <img src="${p.imagen||''}" alt="${p.nombre}">
-                <h3>${p.nombre}</h3>
-                <div class="producto-stock ${st.c}">${st.t}</div>
-                <div class="producto-estrellas-compactas" id="estrellas-comp-${doc.id}"></div>
-                <div class="producto-row">
-                    <span class="producto-precio">$${p.precio.toFixed(2)}</span>
-                    <input type="number" id="cant-${doc.id}" value="1" min="1" max="${p.stock}" ${p.stock<=0?'disabled':''} class="cantidad-input-compacto">
-                    <button onclick="agregarAlCarrito('${doc.id}','${p.nombre}',${p.precio},${p.stock})" ${p.stock<=0?'disabled':''} class="btn-carrito-compacto"><i class="fas fa-cart-plus"></i></button>
-                </div>
-                <div class="producto-acciones-compactas">
-                    <button onclick="abrirValoracionProducto('${doc.id}','${p.nombre}')" class="btn-icono" title="Valorar">⭐</button>
-                    <button onclick="verComentarios('${doc.id}','${p.nombre}')" class="btn-icono" title="Comentarios">💬</button>
-                </div>
-            </div>`;
-            
-            db.collection('valoraciones').where('productoId','==',doc.id).get().then(vs => {
-                let t=0,n=0;
-                vs.forEach(v=>{ const d=v.data(); if(d.aprobada){ t+=d.estrellas; n++; } });
-                const prom = n>0?t/n:0;
-                const el = document.getElementById('estrellas-comp-'+doc.id);
-                if (el) el.innerHTML = generarEstrellasParciales(prom);
-            });
-        });
+        todosLosProductosCliente = [];
+        snap.forEach(doc => todosLosProductosCliente.push({id: doc.id, ...doc.data()}));
+        renderizarProductosCarrusel(todosLosProductosCliente);
     });
 }
 
+function renderizarProductosCarrusel(lista) {
+    const c = document.getElementById('productos-lista');
+    if (!c) return;
+    
+    c.innerHTML = `
+        <div style="position:relative;max-width:1400px;margin:0 auto;padding:0 50px;">
+            <button onclick="moverCarruselProductos(-1)" class="btn-carrusel" style="position:absolute;left:0;top:-20px;transform:translateY(-50%);z-index:10;">◀</button>
+            <div style="overflow:hidden;">
+                <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="productos-carrusel-track">
+                    ${lista.map(p => {
+                        const st = p.stock<=0?{t:'Agotado',c:'stock-agotado'}:p.stock<12?{t:'Stock bajo',c:'stock-bajo'}:{t:'Disponible',c:'stock-disponible'};
+                        return `
+                        <div class="producto-card-compacto" id="prod-${p.id}" style="min-width:250px;flex-shrink:0;">
+                            <img src="${p.imagen||''}" alt="${p.nombre}">
+                            <h3>${p.nombre}</h3>
+                            <div class="producto-stock ${st.c}">${st.t}</div>
+                            <div class="producto-estrellas-compactas" id="estrellas-comp-${p.id}"></div>
+                            <div class="producto-row">
+                                <span class="producto-precio">$${p.precio.toFixed(2)}</span>
+                                <input type="number" id="cant-${p.id}" value="1" min="1" max="${p.stock}" ${p.stock<=0?'disabled':''} class="cantidad-input-compacto">
+                                <button onclick="agregarAlCarrito('${p.id}','${p.nombre}',${p.precio},${p.stock})" ${p.stock<=0?'disabled':''} class="btn-carrito-compacto"><i class="fas fa-cart-plus"></i></button>
+                            </div>
+                            <div class="producto-acciones-compactas">
+                                <button onclick="abrirValoracionProducto('${p.id}','${p.nombre}')" class="btn-icono" title="Valorar">⭐</button>
+                                <button onclick="verComentarios('${p.id}','${p.nombre}')" class="btn-icono" title="Comentarios">💬</button>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+            <button onclick="moverCarruselProductos(1)" class="btn-carrusel" style="position:absolute;right:0;top:-20px;transform:translateY(-50%);z-index:10;">▶</button>
+        </div>
+    `;
+    
+    lista.forEach(p => {
+        db.collection('valoraciones').where('productoId','==',p.id).get().then(vs => {
+            let t=0,n=0;
+            vs.forEach(v=>{ const d=v.data(); if(d.aprobada){ t+=d.estrellas; n++; } });
+            const prom = n>0?t/n:0;
+            const el = document.getElementById('estrellas-comp-'+p.id);
+            if (el) el.innerHTML = generarEstrellasParciales(prom);
+        });
+    });
+    
+    window.productosCarruselIndex = 0;
+}
+
+function moverCarruselProductos(dir) {
+    const track = document.getElementById('productos-carrusel-track');
+    if (!track) return;
+    const items = track.querySelectorAll('.producto-card-compacto');
+    if (!items.length) return;
+    const containerWidth = track.parentElement.offsetWidth;
+    const visibleCards = Math.max(1, Math.floor(containerWidth / 270));
+    const maxIndex = Math.max(0, items.length - visibleCards);
+    window.productosCarruselIndex = Math.max(0, Math.min((window.productosCarruselIndex || 0) + dir, maxIndex));
+    const cardWidth = items[0].offsetWidth + 20;
+    const offset = window.productosCarruselIndex * cardWidth;
+    track.style.transform = `translateX(-${offset}px)`;
+}
+
+function filtrarProductosHeader() {
+    const texto = document.getElementById('buscar-producto-header')?.value?.toLowerCase() || '';
+    const resultados = document.getElementById('resultados-busqueda');
+    if (!resultados) return;
+    
+    if (texto.length < 1) {
+        resultados.style.display = 'none';
+        renderizarProductosCarrusel(todosLosProductosCliente);
+        return;
+    }
+    
+    const filtrados = todosLosProductosCliente.filter(p => 
+        p.nombre.toLowerCase().includes(texto) || (p.descripcion||'').toLowerCase().includes(texto)
+    );
+    
+    resultados.innerHTML = filtrados.length ? filtrados.map(p => `
+        <div class="resultado-item" onclick="irAProducto('${p.id}')">
+            <img src="${p.imagen||''}" alt="${p.nombre}">
+            <div class="info">
+                <div class="nombre">${p.nombre}</div>
+                <div class="precio">$${p.precio.toFixed(2)}</div>
+            </div>
+        </div>
+    `).join('') : '<div class="resultado-item"><span style="color:#6b8f71;">No se encontraron productos</span></div>';
+    
+    resultados.style.display = 'block';
+}
+
+function irAProducto(id) {
+    document.getElementById('resultados-busqueda').style.display = 'none';
+    document.getElementById('buscar-producto-header').value = '';
+    const producto = todosLosProductosCliente.find(p => p.id === id);
+    if (producto) renderizarProductosCarrusel([producto]);
+    document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
+}
+
+document.addEventListener('click', function(e) {
+    const buscador = document.getElementById('buscar-producto-header');
+    const resultados = document.getElementById('resultados-busqueda');
+    if (buscador && resultados && !buscador.contains(e.target) && !resultados.contains(e.target)) {
+        resultados.style.display = 'none';
+    }
+});
+
+// ============ ESTRELLAS ============
 function generarEstrellasParciales(prom) {
     let h = '<span style="display:inline-flex;gap:2px;align-items:center;">';
     for(let i=1;i<=5;i++){
-        if(prom >= i) {
-            h += '<span style="color:#ffd700;font-size:0.9em;">★</span>';
-        } else if(prom >= i - 0.9) {
-            // Estrella casi llena (90%)
-            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:90%;color:#ffd700;">★</span></span>';
-        } else if(prom >= i - 0.7) {
-            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:70%;color:#ffd700;">★</span></span>';
-        } else if(prom >= i - 0.5) {
-            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:50%;color:#ffd700;">★</span></span>';
-        } else if(prom >= i - 0.3) {
-            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:30%;color:#ffd700;">★</span></span>';
-        } else if(prom >= i - 0.1) {
-            h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:10%;color:#ffd700;">★</span></span>';
-        } else {
-            h += '<span style="color:#2d5a3d;font-size:0.9em;">★</span>';
-        }
+        if(prom >= i) h += '<span style="color:#ffd700;font-size:0.9em;">★</span>';
+        else if(prom >= i - 0.9) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:90%;color:#ffd700;">★</span></span>';
+        else if(prom >= i - 0.7) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:70%;color:#ffd700;">★</span></span>';
+        else if(prom >= i - 0.5) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:50%;color:#ffd700;">★</span></span>';
+        else if(prom >= i - 0.3) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:30%;color:#ffd700;">★</span></span>';
+        else if(prom >= i - 0.1) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:10%;color:#ffd700;">★</span></span>';
+        else h += '<span style="color:#2d5a3d;font-size:0.9em;">★</span>';
     }
     h += `<small style="font-size:0.8em;margin-left:4px;">(${prom.toFixed(1)})</small></span>`;
     return h;
@@ -361,7 +414,7 @@ function mostrarCarrito(){
 function cambiarCantidad(idx,cambio){const item=carrito[idx],nc=item.cantidad+cambio;if(nc<=0){eliminarDelCarrito(idx);return;}db.collection('productos').doc(item.id).get().then(d=>{if(d.exists)item.cantidad=Math.min(nc,d.data().stock);mostrarCarrito();actualizarContador();});}
 function eliminarDelCarrito(idx){carrito.splice(idx,1);mostrarCarrito();actualizarContador();}
 
-// ============ PAGO MEJORADO ============
+// ============ PAGO ============
 const depsSV = ['Ahuachapán','Cabañas','Chalatenango','Cuscatlán','La Libertad','La Paz','La Unión','Morazán','San Miguel','San Salvador','San Vicente','Santa Ana','Sonsonate','Usulután'];
 const munisSV = {'San Salvador':['San Salvador','Santa Tecla','Antiguo Cuscatlán','Soyapango','Ilopango','Mejicanos','San Marcos'],'La Libertad':['Santa Tecla','Antiguo Cuscatlán','Colón','Quezaltepeque','San Juan Opico'],'Santa Ana':['Santa Ana','Chalchuapa','Metapán','El Congo'],'San Miguel':['San Miguel','Ciudad Barrios','Chinameca'],'Sonsonate':['Sonsonate','Izalco','Nahuizalco','Acajutla'],'Usulután':['Usulután','Santiago de María','Jucuapa'],'La Paz':['Zacatecoluca','Santiago Nonualco'],'Cabañas':['Sensuntepeque','Ilobasco'],'Chalatenango':['Chalatenango','Nueva Concepción'],'Cuscatlán':['Cojutepeque','Suchitoto'],'Morazán':['San Francisco Gotera','Corinto'],'San Vicente':['San Vicente','Tecoluca'],'Ahuachapán':['Ahuachapán','Atiquizaya'],'La Unión':['La Unión','Santa Rosa de Lima']};
 
@@ -410,7 +463,7 @@ function irAPaso2(){
         datos={...datos,ptoNombre:ptNombre,ptoDir:ptDir,ptoDep:ptDep,ptoMun:ptMun};
     }else{
         ['envio-direccion','envio-departamento','envio-municipio','envio-referencia'].forEach(id=>datos[id.replace('envio-','')]=document.getElementById(id).value);
-        if(!datos.direccion||!datos.departamento||!datos.contacto){alert('Completa los datos de envío');return;}
+        if(!datos.direccion||!datos.departamento){alert('Completa los datos de envío');return;}
         datos.contacto=telefono;
     }
     window.datosEntrega=datos;
@@ -437,7 +490,6 @@ function procesarPago(){
         estado:'confirmada',cliente:nombreCliente,
         entrega:window.datosEntrega,telefono:telefonoCliente
     }).then(()=>{
-        // Descontar stock
         carrito.forEach(i=>{
             db.collection('productos').doc(i.id).get().then(d=>{
                 if(d.exists){
@@ -446,7 +498,6 @@ function procesarPago(){
                 }
             });
         });
-        // Enviar WhatsApp al número del CLIENTE
         const itemsTexto=carrito.map(i=>`• ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}`).join('\n');
         const mensaje=encodeURIComponent(`✅ *PEDIDO CONFIRMADO - NITROPEAK*\n\n📦 Orden: *${ordId}*\n👤 Cliente: *${nombreCliente}*\n💰 Total: *$${total.toFixed(2)}*\n\n📋 Productos:\n${itemsTexto}\n\nGracias por tu compra ⚡`);
         window.open(`https://wa.me/${telefonoCliente.replace(/\D/g,'')}?text=${mensaje}`, '_blank');
@@ -462,36 +513,6 @@ async function enviarContacto(e){e.preventDefault();await db.collection('contact
 // ============ SECCIONES ============
 function cargarSeccionesDinamicas(){db.collection('secciones').get().then(snap=>{document.querySelectorAll('.seccion-dinamica').forEach(s=>s.remove());snap.forEach(d=>{const s=d.data();if(!s.activo)return;const div=document.createElement('section');div.className='seccion-dinamica';let media='';if(s.tipo==='imagen'&&s.mediaURL)media=`<img src="${s.mediaURL}" alt="${s.titulo}" style="max-width:100%;border-radius:15px;">`;else if(s.tipo==='video'&&s.mediaURL)media=`<video controls style="max-width:100%"><source src="${s.mediaURL}"></video>`;div.innerHTML=`<div class="contenido"><h2>${s.titulo}</h2><p>${s.contenido||''}</p>${media}</div>`;const footer=document.querySelector('.footer');if(footer)footer.parentNode.insertBefore(div,footer);});});}
 function mostrarNotificacion(msg){const n=document.createElement('div');n.className='notificacion';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),3000);}
-
-function filtrarProductosHeader() {
-    const texto = document.getElementById('buscar-producto-header')?.value?.toLowerCase() || '';
-    const resultados = document.getElementById('resultados-busqueda');
-    
-    if (!resultados) return;
-    
-    if (texto.length < 1) {
-        resultados.style.display = 'none';
-        renderizarProductosCarrusel(todosLosProductosCliente);
-        return;
-    }
-    
-    const filtrados = todosLosProductosCliente.filter(p => 
-        p.nombre.toLowerCase().includes(texto) || 
-        (p.descripcion||'').toLowerCase().includes(texto)
-    );
-    
-    resultados.innerHTML = filtrados.length ? filtrados.map(p => `
-        <div class="resultado-item" onclick="irAProducto('${p.id}')">
-            <img src="${p.imagen||''}" alt="${p.nombre}">
-            <div class="info">
-                <div class="nombre">${p.nombre}</div>
-                <div class="precio">$${p.precio.toFixed(2)}</div>
-            </div>
-        </div>
-    `).join('') : '<div class="resultado-item"><span style="color:#6b8f71;">No se encontraron productos</span></div>';
-    
-    resultados.style.display = 'block';
-}
 
 document.querySelector('.carrito-icon')?.addEventListener('click',e=>{e.preventDefault();mostrarCarrito();});
 document.querySelectorAll('.close').forEach(el=>el.addEventListener('click',function(){this.closest('.modal').style.display='none';}));
