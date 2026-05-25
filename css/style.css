@@ -1287,3 +1287,33 @@ button[type="submit"]:hover,
         font-size: 1.8em;
     }
 }
+
+/* ============ RESPONSIVE PAGO ============ */
+@media (max-width: 600px) {
+    .pago-content {
+        max-width: 95% !important;
+        margin: 2% auto;
+        padding: 15px;
+    }
+    
+    .tarjeta-visual {
+        padding: 15px;
+    }
+    
+    .tarjeta-row {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    #punto-mapa {
+        height: 180px !important;
+    }
+    
+    .metodo-entrega {
+        gap: 5px;
+    }
+    
+    .radio-label {
+        font-size: 0.85em;
+    }
+}
