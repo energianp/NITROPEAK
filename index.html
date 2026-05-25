@@ -161,7 +161,7 @@
         </div>
     </div>
 
-    <!-- Modal Pago -->
+<!-- Modal Pago -->
 <div id="pago-modal" class="modal">
     <div class="modal-content pago-content">
         <span class="close" onclick="cerrarPago()">&times;</span>
@@ -176,8 +176,23 @@
             <input type="text" id="nombre-cliente-pago" placeholder="Tu nombre completo" class="form-input">
             <input type="tel" id="telefono-cliente-pago" placeholder="Tu teléfono (ej: 50361727059)" class="form-input">
             <div id="entrega-punto">
-                <h4>Punto de distribución:</h4>
-                <select id="punto-distribucion" class="form-input"></select>
+                <h4>Selecciona el punto de distribución:</h4>
+                <select id="punto-departamento" class="form-input" onchange="cargarPuntoMunicipios(); filtrarPuntosMapa();">
+                    <option value="">Departamento</option>
+                </select>
+                <select id="punto-municipio" class="form-input" onchange="filtrarPuntosMapa();">
+                    <option value="">Municipio</option>
+                </select>
+                <select id="punto-tipo" class="form-input" onchange="filtrarPuntosMapa();">
+                    <option value="">Tipo (Gym, Farmacia, etc.)</option>
+                    <option value="Supermercado">Supermercado</option>
+                    <option value="Gimnasio">Gimnasio</option>
+                    <option value="Tienda de conveniencia">Tienda de conveniencia</option>
+                    <option value="Farmacia">Farmacia</option>
+                </select>
+                <div id="punto-mapa" style="height:250px;border-radius:10px;margin:10px 0;border:2px solid var(--color-acento);"></div>
+                <div id="punto-seleccionado-info" style="padding:10px;background:var(--color-oscuro);border-radius:8px;color:var(--color-acento);text-align:center;display:none;"></div>
+                <input type="hidden" id="punto-seleccionado-valor">
             </div>
             <div id="entrega-domicilio" style="display:none;">
                 <h4>Datos de envío:</h4>
@@ -203,11 +218,12 @@
             <div class="exito-icono">✅</div>
             <h3>¡Pedido Confirmado!</h3>
             <p>Número de orden: <strong id="numero-orden"></strong></p>
+            <p id="whatsapp-estado" style="color:#48bb78;display:none;">Enviando confirmación por WhatsApp...</p>
             <button onclick="cerrarPago()" class="btn-guardar">Cerrar</button>
         </div>
     </div>
 </div>
-  
+    
     <footer class="footer">
         <p>&copy; 2024 NITROPEAK - Todos los derechos reservados</p>
     </footer>
