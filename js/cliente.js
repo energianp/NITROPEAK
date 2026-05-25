@@ -402,9 +402,12 @@ function mostrarCarrito(){
 function cambiarCantidad(idx,cambio){const item=carrito[idx],nc=item.cantidad+cambio;if(nc<=0){eliminarDelCarrito(idx);return;}db.collection('productos').doc(item.id).get().then(d=>{if(d.exists)item.cantidad=Math.min(nc,d.data().stock);mostrarCarrito();actualizarContador();});}
 function eliminarDelCarrito(idx){carrito.splice(idx,1);mostrarCarrito();actualizarContador();}
 
-// ============ PAGO ============
+// ============ PAGO MEJORADO CON MAPA Y WHATSAPP AUTOMÁTICO ============
 const depsSV = ['Ahuachapán','Cabañas','Chalatenango','Cuscatlán','La Libertad','La Paz','La Unión','Morazán','San Miguel','San Salvador','San Vicente','Santa Ana','Sonsonate','Usulután'];
 const munisSV = {'San Salvador':['San Salvador','Santa Tecla','Antiguo Cuscatlán','Soyapango','Ilopango','Mejicanos','San Marcos'],'La Libertad':['Santa Tecla','Antiguo Cuscatlán','Colón','Quezaltepeque','San Juan Opico'],'Santa Ana':['Santa Ana','Chalchuapa','Metapán','El Congo'],'San Miguel':['San Miguel','Ciudad Barrios','Chinameca'],'Sonsonate':['Sonsonate','Izalco','Nahuizalco','Acajutla'],'Usulután':['Usulután','Santiago de María','Jucuapa'],'La Paz':['Zacatecoluca','Santiago Nonualco'],'Cabañas':['Sensuntepeque','Ilobasco'],'Chalatenango':['Chalatenango','Nueva Concepción'],'Cuscatlán':['Cojutepeque','Suchitoto'],'Morazán':['San Francisco Gotera','Corinto'],'San Vicente':['San Vicente','Tecoluca'],'Ahuachapán':['Ahuachapán','Atiquizaya'],'La Unión':['La Unión','Santa Rosa de Lima']};
+let puntoMapa = null;
+let puntoMarcadoresLayer = null;
+let puntoSeleccionadoActual = null;
 
 function irAPagar(){
     document.getElementById('carrito-modal').style.display='none';
@@ -412,16 +415,94 @@ function irAPagar(){
     document.getElementById('pago-paso1').style.display='block';
     document.getElementById('pago-paso2').style.display='none';
     document.getElementById('pago-exitoso').style.display='none';
-    cargarPuntosDistribucion();
+    puntoSeleccionadoActual = null;
+    document.getElementById('punto-seleccionado-valor').value = '';
+    document.getElementById('punto-seleccionado-info').style.display = 'none';
+    cargarPuntoDepartamentos();
     cargarDepsEnvio();
+    setTimeout(() => { if (document.getElementById('punto-mapa').offsetParent) inicializarPuntoMapa(); }, 300);
 }
-function cargarPuntosDistribucion(){
-    db.collection('ubicaciones').get().then(snap=>{
-        const s=document.getElementById('punto-distribucion');
-        s.innerHTML='<option value="">Seleccionar punto</option>';
-        snap.forEach(d=>{const u=d.data();s.innerHTML+=`<option value="${u.nombre}|${u.direccion}|${u.departamento}|${u.municipio}">${u.nombre} - ${u.direccion} (${u.departamento})</option>`;});
+
+function cargarPuntoDepartamentos() {
+    const s = document.getElementById('punto-departamento');
+    if (!s) return;
+    s.innerHTML = '<option value="">Departamento</option>';
+    depsSV.forEach(d => s.innerHTML += `<option value="${d}">${d}</option>`);
+}
+
+function cargarPuntoMunicipios() {
+    const dep = document.getElementById('punto-departamento').value;
+    const s = document.getElementById('punto-municipio');
+    if (!s) return;
+    s.innerHTML = '<option value="">Municipio</option>';
+    if (munisSV[dep]) munisSV[dep].forEach(m => s.innerHTML += `<option value="${m}">${m}</option>`);
+}
+
+function inicializarPuntoMapa() {
+    if (puntoMapa) { puntoMapa.remove(); }
+    puntoMapa = L.map('punto-mapa').setView([13.7942, -88.8965], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(puntoMapa);
+    puntoMarcadoresLayer = L.layerGroup().addTo(puntoMapa);
+    filtrarPuntosMapa();
+}
+
+function filtrarPuntosMapa() {
+    if (!puntoMapa || !puntoMarcadoresLayer) return;
+    const dep = document.getElementById('punto-departamento').value;
+    const mun = document.getElementById('punto-municipio').value;
+    const tipo = document.getElementById('punto-tipo').value;
+    
+    db.collection('ubicaciones').get().then(snap => {
+        const filtradas = [];
+        snap.forEach(d => {
+            const u = d.data();
+            if (dep && u.departamento !== dep) return;
+            if (mun && u.municipio !== mun) return;
+            if (tipo && u.tipo !== tipo) return;
+            filtradas.push({...u, id: d.id});
+        });
+        
+        puntoMarcadoresLayer.clearLayers();
+        const bounds = [];
+        const coords = {
+            'San Salvador':[13.7209,-89.2100],'Santa Tecla':[13.6769,-89.2794],'Antiguo Cuscatlán':[13.6732,-89.2533],
+            'Soyapango':[13.7081,-89.1473],'Mejicanos':[13.7254,-89.2158],'Santa Ana':[13.9778,-89.5694],
+            'San Miguel':[13.4833,-88.1833],'Sonsonate':[13.7189,-89.7258],'Usulután':[13.3500,-88.4500],
+            'Zacatecoluca':[13.5000,-88.8667],'San Vicente':[13.6458,-88.7889],'Ahuachapán':[13.9214,-89.8458],
+            'La Unión':[13.3369,-87.8439],'Chalatenango':[14.0333,-88.9333],'Cojutepeque':[13.7167,-88.9333],
+            'Sensuntepeque':[13.8667,-88.6333],'San Francisco Gotera':[13.7000,-88.1000]
+        };
+        
+        filtradas.forEach(u => {
+            const coord = coords[u.municipio] || coords[u.departamento] || [13.7942,-88.8965];
+            const lat = coord[0] + (Math.random()-0.5)*0.02;
+            const lng = coord[1] + (Math.random()-0.5)*0.02;
+            
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="width:24px;height:24px;background:${u.color||'#48bb78'};border:3px solid #1a472a;border-radius:50%;cursor:pointer;"></div>`,
+                iconSize: [24,24], iconAnchor: [12,12]
+            });
+            const m = L.marker([lat,lng], {icon}).addTo(puntoMarcadoresLayer);
+            m.bindPopup(`<div style="color:#1a472a"><strong>${u.nombre}</strong><br>📍${u.direccion}<br>📞${u.telefono||'N/A'}<br><button onclick="seleccionarPuntoMapa('${u.nombre}|${u.direccion}|${u.departamento}|${u.municipio}','${u.nombre}','${u.direccion}')" style="background:#48bb78;color:#1a472a;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-top:5px;">Seleccionar</button></div>`);
+            m.on('click', () => m.openPopup());
+            bounds.push([lat,lng]);
+        });
+        
+        if (bounds.length > 1) puntoMapa.fitBounds(bounds, {padding:[20,20]});
+        else if (bounds.length === 1) puntoMapa.setView(bounds[0], 14);
     });
 }
+
+function seleccionarPuntoMapa(valor, nombre, direccion) {
+    puntoSeleccionadoActual = { valor, nombre, direccion };
+    document.getElementById('punto-seleccionado-valor').value = valor;
+    const info = document.getElementById('punto-seleccionado-info');
+    info.innerHTML = `✅ <strong>${nombre}</strong><br>📍 ${direccion}`;
+    info.style.display = 'block';
+    document.querySelectorAll('#punto-mapa .leaflet-popup').forEach(p => p.remove());
+}
+
 function cargarDepsEnvio(){
     const s=document.getElementById('envio-departamento');
     if(!s)return;
@@ -437,6 +518,7 @@ function cargarMunisEnvio(dep){
 function mostrarPasoEntrega(t){
     document.getElementById('entrega-punto').style.display=t==='punto'?'block':'none';
     document.getElementById('entrega-domicilio').style.display=t==='domicilio'?'block':'none';
+    if (t === 'punto') setTimeout(() => inicializarPuntoMapa(), 200);
 }
 function irAPaso2(){
     const tipo=document.querySelector('input[name="entrega"]:checked')?.value;
@@ -445,8 +527,8 @@ function irAPaso2(){
     if(!nombre||!telefono){alert('Completa tu nombre y teléfono');return;}
     let datos={tipo,nombre,telefono};
     if(tipo==='punto'){
-        const p=document.getElementById('punto-distribucion').value;
-        if(!p){alert('Selecciona un punto de distribución');return;}
+        const p = document.getElementById('punto-seleccionado-valor').value;
+        if(!p){alert('Selecciona un punto en el mapa');return;}
         const[ptNombre,ptDir,ptDep,ptMun]=p.split('|');
         datos={...datos,ptoNombre:ptNombre,ptoDir:ptDir,ptoDep:ptDep,ptoMun:ptMun};
     }else{
@@ -462,12 +544,30 @@ function irAPaso2(){
     window.totalCompra=total;
 }
 function formatearTarjeta(input){let v=input.value.replace(/\D/g,'').replace(/(\d{4})/g,'$1 ').trim();input.value=v;document.getElementById('numero-tarjeta-visual').textContent=v||'•••• •••• •••• ••••';}
+
+// ============ WHATSAPP AUTOMÁTICO CON CALLMEBOT ============
+// Reemplaza TU_API_KEY con la que obtengas de https://callmebot.com
+const CALLMEBOT_API_KEY = 'TU_API_KEY'; // ← Cambiar por tu API Key real
+const NUMERO_EMPRESA = '50361727059';
+
+async function enviarWhatsAppAutomatico(telefonoCliente, mensaje) {
+    try {
+        const url = `https://api.callmebot.com/whatsapp.php?phone=${NUMERO_EMPRESA}&text=${encodeURIComponent(mensaje)}&apikey=${CALLMEBOT_API_KEY}`;
+        await fetch(url);
+        return true;
+    } catch (e) {
+        console.error('Error enviando WhatsApp:', e);
+        return false;
+    }
+}
+
 function procesarPago(){
     const nombreCliente=window.datosEntrega?.nombre||'';
     const telefonoCliente=window.datosEntrega?.telefono||'';
     if(!nombreCliente||!telefonoCliente){alert('Faltan datos del cliente');return;}
     document.getElementById('pago-paso2').style.display='none';
     document.getElementById('pago-exitoso').style.display='block';
+    document.getElementById('whatsapp-estado').style.display = 'block';
     const ordId='ORD-'+Date.now().toString(36).toUpperCase();
     document.getElementById('numero-orden').textContent=ordId;
     const total=window.totalCompra||carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
@@ -486,13 +586,22 @@ function procesarPago(){
                 }
             });
         });
+        // Enviar WhatsApp automático (sin abrir ventana)
         const itemsTexto=carrito.map(i=>`• ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}`).join('\n');
-        const mensaje=encodeURIComponent(`✅ *PEDIDO CONFIRMADO - NITROPEAK*\n\n📦 Orden: *${ordId}*\n👤 Cliente: *${nombreCliente}*\n💰 Total: *$${total.toFixed(2)}*\n\n📋 Productos:\n${itemsTexto}\n\nGracias por tu compra ⚡`);
-        window.open(`https://wa.me/${telefonoCliente.replace(/\D/g,'')}?text=${mensaje}`, '_blank');
+        const mensaje=`✅ *PEDIDO CONFIRMADO - NITROPEAK*\n\n📦 Orden: *${ordId}*\n👤 Cliente: *${nombreCliente}*\n💰 Total: *$${total.toFixed(2)}*\n\n📋 Productos:\n${itemsTexto}\n\nGracias por tu compra ⚡`;
+        
+        enviarWhatsAppAutomatico(telefonoCliente, mensaje).then(() => {
+            document.getElementById('whatsapp-estado').textContent = '✅ Confirmación enviada por WhatsApp';
+        });
     });
     carrito=[];actualizarContador();
 }
-function cerrarPago(){document.getElementById('pago-modal').style.display='none';['numero-tarjeta','nombre-tarjeta','vencimiento','cvv'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('numero-tarjeta-visual').textContent='•••• •••• •••• ••••';}
+function cerrarPago(){
+    document.getElementById('pago-modal').style.display='none';
+    ['numero-tarjeta','nombre-tarjeta','vencimiento','cvv'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('numero-tarjeta-visual').textContent='•••• •••• •••• ••••';
+    if (puntoMapa) { puntoMapa.remove(); puntoMapa = null; }
+}
 
 // ============ CONTACTO ============
 function cargarRedesSociales(){db.collection('configuracion').doc('redes').onSnapshot(d=>{if(!d.exists)return;const ig=document.querySelector('.icono-red.instagram'),wa=document.querySelector('.icono-red.whatsapp');if(ig&&d.data().instagram)ig.href=d.data().instagram;if(wa&&d.data().whatsapp)wa.href='https://wa.me/'+d.data().whatsapp.replace(/\D/g,'');});}
