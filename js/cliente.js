@@ -547,7 +547,7 @@ function formatearTarjeta(input){let v=input.value.replace(/\D/g,'').replace(/(\
 
 // ============ WHATSAPP AUTOMÁTICO CON CALLMEBOT ============
 // Reemplaza TU_API_KEY con la que obtengas de https://callmebot.com
-const CALLMEBOT_API_KEY = 'TU_API_KEY'; // ← Cambiar por tu API Key real
+const CALLMEBOT_API_KEY = '1722285'; // ← Cambiar por tu API Key real
 const NUMERO_EMPRESA = '50361727059';
 
 async function enviarWhatsAppAutomatico(telefonoCliente, mensaje) {
