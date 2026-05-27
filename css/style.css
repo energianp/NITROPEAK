@@ -107,6 +107,45 @@ body {
     font-weight: bold;
 }
 
+/* ============ BUSCADOR HEADER ============ */
+.buscador-header {
+    position: relative;
+    flex: 1;
+    max-width: 300px;
+    margin: 0 20px;
+}
+
+.buscar-input {
+    width: 100%;
+    padding: 8px 15px;
+    border: 2px solid var(--color-secundario);
+    border-radius: 20px;
+    background: var(--color-oscuro);
+    color: var(--color-texto);
+    font-size: 0.85em;
+    transition: all 0.3s;
+}
+
+.buscar-input:focus {
+    border-color: var(--color-acento);
+    outline: none;
+    box-shadow: 0 0 10px rgba(72, 187, 120, 0.2);
+}
+
+.resultados-busqueda {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-card);
+    border: 2px solid var(--color-acento);
+    border-radius: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1001;
+    margin-top: 5px;
+}
+
 /* ============ HERO ============ */
 .hero {
     background: linear-gradient(135deg, var(--color-principal) 0%, var(--color-oscuro) 100%);
@@ -510,9 +549,10 @@ section h2::after {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-/* ============ UBICACIONES ============ */
+/* ============ UBICACIONES - CARRUSEL ============ */
 .ubicaciones {
     background: var(--color-card);
+    overflow: hidden;
 }
 
 #mapa {
@@ -556,20 +596,52 @@ section h2::after {
     background: rgba(72, 187, 120, 0.1);
 }
 
-.ubicaciones-lista {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    max-width: 1200px;
+/* Contenedor del carrusel de ubicaciones */
+.carrusel-ubicaciones-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
     margin: 0 auto;
+    padding: 10px 0 20px 0;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-acento) var(--color-card);
+    -webkit-overflow-scrolling: touch;
 }
 
+.carrusel-ubicaciones-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.carrusel-ubicaciones-container::-webkit-scrollbar-track {
+    background: var(--color-card);
+    border-radius: 10px;
+}
+
+.carrusel-ubicaciones-container::-webkit-scrollbar-thumb {
+    background: var(--color-acento);
+    border-radius: 10px;
+}
+
+/* Track del carrusel - horizontal */
+.carrusel-ubicaciones-track {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.4s ease;
+    will-change: transform;
+    padding: 5px;
+}
+
+/* Tarjetas de ubicaciones */
 .ubicacion-item {
     background: var(--color-card);
     padding: 20px;
     border-radius: 10px;
     border: 1px solid var(--color-borde);
     transition: all 0.3s ease;
+    min-width: 280px;
+    max-width: 320px;
+    flex-shrink: 0;
 }
 
 .ubicacion-item:hover {
@@ -579,8 +651,17 @@ section h2::after {
     background: #1f3d26;
 }
 
-.ubicacion-item h4 { color: var(--color-acento); margin-bottom: 10px; }
-.ubicacion-item p { color: var(--color-texto-secundario); font-size: 0.9em; margin: 5px 0; }
+.ubicacion-item h4 { 
+    color: var(--color-acento); 
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.ubicacion-item p { 
+    color: var(--color-texto-secundario); 
+    font-size: 0.9em; 
+    margin: 5px 0;
+}
 
 .tipo-ubicacion {
     display: inline-block;
@@ -590,6 +671,35 @@ section h2::after {
     font-weight: bold;
     color: var(--color-principal);
     margin-top: 10px;
+}
+
+/* Botones de navegación del carrusel de ubicaciones */
+.carrusel-ubicaciones-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn-carrusel-ubicacion {
+    background: rgba(72, 187, 120, 0.1);
+    border: 2px solid var(--color-acento);
+    color: var(--color-acento);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-carrusel-ubicacion:hover {
+    background: rgba(72, 187, 120, 0.25);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(72, 187, 120, 0.4);
 }
 
 /* ============ PERSONALIZAR ============ */
@@ -859,49 +969,6 @@ button[type="submit"]:hover,
     box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
 }
 
-/* ============ SECCIONES DINÁMICAS ============ */
-.seccion-dinamica {
-    padding: 80px 50px;
-}
-
-.seccion-dinamica:nth-child(odd) {
-    background: var(--color-card);
-}
-
-.seccion-dinamica:nth-child(even) {
-    background: var(--color-oscuro);
-}
-
-.seccion-dinamica .contenido {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.seccion-dinamica img {
-    max-width: 100%;
-    border-radius: 15px;
-    border: 2px solid var(--color-borde);
-}
-
-.seccion-dinamica video {
-    max-width: 100%;
-    border-radius: 15px;
-    border: 2px solid var(--color-borde);
-}
-
-/* ============ COMENTARIOS ============ */
-.comentario-item {
-    background: var(--color-oscuro);
-    border: 1px solid var(--color-borde);
-    border-radius: 10px;
-    padding: 15px;
-    margin: 10px 0;
-}
-
-.valoracion-modal-content {
-    max-width: 500px !important;
-}
-
 /* ============ FOOTER ============ */
 .footer {
     background: var(--color-oscuro);
@@ -947,164 +1014,6 @@ button[type="submit"]:hover,
     border: 1px solid var(--color-acento) !important;
 }
 
-/* ============ BUSCADOR EN HEADER ============ */
-.buscador-header {
-    position: relative;
-    flex: 1;
-    max-width: 300px;
-    margin: 0 20px;
-}
-
-.buscar-input {
-    width: 100%;
-    padding: 8px 15px;
-    border: 2px solid var(--color-secundario);
-    border-radius: 20px;
-    background: var(--color-oscuro);
-    color: var(--color-texto);
-    font-size: 0.85em;
-    transition: all 0.3s;
-}
-
-.buscar-input:focus {
-    border-color: var(--color-acento);
-    outline: none;
-    box-shadow: 0 0 10px rgba(72, 187, 120, 0.2);
-}
-
-.resultados-busqueda {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--color-card);
-    border: 2px solid var(--color-acento);
-    border-radius: 10px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 1001;
-    margin-top: 5px;
-}
-
-.resultado-item {
-    padding: 12px 15px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--color-borde);
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.resultado-item:hover {
-    background: rgba(72, 187, 120, 0.1);
-}
-
-.resultado-item img {
-    width: 40px;
-    height: 40px;
-    border-radius: 5px;
-    object-fit: cover;
-}
-
-.resultado-item .info {
-    flex: 1;
-}
-
-.resultado-item .nombre {
-    color: var(--color-acento);
-    font-weight: bold;
-    font-size: 0.9em;
-}
-
-.resultado-item .precio {
-    color: var(--color-texto-secundario);
-    font-size: 0.8em;
-}
-
-/* ============ HISTORIA (TEXTO ARRIBA, IMAGEN ABAJO) ============ */
-.historia-content {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.historia-texto {
-    text-align: left;
-    width: 100%;
-}
-
-.historia-texto h3 {
-    color: var(--color-acento);
-    font-size: 1.8em;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.historia-texto p {
-    color: var(--color-texto-secundario);
-    line-height: 1.8;
-    font-size: 1.1em;
-    white-space: pre-line;
-}
-
-.historia-content img,
-.historia-texto img {
-    width: 100%;
-    max-width: 100%;
-    border-radius: 15px;
-    border: 2px solid var(--color-borde);
-    margin-top: 20px;
-    display: block;
-}
-
-/* ============ CARRUSEL DE PRODUCTOS ============ */
-.productos-carrusel-container {
-    overflow: hidden;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 10px 0;
-    position: relative;
-}
-
-.productos-carrusel-track {
-    display: flex;
-    gap: 20px;
-    transition: transform 0.4s ease;
-}
-
-.productos-carrusel-nav {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-/* ============ CARRUSEL DE UBICACIONES ============ */
-.carrusel-ubicaciones-container {
-    overflow: hidden;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 10px 0;
-    position: relative;
-}
-
-.carrusel-ubicaciones-track {
-    display: flex;
-    gap: 20px;
-    transition: transform 0.4s ease;
-    will-change: transform;
-}
-
-.carrusel-ubicaciones-nav {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1024px) {
     .buscador-header {
@@ -1135,14 +1044,12 @@ button[type="submit"]:hover,
         left: 0;
         width: 100%;
         z-index: 1000;
-        overflow-y: visible;
     }
     
     .nav {
         flex-direction: column;
         padding: 10px 15px;
         gap: 8px;
-        max-height: none;
     }
     
     .logo {
@@ -1193,19 +1100,19 @@ button[type="submit"]:hover,
     }
     
     .hero {
-        padding-top: 140px;
+        padding-top: 160px;
     }
     
     .hero-content h2 { font-size: 2em; }
     .hero-content p { font-size: 1em; }
     
     section {
-        padding: 40px 10px;
+        padding: 40px 15px;
     }
     
     section h2 {
-        font-size: 1.5em;
-        margin-bottom: 25px;
+        font-size: 1.8em;
+        margin-bottom: 30px;
     }
     
     .historia-content {
@@ -1214,32 +1121,23 @@ button[type="submit"]:hover,
     
     .productos-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        gap: 15px;
     }
     
     .producto-card-compacto {
-        padding: 10px;
+        padding: 12px;
     }
     
     .producto-card-compacto img {
         height: 120px;
     }
     
-    .producto-card-compacto h3 {
-        font-size: 0.9em;
-    }
-    
-    .producto-precio {
-        font-size: 1em;
-    }
-    
     .contacto-container {
         grid-template-columns: 1fr;
     }
     
-    .carrusel-item { min-width: 240px; }
+    .carrusel-item { min-width: 260px; }
     .filtro-valoraciones { flex-direction: column; }
-    .producto-row { flex-wrap: nowrap; }
     
     .mapa-buscador {
         flex-direction: column;
@@ -1258,16 +1156,25 @@ button[type="submit"]:hover,
     
     /* Ajustes para el carrusel de ubicaciones en móvil */
     .carrusel-ubicaciones-container {
-        padding: 10px 15px;
+        padding: 10px 10px 20px 10px;
     }
     
     .carrusel-ubicaciones-track {
         gap: 15px;
     }
     
-    .carrusel-ubicaciones-track > * {
-        min-width: calc(80% - 10px);
-        flex-shrink: 0;
+    .ubicacion-item {
+        min-width: 260px;
+        max-width: 280px;
+        padding: 15px;
+    }
+    
+    .ubicacion-item h4 {
+        font-size: 1em;
+    }
+    
+    .ubicacion-item p {
+        font-size: 0.85em;
     }
 }
 
@@ -1308,7 +1215,7 @@ button[type="submit"]:hover,
     
     .hero {
         min-height: 60vh;
-        padding: 130px 10px 30px;
+        padding: 140px 10px 30px;
     }
     
     .hero-content h2 {
@@ -1325,12 +1232,12 @@ button[type="submit"]:hover,
     }
     
     section {
-        padding: 30px 8px;
+        padding: 30px 10px;
     }
     
     section h2 {
-        font-size: 1.3em;
-        margin-bottom: 20px;
+        font-size: 1.4em;
+        margin-bottom: 25px;
     }
     
     section h2::after {
@@ -1340,7 +1247,7 @@ button[type="submit"]:hover,
     
     .productos-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        gap: 10px;
     }
     
     .producto-card-compacto {
@@ -1356,20 +1263,6 @@ button[type="submit"]:hover,
     .producto-card-compacto h3 {
         font-size: 0.8em;
         margin: 5px 0;
-    }
-    
-    .producto-stock {
-        font-size: 0.7em;
-    }
-    
-    .producto-estrellas-compactas {
-        font-size: 0.7em;
-        margin: 3px 0;
-    }
-    
-    .producto-row {
-        gap: 4px;
-        margin: 6px 0;
     }
     
     .producto-precio {
@@ -1392,11 +1285,6 @@ button[type="submit"]:hover,
         font-size: 0.8em;
     }
     
-    .producto-acciones-compactas {
-        gap: 6px;
-        margin-top: 5px;
-    }
-    
     .modal-content {
         margin: 5% auto;
         padding: 12px;
@@ -1405,7 +1293,7 @@ button[type="submit"]:hover,
     }
     
     .carrusel-item {
-        min-width: 200px;
+        min-width: 220px;
         padding: 15px;
     }
     
@@ -1462,12 +1350,37 @@ button[type="submit"]:hover,
     }
     
     /* Ajustes para el carrusel de ubicaciones en móvil pequeño */
+    .carrusel-ubicaciones-container {
+        padding: 10px 8px 20px 8px;
+    }
+    
     .carrusel-ubicaciones-track {
         gap: 12px;
     }
     
-    .carrusel-ubicaciones-track > * {
-        min-width: calc(85% - 8px);
+    .ubicacion-item {
+        min-width: 240px;
+        max-width: 260px;
+        padding: 12px;
+    }
+    
+    .ubicacion-item h4 {
+        font-size: 0.95em;
+    }
+    
+    .ubicacion-item p {
+        font-size: 0.8em;
+    }
+    
+    .tipo-ubicacion {
+        font-size: 0.7em;
+        padding: 2px 10px;
+    }
+    
+    .btn-carrusel-ubicacion {
+        width: 35px;
+        height: 35px;
+        font-size: 0.85em;
     }
 }
 
@@ -1480,11 +1393,4 @@ button[type="submit"]:hover,
 .comentario-item .estrellas-valoracion span,
 .comentario-item div:first-child span {
     font-size: 0.9em !important;
-}
-
-@media (max-width: 768px) {
-    .mapa-buscador .form-input {
-        max-width: 100%;
-        min-width: 100%;
-    }
 }
