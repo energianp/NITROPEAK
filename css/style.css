@@ -36,155 +36,306 @@ body {
 }
 
 /* ============ HEADER ============ */
+
 .header {
+
     background: rgba(13, 31, 20, 0.95);
+
     backdrop-filter: blur(10px);
+
     box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+
     position: fixed;
+
     width: 100%;
+
     top: 0;
+
     z-index: 1000;
+
     border-bottom: 2px solid var(--color-acento);
+
     max-height: 100vh;
+
     overflow-y: auto;
+
 }
+
+
 
 .nav {
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
+
     padding: 15px 50px;
+
     max-width: 100px;
+
     margin: 0 auto;
+
 }
+
+
 
 .logo {
+
     display: flex;
+
     align-items: center;
+
     gap: 15px;
+
 }
+
+
 
 .logo img {
+
     width: 50px;
+
     height: 50px;
+
     border-radius: 50%;
+
     border: 2px solid var(--color-acento);
+
 }
+
+
 
 .logo h1 {
+
     color: var(--color-acento);
+
     font-size: 1.8em;
+
     font-weight: bold;
+
     text-shadow: 0 0 20px rgba(72, 187, 120, 0.5);
+
 }
+
+
 
 .nav-menu {
+
     display: flex;
+
     list-style: none;
+
     gap: 30px;
+
     align-items: center;
+
 }
+
+
 
 .nav-menu a {
+
     text-decoration: none;
+
     color: var(--color-texto-secundario);
+
     font-weight: 500;
+
     transition: all 0.3s;
+
     font-size: 0.95em;
+
 }
+
+
 
 .nav-menu a:hover {
+
     color: var(--color-acento);
+
     text-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+
 }
+
+
 
 .carrito-icon {
+
     position: relative;
+
     font-size: 1.3em;
+
     color: var(--color-acento);
+
 }
+
+
 
 #contador-carrito {
+
     position: absolute;
+
     top: -8px;
+
     right: -8px;
+
     background: var(--color-acento);
+
     color: var(--color-principal);
+
     border-radius: 50%;
+
     width: 22px;
+
     height: 22px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     font-size: 12px;
+
     font-weight: bold;
+
 }
+
+
 
 /* ============ HERO ============ */
+
 .hero {
+
     background: linear-gradient(135deg, var(--color-principal) 0%, var(--color-oscuro) 100%);
+
     min-height: 100vh;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     text-align: center;
+
     padding: 100px 20px 50px;
+
     position: relative;
+
     overflow: hidden;
+
 }
+
+
 
 .hero::before {
+
     content: '';
+
     position: absolute;
+
     top: 0; left: 0; right: 0; bottom: 0;
+
     background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(72,187,120,0.05)" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,208C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+
     background-size: cover;
+
 }
+
+
 
 .hero-content {
+
     position: relative;
+
     z-index: 1;
+
     max-width: 800px;
+
 }
+
+
 
 .hero-content h2 {
+
     font-size: 3.5em;
+
     margin-bottom: 20px;
+
     color: var(--color-acento);
+
     animation: fadeInUp 1s ease;
+
     text-shadow: 0 0 30px rgba(72, 187, 120, 0.3);
+
 }
+
+
 
 .hero-content p {
+
     font-size: 1.3em;
+
     margin-bottom: 30px;
+
     color: var(--color-texto-secundario);
+
     animation: fadeInUp 1s ease 0.2s;
+
 }
+
+
 
 .btn-cta {
+
     display: inline-block;
+
     background: var(--color-acento);
+
     color: var(--color-principal);
+
     padding: 15px 40px;
+
     border-radius: 50px;
+
     text-decoration: none;
+
     font-size: 1.1em;
+
     font-weight: bold;
+
     transition: all 0.3s;
+
     animation: fadeInUp 1s ease 0.4s;
+
     box-shadow: 0 0 30px rgba(72, 187, 120, 0.3);
+
 }
+
+
 
 .btn-cta:hover {
+
     transform: translateY(-3px);
+
     box-shadow: 0 10px 40px rgba(72, 187, 120, 0.5);
+
 }
 
+
+
 @keyframes fadeInUp {
+
     from { opacity: 0; transform: translateY(30px); }
+
     to { opacity: 1; transform: translateY(0); }
+
 }
+
+
 
 /* ============ SECCIONES GENERALES ============ */
 section {
