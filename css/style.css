@@ -34,6 +34,8 @@ body {
     top: 0;
     z-index: 1000;
     border-bottom: 2px solid var(--color-acento);
+    max-height: 100vh;
+    overflow-y: auto;
 }
 
 .nav {
@@ -510,55 +512,6 @@ section h2::after {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-/* Valoraciones individuales (vista anterior) */
-.valoraciones-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto 50px;
-}
-
-.valoracion-card {
-    background: var(--color-card);
-    border: 1px solid var(--color-borde);
-    border-radius: 15px;
-    padding: 25px;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-.valoracion-card:hover {
-    border-color: var(--color-acento);
-    box-shadow: 0 0 20px rgba(72, 187, 120, 0.25);
-    transform: translateY(-3px);
-}
-
-.valoracion-card .estrellas-valoracion {
-    color: #ffd700;
-    font-size: 1.2em;
-    margin-bottom: 10px;
-}
-
-.valoracion-card p {
-    color: var(--color-texto-secundario);
-    font-style: italic;
-    line-height: 1.6;
-}
-
-.valoracion-card small {
-    color: var(--color-texto-terciario);
-    display: block;
-    margin: 5px 0;
-}
-
-.valoracion-card .nombre-valorador {
-    color: var(--color-texto-terciario);
-    display: block;
-    margin-top: 12px;
-    font-weight: bold;
-}
-
 /* ============ UBICACIONES ============ */
 .ubicaciones {
     background: var(--color-card);
@@ -996,75 +949,6 @@ button[type="submit"]:hover,
     border: 1px solid var(--color-acento) !important;
 }
 
-/* ============ RESPONSIVE ============ */
-@media (max-width: 768px) {
-    .nav { flex-direction: column; padding: 15px 20px; }
-    .nav-menu { flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 15px; }
-    .hero-content h2 { font-size: 2.5em; }
-    .hero-content p { font-size: 1.1em; }
-    section { padding: 60px 20px; }
-    section h2 { font-size: 2em; }
-    .historia-content { grid-template-columns: 1fr; }
-    .productos-grid { grid-template-columns: repeat(2, 1fr); }
-    .contacto-container { grid-template-columns: 1fr; }
-    .carrusel-item { min-width: 260px; }
-    .filtro-valoraciones { flex-direction: column; }
-    .producto-row { flex-wrap: wrap; }
-}
-
-@media (max-width: 480px) {
-    .hero-content h2 { font-size: 2em; }
-    .modal-content { margin: 10% auto; padding: 20px; }
-    .productos-grid { grid-template-columns: 1fr; }
-    .carrusel-item { min-width: 220px; }
-    .producto-card-compacto img { height: 150px; }
-}
-
-.comentario-item .estrellas-valoracion,
-.comentario-item div:first-child {
-    font-size: 0.9em !important;
-    color: #ffd700;
-}
-
-.comentario-item .estrellas-valoracion span,
-.comentario-item div:first-child span {
-    font-size: 0.9em !important;
-}
-
-.mapa-buscador .form-input {
-    flex: 1;
-    min-width: 130px;
-    max-width: 200px;
-}
-
-@media (max-width: 768px) {
-    .mapa-buscador .form-input {
-        max-width: 100%;
-        min-width: 100%;
-    }
-}
-
-/* ============ CARRUSEL DE UBICACIONES ============ */
-.carrusel-ubicaciones-container {
-    overflow: hidden;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 10px 0;
-}
-
-.carrusel-ubicaciones-track {
-    display: flex;
-    gap: 20px;
-    transition: transform 0.4s ease;
-}
-
-.carrusel-ubicaciones-nav {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
 /* ============ BUSCADOR EN HEADER ============ */
 .buscador-header {
     position: relative;
@@ -1200,66 +1084,65 @@ button[type="submit"]:hover,
     margin-top: 20px;
 }
 
+/* ============ CARRUSEL DE UBICACIONES ============ */
+.carrusel-ubicaciones-container {
+    overflow: hidden;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 0;
+}
+
+.carrusel-ubicaciones-track {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.4s ease;
+}
+
+.carrusel-ubicaciones-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1024px) {
     .buscador-header {
-        max-width: 200px;
+        max-width: 180px;
     }
     
     .historia-content {
         max-width: 100%;
     }
+    
+    .nav {
+        padding: 12px 20px;
+    }
+    
+    .nav-menu {
+        gap: 15px;
+    }
+    
+    .nav-menu a {
+        font-size: 0.85em;
+    }
 }
 
 @media (max-width: 768px) {
     .nav {
-        flex-wrap: wrap;
+        flex-direction: column;
         padding: 10px 15px;
-        gap: 10px;
-    }
-    
-    .buscador-header {
-        order: 3;
-        max-width: 100%;
-        width: 100%;
-        margin: 5px 0;
-    }
-    
-    .nav-menu {
-        order: 2;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
+        gap: 8px;
     }
     
     .logo {
         order: 1;
+        width: 100%;
+        justify-content: center;
     }
     
-    .nav-menu a {
-        font-size: 0.8em;
-    }
-    
-    .historia-texto h3 {
-        font-size: 1.4em;
-    }
-    
-    .historia-texto p {
-        font-size: 0.95em;
-    }
-    
-    section {
-        padding: 50px 15px;
-    }
-    
-    section h2 {
-        font-size: 1.8em;
-    }
-}
-
-@media (max-width: 480px) {
     .logo h1 {
-        font-size: 1.2em;
+        font-size: 1.3em;
     }
     
     .logo img {
@@ -1267,29 +1150,257 @@ button[type="submit"]:hover,
         height: 35px;
     }
     
+    .buscador-header {
+        order: 2;
+        max-width: 100%;
+        width: 100%;
+        margin: 5px 0;
+    }
+    
     .nav-menu {
-        gap: 5px;
+        order: 3;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 5px 0;
+    }
+    
+    .nav-menu li {
+        margin: 2px 0;
     }
     
     .nav-menu a {
-        font-size: 0.7em;
+        font-size: 0.75em;
+        padding: 4px 8px;
+        white-space: nowrap;
     }
     
-    .historia-texto h3 {
-        font-size: 1.2em;
+    .hero-content h2 { font-size: 2em; }
+    .hero-content p { font-size: 1em; }
+    
+    section {
+        padding: 40px 10px;
     }
     
-    .historia-texto p {
-        font-size: 0.85em;
+    section h2 {
+        font-size: 1.5em;
+        margin-bottom: 25px;
     }
     
-    .hero-content h2 {
-        font-size: 1.8em;
+    .historia-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .productos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .producto-card-compacto {
+        padding: 10px;
+    }
+    
+    .producto-card-compacto img {
+        height: 120px;
+    }
+    
+    .producto-card-compacto h3 {
+        font-size: 0.9em;
+    }
+    
+    .producto-precio {
+        font-size: 1em;
+    }
+    
+    .contacto-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .carrusel-item { min-width: 240px; }
+    .filtro-valoraciones { flex-direction: column; }
+    .producto-row { flex-wrap: nowrap; }
+    
+    .mapa-buscador {
+        flex-direction: column;
+    }
+    
+    .mapa-buscador .form-input {
+        max-width: 100%;
+        min-width: 100%;
+    }
+    
+    .modal-content {
+        margin: 2% auto;
+        padding: 15px;
+        max-width: 95%;
     }
 }
 
-/* ============ RESPONSIVE PAGO ============ */
-@media (max-width: 600px) {
+@media (max-width: 480px) {
+    .header {
+        padding: 5px 0;
+    }
+    
+    .nav {
+        padding: 8px 10px;
+        gap: 5px;
+    }
+    
+    .logo h1 {
+        font-size: 1.1em;
+    }
+    
+    .logo img {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .nav-menu {
+        gap: 3px;
+    }
+    
+    .nav-menu a {
+        font-size: 0.65em;
+        padding: 3px 5px;
+    }
+    
+    .buscador-header {
+        margin: 3px 0;
+    }
+    
+    .buscar-input {
+        padding: 6px 10px;
+        font-size: 0.75em;
+    }
+    
+    .hero {
+        min-height: 60vh;
+        padding: 80px 10px 30px;
+    }
+    
+    .hero-content h2 {
+        font-size: 1.5em;
+    }
+    
+    .hero-content p {
+        font-size: 0.85em;
+    }
+    
+    .btn-cta {
+        padding: 10px 25px;
+        font-size: 0.9em;
+    }
+    
+    section {
+        padding: 30px 8px;
+    }
+    
+    section h2 {
+        font-size: 1.3em;
+        margin-bottom: 20px;
+    }
+    
+    section h2::after {
+        width: 50px;
+        height: 3px;
+    }
+    
+    .productos-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .producto-card-compacto {
+        padding: 8px;
+        border-radius: 10px;
+    }
+    
+    .producto-card-compacto img {
+        height: 100px;
+        border-radius: 8px;
+    }
+    
+    .producto-card-compacto h3 {
+        font-size: 0.8em;
+        margin: 5px 0;
+    }
+    
+    .producto-stock {
+        font-size: 0.7em;
+    }
+    
+    .producto-estrellas-compactas {
+        font-size: 0.7em;
+        margin: 3px 0;
+    }
+    
+    .producto-row {
+        gap: 4px;
+        margin: 6px 0;
+    }
+    
+    .producto-precio {
+        font-size: 0.9em;
+    }
+    
+    .cantidad-input-compacto {
+        width: 24px;
+        height: 24px;
+        font-size: 0.65em;
+    }
+    
+    .btn-carrito-compacto {
+        padding: 4px 7px;
+        font-size: 0.8em;
+    }
+    
+    .btn-icono {
+        padding: 4px 8px;
+        font-size: 0.8em;
+    }
+    
+    .producto-acciones-compactas {
+        gap: 6px;
+        margin-top: 5px;
+    }
+    
+    .modal-content {
+        margin: 5% auto;
+        padding: 12px;
+        max-width: 98%;
+        border-radius: 10px;
+    }
+    
+    .carrusel-item {
+        min-width: 200px;
+        padding: 15px;
+    }
+    
+    .historia-texto h3 {
+        font-size: 1.1em;
+    }
+    
+    .historia-texto p {
+        font-size: 0.8em;
+    }
+    
+    .agregar-valoracion {
+        padding: 20px;
+    }
+    
+    .estrellas {
+        font-size: 1.5em;
+    }
+    
+    #mapa {
+        height: 250px;
+    }
+    
+    .footer {
+        padding: 15px;
+        font-size: 0.8em;
+    }
+    
     .pago-content {
         max-width: 95% !important;
         margin: 2% auto;
@@ -1315,5 +1426,23 @@ button[type="submit"]:hover,
     
     .radio-label {
         font-size: 0.85em;
+    }
+}
+
+.comentario-item .estrellas-valoracion,
+.comentario-item div:first-child {
+    font-size: 0.9em !important;
+    color: #ffd700;
+}
+
+.comentario-item .estrellas-valoracion span,
+.comentario-item div:first-child span {
+    font-size: 0.9em !important;
+}
+
+@media (max-width: 768px) {
+    .mapa-buscador .form-input {
+        max-width: 100%;
+        min-width: 100%;
     }
 }
