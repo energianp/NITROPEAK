@@ -24,6 +24,17 @@ body {
     background: var(--color-fondo);
 }
 
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+}
+
 /* ============ HEADER ============ */
 .header {
     background: rgba(13, 31, 20, 0.95);
@@ -43,7 +54,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 15px 50px;
-    max-width: 1400px;
+    max-width: 100px;
     margin: 0 auto;
 }
 
@@ -1237,207 +1248,105 @@ button[type="submit"]:hover,
 }
 
 @media (max-width: 480px) {
-    .header {
-        padding: 5px 0;
-    }
-    
     .nav {
-        padding: 8px 10px;
-        gap: 5px;
-    }
-    
-    .logo h1 {
-        font-size: 1.1em;
-    }
-    
-    .logo img {
-        width: 30px;
-        height: 30px;
-    }
-    
-    .nav-menu {
+        padding: 5px 6px;
         gap: 3px;
     }
     
-    .nav-menu a {
-        font-size: 0.65em;
-        padding: 3px 5px;
-    }
-    
-    .buscador-header {
-        margin: 3px 0;
-    }
+    .logo h1 { font-size: 1em; }
+    .logo img { width: 25px; height: 25px; }
+    .logo { gap: 5px; }
     
     .buscar-input {
-        padding: 6px 10px;
-        font-size: 0.75em;
+        padding: 5px 8px;
+        font-size: 0.7em;
+    }
+    
+    .nav-menu { gap: 2px; }
+    
+    .nav-menu a {
+        font-size: 0.6em;
+        padding: 2px 3px;
     }
     
     .hero {
-        min-height: 60vh;
-        padding: 80px 10px 30px;
+        padding: 75px 8px 20px;
     }
     
-    .hero-content h2 {
-        font-size: 1.5em;
-    }
-    
-    .hero-content p {
-        font-size: 0.85em;
-    }
-    
-    .btn-cta {
-        padding: 10px 25px;
-        font-size: 0.9em;
-    }
+    .hero-content h2 { font-size: 1.2em; }
+    .hero-content p { font-size: 0.7em; }
+    .btn-cta { padding: 8px 18px; font-size: 0.75em; }
     
     section {
-        padding: 30px 8px;
+        padding: 20px 5px;
+        width: 100%;
+        max-width: 100vw;
     }
     
-    section h2 {
-        font-size: 1.3em;
-        margin-bottom: 20px;
-    }
-    
-    section h2::after {
-        width: 50px;
-        height: 3px;
-    }
+    section h2 { font-size: 1.1em; margin-bottom: 12px; }
     
     .productos-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        gap: 5px;
     }
     
     .producto-card-compacto {
-        padding: 8px;
-        border-radius: 10px;
-    }
-    
-    .producto-card-compacto img {
-        height: 100px;
+        padding: 5px;
         border-radius: 8px;
     }
     
-    .producto-card-compacto h3 {
-        font-size: 0.8em;
-        margin: 5px 0;
+    .producto-card-compacto img {
+        height: 75px;
+        border-radius: 6px;
+        margin-bottom: 4px;
     }
     
-    .producto-stock {
-        font-size: 0.7em;
-    }
-    
-    .producto-estrellas-compactas {
-        font-size: 0.7em;
-        margin: 3px 0;
-    }
-    
-    .producto-row {
-        gap: 4px;
-        margin: 6px 0;
-    }
-    
-    .producto-precio {
-        font-size: 0.9em;
-    }
+    .producto-card-compacto h3 { font-size: 0.65em; }
+    .producto-stock { font-size: 0.55em; }
+    .producto-estrellas-compactas { font-size: 0.55em; }
+    .producto-precio { font-size: 0.7em; }
     
     .cantidad-input-compacto {
-        width: 24px;
-        height: 24px;
-        font-size: 0.65em;
+        width: 18px;
+        height: 18px;
+        font-size: 0.55em;
     }
     
     .btn-carrito-compacto {
-        padding: 4px 7px;
-        font-size: 0.8em;
+        padding: 2px 4px;
+        font-size: 0.65em;
     }
     
     .btn-icono {
-        padding: 4px 8px;
-        font-size: 0.8em;
+        padding: 2px 5px;
+        font-size: 0.6em;
     }
     
-    .producto-acciones-compactas {
-        gap: 6px;
-        margin-top: 5px;
-    }
+    .producto-acciones-compactas { gap: 3px; }
+    
+    #mapa { height: 180px; }
     
     .modal-content {
-        margin: 5% auto;
-        padding: 12px;
         max-width: 98%;
-        border-radius: 10px;
+        padding: 10px;
+        margin: 1% auto;
     }
     
-    .carrusel-item {
-        min-width: 200px;
-        padding: 15px;
+    .carrusel-item { min-width: 160px; padding: 10px; }
+    
+    #ubicaciones-contenido > div {
+        padding: 0 25px !important;
     }
     
-    .historia-texto h3 {
-        font-size: 1.1em;
+    .ubicacion-item {
+        min-width: 160px !important;
+        padding: 8px !important;
     }
     
-    .historia-texto p {
-        font-size: 0.8em;
+    .btn-carrusel {
+        width: 26px !important;
+        height: 26px !important;
     }
-    
-    .agregar-valoracion {
-        padding: 20px;
-    }
-    
-    .estrellas {
-        font-size: 1.5em;
-    }
-    
-    #mapa {
-        height: 250px;
-    }
-    
-    .footer {
-        padding: 15px;
-        font-size: 0.8em;
-    }
-    
-    .pago-content {
-        max-width: 95% !important;
-        margin: 2% auto;
-        padding: 15px;
-    }
-    
-    .tarjeta-visual {
-        padding: 15px;
-    }
-    
-    .tarjeta-row {
-        flex-direction: column;
-        gap: 5px;
-    }
-    
-    #punto-mapa {
-        height: 180px !important;
-    }
-    
-    .metodo-entrega {
-        gap: 5px;
-    }
-    
-    .radio-label {
-        font-size: 0.85em;
-    }
-}
-
-.comentario-item .estrellas-valoracion,
-.comentario-item div:first-child {
-    font-size: 0.9em !important;
-    color: #ffd700;
-}
-
-.comentario-item .estrellas-valoracion span,
-.comentario-item div:first-child span {
-    font-size: 0.9em !important;
 }
 
 @media (max-width: 768px) {
