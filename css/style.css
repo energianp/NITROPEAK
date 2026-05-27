@@ -34,8 +34,6 @@ body {
     top: 0;
     z-index: 1000;
     border-bottom: 2px solid var(--color-acento);
-    max-height: 100vh;
-    overflow-y: auto;
 }
 
 .nav {
@@ -1087,15 +1085,17 @@ button[type="submit"]:hover,
 /* ============ CARRUSEL DE UBICACIONES ============ */
 .carrusel-ubicaciones-container {
     overflow: hidden;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 10px 0;
+    position: relative;
 }
 
 .carrusel-ubicaciones-track {
     display: flex;
     gap: 20px;
     transition: transform 0.4s ease;
+    will-change: transform;
 }
 
 .carrusel-ubicaciones-nav {
@@ -1129,10 +1129,20 @@ button[type="submit"]:hover,
 }
 
 @media (max-width: 768px) {
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        overflow-y: visible;
+    }
+    
     .nav {
         flex-direction: column;
         padding: 10px 15px;
         gap: 8px;
+        max-height: none;
     }
     
     .logo {
@@ -1157,22 +1167,33 @@ button[type="submit"]:hover,
         margin: 5px 0;
     }
     
+    .buscar-input {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+    
     .nav-menu {
         order: 3;
         flex-wrap: wrap;
         justify-content: center;
         gap: 8px;
         padding: 5px 0;
+        margin: 0;
     }
     
     .nav-menu li {
-        margin: 2px 0;
+        margin: 0;
     }
     
     .nav-menu a {
-        font-size: 0.75em;
-        padding: 4px 8px;
+        font-size: 0.8em;
+        padding: 6px 10px;
         white-space: nowrap;
+        display: inline-block;
+    }
+    
+    .hero {
+        padding-top: 140px;
     }
     
     .hero-content h2 { font-size: 2em; }
@@ -1234,16 +1255,32 @@ button[type="submit"]:hover,
         padding: 15px;
         max-width: 95%;
     }
+    
+    /* Ajustes para el carrusel de ubicaciones en móvil */
+    .carrusel-ubicaciones-container {
+        padding: 10px 15px;
+    }
+    
+    .carrusel-ubicaciones-track {
+        gap: 15px;
+    }
+    
+    .carrusel-ubicaciones-track > * {
+        min-width: calc(80% - 10px);
+        flex-shrink: 0;
+    }
 }
 
 @media (max-width: 480px) {
     .header {
-        padding: 5px 0;
+        position: fixed;
+        width: 100%;
+        top: 0;
     }
     
     .nav {
-        padding: 8px 10px;
-        gap: 5px;
+        padding: 6px 10px;
+        gap: 6px;
     }
     
     .logo h1 {
@@ -1251,31 +1288,27 @@ button[type="submit"]:hover,
     }
     
     .logo img {
-        width: 30px;
-        height: 30px;
-    }
-    
-    .nav-menu {
-        gap: 3px;
-    }
-    
-    .nav-menu a {
-        font-size: 0.65em;
-        padding: 3px 5px;
-    }
-    
-    .buscador-header {
-        margin: 3px 0;
+        width: 28px;
+        height: 28px;
     }
     
     .buscar-input {
         padding: 6px 10px;
-        font-size: 0.75em;
+        font-size: 0.85em;
+    }
+    
+    .nav-menu {
+        gap: 5px;
+    }
+    
+    .nav-menu a {
+        font-size: 0.7em;
+        padding: 4px 8px;
     }
     
     .hero {
         min-height: 60vh;
-        padding: 80px 10px 30px;
+        padding: 130px 10px 30px;
     }
     
     .hero-content h2 {
@@ -1426,6 +1459,15 @@ button[type="submit"]:hover,
     
     .radio-label {
         font-size: 0.85em;
+    }
+    
+    /* Ajustes para el carrusel de ubicaciones en móvil pequeño */
+    .carrusel-ubicaciones-track {
+        gap: 12px;
+    }
+    
+    .carrusel-ubicaciones-track > * {
+        min-width: calc(85% - 8px);
     }
 }
 
