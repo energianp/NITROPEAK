@@ -28,6 +28,7 @@ function initMap() {
     cargarTiposSelect();
     cargarProductos();
     cargarHistoria();
+    cargarEquipo();
     cargarValoracionesCliente();
     cargarSeccionesDinamicas();
     cargarRedesSociales();
