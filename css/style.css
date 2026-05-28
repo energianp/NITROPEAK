@@ -1396,3 +1396,5 @@ button[type="submit"]:hover,
 .comentario-item div:first-child span {
     font-size: 0.9em !important;
 }
+
+.icono-red.gmail { color: #ea4335; }
