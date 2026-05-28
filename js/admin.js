@@ -596,7 +596,7 @@ function previewNoticiaMedia(e) {
 }
 async function guardarNoticia() {
     let media = document.getElementById('noticia-media-preview').src;
-    if(window.notFile) media = await imgToB64(window.notFile);
+    if(window.notFile) media = await comprimirImagen(window.notFile, 500, 0.5);
     await db.collection('noticias').add({
         titulo:document.getElementById('noticia-titulo').value,
         tipo:document.getElementById('noticia-tipo').value,
@@ -609,6 +609,7 @@ async function guardarNoticia() {
     ['noticia-titulo','noticia-contenido'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('noticia-media-preview').style.display='none';window.notFile=null;
 }
+
 async function eliminarNoticia(id) { if(confirm('¿Eliminar?')) await db.collection('noticias').doc(id).delete(); }
 
 // ============ DESCARGAR PDF ORDEN ============
