@@ -578,17 +578,44 @@ async function eliminarSolicitud(id) { if(confirm('¿Eliminar?')) await db.colle
 
 // ============ NOTICIAS ADMIN ============
 function cargarNoticiasAdmin() {
-    db.collection('noticias').orderBy('fecha','desc').onSnapshot(s => {
+    db.collection('noticias').onSnapshot(s => {
         const c = document.getElementById('lista-noticias-admin');
-        c.innerHTML = s.empty ? '<p>No hay noticias</p>' : Array.from(s).map(d => {
-            const n = d.data();
-            return `<div class="seccion-card">
-                <h3>${n.titulo}</h3><span class="tipo-badge">${n.tipo}</span>
+        if (!c) return;
+        
+        if (s.empty) {
+            c.innerHTML = '<p>No hay noticias</p>';
+            return;
+        }
+        
+        const noticias = [];
+        s.forEach(d => {
+            noticias.push({id: d.id, ...d.data()});
+        });
+        noticias.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
+        
+        c.innerHTML = noticias.map(n => `
+            <div class="seccion-card">
+                <h3>${n.titulo}</h3>
+                <span class="tipo-badge">${n.tipo}</span>
                 <p>${(n.contenido||'').substring(0,80)}...</p>
-                <button onclick="eliminarNoticia('${d.id}')" class="btn-eliminar">Eliminar</button>
-            </div>`;
-        }).join('');
+                <button onclick="editarNoticia('${n.id}')" class="btn-editar">Editar</button>
+                <button onclick="eliminarNoticia('${n.id}')" class="btn-eliminar">Eliminar</button>
+            </div>
+        `).join('');
     });
+}
+
+async function editarNoticia(id) {
+    const d = await db.collection('noticias').doc(id).get();
+    const n = d.data();
+    document.getElementById('noticia-titulo').value = n.titulo||'';
+    document.getElementById('noticia-tipo').value = n.tipo||'texto';
+    document.getElementById('noticia-contenido').value = n.contenido||'';
+    document.getElementById('noticia-activo').checked = n.activo;
+    toggleNoticiaTipo();
+    window.scrollTo({top:0,behavior:'smooth'});
+    // Guardar ID para actualizar
+    window.editNoticiaId = id;
 }
 function previewNoticiaMedia(e) {
     const f = e.target.files[0];
@@ -640,14 +667,25 @@ async function guardarNoticia() {
         }
     }
     
-    await db.collection('noticias').add({
-        titulo: document.getElementById('noticia-titulo').value,
-        tipo: tipo,
-        contenido: document.getElementById('noticia-contenido').value,
-        mediaURL: media || '',
-        activo: document.getElementById('noticia-activo').checked,
-        fecha: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    if (window.editNoticiaId) {
+        await db.collection('noticias').doc(window.editNoticiaId).update({
+            titulo: document.getElementById('noticia-titulo').value,
+            tipo: tipo,
+            contenido: document.getElementById('noticia-contenido').value,
+            mediaURL: media || '',
+            activo: document.getElementById('noticia-activo').checked,
+        });
+        window.editNoticiaId = null;
+    } else {
+        await db.collection('noticias').add({
+            titulo: document.getElementById('noticia-titulo').value,
+            tipo: tipo,
+            contenido: document.getElementById('noticia-contenido').value,
+            mediaURL: media || '',
+            activo: document.getElementById('noticia-activo').checked,
+            fecha: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
     
     alert('Noticia guardada');
     ['noticia-titulo','noticia-contenido','noticia-video-url'].forEach(id=>document.getElementById(id).value='');
