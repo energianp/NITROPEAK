@@ -150,45 +150,67 @@ function mostrarListaUbicaciones(ubis) {
     const contenedor = document.getElementById('ubicaciones-contenido');
     if (!contenedor) return;
     contenedor.innerHTML = `
-        <div style="position:relative;max-width:1200px;margin:0 auto;padding:0 50px;">
-            <button onclick="moverCarruselUbicaciones(-1)" class="btn-carrusel" style="position:absolute;left:0;top:-20px;transform:translateY(-50%);z-index:10;">◀</button>
-            <div style="overflow:hidden;">
-                <div style="display:flex;gap:20px;transition:transform 0.4s ease;" id="carrusel-ubicaciones-track">
-                    ${ubis.map(u => `
-                        <div class="ubicacion-item" style="border-left:4px solid ${u.color || '#48bb78'};min-width:280px;flex-shrink:0;">
-                            <h4>${u.nombre}</h4><p>📍 ${u.direccion}</p><p>📞 ${u.telefono || 'N/A'}</p>
-                            <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
-                            <span class="tipo-ubicacion" style="background:${u.color || '#48bb78'}">${u.tipo}</span>
-                        </div>
-                    `).join('')}
-                </div>
+        <div class="carrusel-auto-container" style="cursor:grab;">
+            <div class="carrusel-auto-track" id="carrusel-ubicaciones-track">
+                ${ubis.map(u => `
+                    <div class="ubicacion-item" style="border-left:4px solid ${u.color || '#48bb78'};min-width:280px;flex-shrink:0;">
+                        <h4>${u.nombre}</h4><p>📍 ${u.direccion}</p><p>📞 ${u.telefono || 'N/A'}</p>
+                        <p>🗺️ ${u.departamento}, ${u.municipio || ''}</p>
+                        <span class="tipo-ubicacion" style="background:${u.color || '#48bb78'}">${u.tipo}</span>
+                    </div>
+                `).join('')}
             </div>
-            <button onclick="moverCarruselUbicaciones(1)" class="btn-carrusel" style="position:absolute;right:0;top:-20px;transform:translateY(-50%);z-index:10;">▶</button>
         </div>
     `;
-    window.ubicacionesCarruselIndex = 0;
+    hacerArrastrable('carrusel-ubicaciones-track');
 }
 
-function moverCarruselUbicaciones(dir) {
-    const track = document.getElementById('carrusel-ubicaciones-track');
-    if (!track) return;
-    const items = track.querySelectorAll('.ubicacion-item');
-    if (!items.length) return;
-    const visibleCards = window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 4;
-    const maxIndex = Math.max(0, items.length - visibleCards);
-    window.ubicacionesCarruselIndex = Math.max(0, Math.min((window.ubicacionesCarruselIndex || 0) + dir, maxIndex));
-    const cardWidth = items[0].offsetWidth + 20;
-    const offset = window.ubicacionesCarruselIndex * cardWidth;
-    track.style.transform = `translateX(-${offset}px)`;
-}
 
 // ============ PRODUCTOS EN CARRUSEL ============
 function cargarProductos() {
     db.collection('productos').where('activo','==',true).onSnapshot(snap => {
         todosLosProductosCliente = [];
         snap.forEach(doc => todosLosProductosCliente.push({id: doc.id, ...doc.data()}));
-        renderizarProductosGrid(todosLosProductosCliente);
+        renderizarProductosCarrusel(todosLosProductosCliente);
     });
+}
+
+function renderizarProductosCarrusel(lista) {
+    const c = document.getElementById('productos-carrusel-track');
+    if (!c) return;
+    
+    c.innerHTML = lista.map(p => {
+        const st = p.stock<=0?{t:'Agotado',c:'stock-agotado'}:p.stock<12?{t:'Stock bajo',c:'stock-bajo'}:{t:'Disponible',c:'stock-disponible'};
+        return `
+        <div class="producto-card-compacto" id="prod-${p.id}" style="min-width:250px;flex-shrink:0;">
+            <img src="${p.imagen||''}" alt="${p.nombre}">
+            <h3>${p.nombre}</h3>
+            <div class="producto-stock ${st.c}">${st.t}</div>
+            <div class="producto-estrellas-compactas" id="estrellas-comp-${p.id}"></div>
+            <div class="producto-row">
+                <span class="producto-precio">$${p.precio.toFixed(2)}</span>
+                <input type="number" id="cant-${p.id}" value="1" min="1" max="${p.stock}" ${p.stock<=0?'disabled':''} class="cantidad-input-compacto">
+                <button onclick="agregarAlCarrito('${p.id}','${p.nombre}',${p.precio},${p.stock})" ${p.stock<=0?'disabled':''} class="btn-carrito-compacto"><i class="fas fa-cart-plus"></i></button>
+            </div>
+            <div class="producto-acciones-compactas">
+                <button onclick="abrirValoracionProducto('${p.id}','${p.nombre}')" class="btn-icono" title="Valorar">⭐</button>
+                <button onclick="verComentarios('${p.id}','${p.nombre}')" class="btn-icono" title="Comentarios">💬</button>
+            </div>
+        </div>`;
+    }).join('');
+    
+    lista.forEach(p => {
+        db.collection('valoraciones').where('productoId','==',p.id).get().then(vs => {
+            let t=0,n=0;
+            vs.forEach(v=>{ const d=v.data(); if(d.aprobada){ t+=d.estrellas; n++; } });
+            const prom = n>0?t/n:0;
+            const el = document.getElementById('estrellas-comp-'+p.id);
+            if (el) el.innerHTML = generarEstrellasParciales(prom);
+        });
+    });
+    
+    // Hacer el carrusel arrastrable
+    hacerArrastrable('productos-carrusel-track');
 }
 
 function renderizarProductosGrid(lista) {
@@ -226,20 +248,6 @@ function renderizarProductosGrid(lista) {
     });
 }
 
-function moverCarruselProductos(dir) {
-    const track = document.getElementById('productos-carrusel-track');
-    if (!track) return;
-    const items = track.querySelectorAll('.producto-card-compacto');
-    if (!items.length) return;
-    const containerWidth = track.parentElement.offsetWidth;
-    const visibleCards = Math.max(1, Math.floor(containerWidth / 270));
-    const maxIndex = Math.max(0, items.length - visibleCards);
-    window.productosCarruselIndex = Math.max(0, Math.min((window.productosCarruselIndex || 0) + dir, maxIndex));
-    const cardWidth = items[0].offsetWidth + 20;
-    const offset = window.productosCarruselIndex * cardWidth;
-    track.style.transform = `translateX(-${offset}px)`;
-}
-
 function filtrarProductosHeader() {
     const texto = document.getElementById('buscar-producto-header')?.value?.toLowerCase() || '';
     const resultados = document.getElementById('resultados-busqueda');
@@ -247,7 +255,7 @@ function filtrarProductosHeader() {
     
     if (texto.length < 1) {
         resultados.style.display = 'none';
-        renderizarProductosGrid(todosLosProductosCliente);
+        renderizarProductosCarrusel(todosLosProductosCliente);
         return;
     }
     
@@ -272,7 +280,7 @@ function irAProducto(id) {
     document.getElementById('resultados-busqueda').style.display = 'none';
     document.getElementById('buscar-producto-header').value = '';
     const producto = todosLosProductosCliente.find(p => p.id === id);
-    if (producto) renderizarProductosGrid([producto]);
+    if (producto) renderizarProductosCarrusel([producto]);
     document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -335,21 +343,11 @@ function renderizarCarrusel(lista) {
     const track = document.getElementById('carrusel-valoraciones');
     if (!track) return;
     track.innerHTML = lista.length ? lista.map(v=>`<div class="carrusel-item"><div class="estrellas-valoracion">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</div><p>"${v.comentario}"</p>${v.productoNombre?`<small>Producto: ${v.productoNombre}</small>`:''}<span class="nombre-valorador">- ${v.nombre}</span></div>`).join('') : '<div class="carrusel-item"><p>No hay valoraciones aún</p></div>';
-    carruselIndex=0; actualizarPosicionCarrusel();
+    carruselIndex=0;
+    hacerArrastrable('carrusel-valoraciones');
 }
-function moverCarrusel(dir) {
-    const track=document.getElementById('carrusel-valoraciones');
-    if(!track)return;
-    const items=track.querySelectorAll('.carrusel-item');
-    if(!items.length)return;
-    carruselIndex=Math.max(0,Math.min(carruselIndex+dir,items.length-3));
-    actualizarPosicionCarrusel();
-}
-function actualizarPosicionCarrusel() {
-    const track=document.getElementById('carrusel-valoraciones');
-    if(!track)return;
-    track.style.transform=`translateX(-${carruselIndex*320}px)`;
-}
+
+
 function calificarGeneral(e){calificacionGeneralActual=e;document.querySelectorAll('#estrellas-general span').forEach((s,i)=>s.style.color=i<e?'#ffd700':'#2d5a3d');}
 async function enviarValoracionGeneral(){
     const c=document.getElementById('comentario-general').value,n=document.getElementById('nombre-general').value;
@@ -760,29 +758,66 @@ function mostrarNotificacion(msg){const n=document.createElement('div');n.classN
 // ============ DISTRIBUIDORES ============
 function cargarDistribuidores() {
     db.collection('ubicaciones').get().then(snap => {
-        const distribuidores = [];
-        snap.forEach(d => distribuidores.push(d.data()));
+        const todas = [];
+        snap.forEach(d => todas.push(d.data()));
+        
+        // Agrupar por cadena (nombre base)
+        const cadenas = {};
+        todas.forEach(u => {
+            const nombreBase = u.nombre.split(' - ')[0].trim();
+            if (!cadenas[nombreBase]) {
+                cadenas[nombreBase] = { nombre: nombreBase, tipo: u.tipo, color: u.color, cantidad: 0 };
+            }
+            cadenas[nombreBase].cantidad++;
+        });
+        
+        const logos = {
+            'Súper Selectos': 'https://logo.clearbit.com/superselectos.com',
+            'Walmart': 'https://logo.clearbit.com/walmart.com',
+            'Pricesmart': 'https://logo.clearbit.com/pricesmart.com',
+            'Maxi Despensa': 'https://logo.clearbit.com/maxidespensa.com',
+            'La Despensa de Don Juan': '',
+            'Farmacia San Nicolás': '',
+            'Farmacias Económicas': '',
+            'Smart Fit': 'https://logo.clearbit.com/smartfit.com',
+            'World Gym': 'https://logo.clearbit.com/worldgym.com',
+            'Gold\'s Gym': 'https://logo.clearbit.com/goldsgym.com',
+            'INDES': '',
+            'Coach Gym': '',
+            'Super 7': '',
+            'Tienda 24/7': '',
+            'Farmacia Vicentina': '',
+            'Farmacia La Moderna': '',
+            'Farmacia El Rosario': '',
+            'Tda. El Mercadito': '',
+            'Tda. Nahomy': '',
+            'Tda. Luz': ''
+        };
         
         const track = document.getElementById('carrusel-distribuidores-track');
         if (!track) return;
         
-        track.innerHTML = distribuidores.map(u => `
+        const distribuidores = Object.values(cadenas);
+        
+        track.innerHTML = distribuidores.map(d => {
+            const logoUrl = logos[d.nombre] || '';
+            return `
             <div class="distribuidor-item">
-                <div style="width:80px;height:80px;border-radius:50%;background:${u.color||'#48bb78'};margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:2em;color:#1a472a;">🏪</div>
-                <h4>${u.nombre}</h4>
-                <p>${u.tipo}</p>
-            </div>
-        `).join('') + `
+                ${logoUrl ? `<img src="${logoUrl}" alt="${d.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+                <div style="width:80px;height:80px;border-radius:50%;background:${d.color||'#48bb78'};margin:0 auto 10px;display:${logoUrl?'none':'flex'};align-items:center;justify-content:center;font-size:2em;color:#1a472a;">🏪</div>
+                <h4>${d.nombre}</h4>
+                <p>${d.cantidad} ubicaciones</p>
+            </div>`;
+        }).join('') + `
             <div class="distribuidor-card-especial" onclick="abrirModalDistribuidor()">
                 <span>🤝</span>
                 <p>¿Quieres ser distribuidor?</p>
             </div>
         `;
         
-        iniciarCarruselAuto('carrusel-distribuidores-track', 3000);
+        hacerArrastrable('carrusel-distribuidores-track');
     });
 }
-
 function abrirModalDistribuidor() {
     document.getElementById('modal-distribuidor').style.display = 'block';
 }
@@ -864,6 +899,54 @@ function iniciarCarruselAuto(trackId, velocidad) {
         }, velocidad);
     });
 }
+
+// ============ CARRUSEL ARRASTRABLE CON MOUSE/DEDO ============
+function hacerArrastrable(trackId) {
+    const track = document.getElementById(trackId);
+    if (!track) return;
+    
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    
+    track.addEventListener('mousedown', (e) => {
+        isDown = true;
+        track.style.cursor = 'grabbing';
+        startX = e.pageX - track.offsetLeft;
+        scrollLeft = track.offsetLeft;
+    });
+    
+    track.addEventListener('mouseleave', () => {
+        isDown = false;
+        track.style.cursor = 'grab';
+    });
+    
+    track.addEventListener('mouseup', () => {
+        isDown = false;
+        track.style.cursor = 'grab';
+    });
+    
+    track.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - track.offsetLeft;
+        const walk = (x - startX) * 2;
+        track.scrollLeft = scrollLeft - walk;
+    });
+    
+    // Soporte táctil
+    track.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].pageX - track.offsetLeft;
+        scrollLeft = track.scrollLeft;
+    });
+    
+    track.addEventListener('touchmove', (e) => {
+        const x = e.touches[0].pageX - track.offsetLeft;
+        const walk = (x - startX) * 2;
+        track.scrollLeft = scrollLeft - walk;
+    });
+}
+
 document.querySelector('.carrito-icon')?.addEventListener('click',e=>{e.preventDefault();mostrarCarrito();});
 document.querySelectorAll('.close').forEach(el=>el.addEventListener('click',function(){this.closest('.modal').style.display='none';}));
 window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.display='none';};
