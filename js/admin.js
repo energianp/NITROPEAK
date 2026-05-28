@@ -8,6 +8,8 @@ let allUbi = [], editUbi = null;
 let allSec = [], editSec = null;
 let allVal = [];
 let allCon = [];
+let allSol = [];
+let allNot = [];
 
 function verificarAdmin() {
     if (!sessionStorage.getItem('admin')) {
@@ -53,9 +55,15 @@ function imgToB64(file) {
 
 // ============ NOTIFICACIONES ============
 function initNotifs() {
+    const ordenesVistas = JSON.parse(sessionStorage.getItem('ordenes_vistas') || '[]');
+    
     db.collection('valoraciones').where('aprobada','==',false).onSnapshot(s => s.docChanges().forEach(c => { if(c.type==='added') addNotif('valoraciones','Nueva valoración',c.doc.id); }));
     db.collection('contactos').where('contactado','==',false).onSnapshot(s => s.docChanges().forEach(c => { if(c.type==='added') addNotif('contactos','Nuevo mensaje',c.doc.id); }));
-    db.collection('ordenes').where('estado','==','confirmada').onSnapshot(s => s.docChanges().forEach(c => { if(c.type==='added') addNotif('ordenes','Nueva orden',c.doc.id); }));
+    db.collection('ordenes').where('estado','==','confirmada').onSnapshot(s => s.docChanges().forEach(c => { 
+        if(c.type==='added' && !ordenesVistas.includes(c.doc.id)) {
+            addNotif('ordenes','Nueva orden: '+c.doc.id,c.doc.id);
+        }
+    }));
     db.collection('productos').where('activo','==',true).onSnapshot(s => s.docChanges().forEach(c => { const p=c.doc.data(); if(p.stock<12&&p.stock>0) addNotif('productos','Stock bajo: '+p.nombre,c.doc.id); }));
 }
 
@@ -81,6 +89,11 @@ function mostrarSeccion(sec, el) {
     document.getElementById('seccion-'+sec).style.display = 'block';
     document.querySelectorAll('.nav-menu li').forEach(li => li.classList.remove('active'));
     if (el) el.classList.add('active');
+        if (sec === 'ordenes') {
+        const ordenesVistas = JSON.parse(sessionStorage.getItem('ordenes_vistas') || '[]');
+        const nuevas = notificacionesLista.filter(n => n.sec === 'ordenes').map(n => n.id);
+        sessionStorage.setItem('ordenes_vistas', JSON.stringify([...new Set([...ordenesVistas, ...nuevas])]));
+    }
     // Limpiar notificaciones de esta sección
     notifSec[sec] = 0;
     notificacionesLista = notificacionesLista.filter(n => n.sec !== sec);
@@ -89,7 +102,8 @@ function mostrarSeccion(sec, el) {
         productos: cargarProductos, ordenes: cargarOrdenes, historia: cargarHistoriaAdmin,
         ubicaciones: () => { cargarUbicacionesAdmin(); cargarDepartamentos(); },
         secciones: cargarSecciones, valoraciones: cargarValoracionesAdmin,
-        contactos: cargarContactos, configuracion: cargarConfiguracion
+        contactos: cargarContactos, configuracion: cargarConfiguracion,
+        solicitudes: cargarSolicitudes, noticias_admin: cargarNoticiasAdmin
     };
     if (fn[sec]) fn[sec]();
 }
@@ -139,8 +153,7 @@ async function guardarProducto() {
         img = await comprimirImagen(window.prodImg, 600, 0.6);
     }
     
-    const datos = { nombre:n, precio:parseFloat(pr), stock:parseInt(document.getElementById('stock-producto').value)||0, imagen:img, descripcion:document.getElementById('descripcion-producto').value, activo:document.getElementById('activo-producto').checked };
-    
+    const datos = { nombre:n, precio:parseFloat(pr), stock:parseInt(document.getElementById('stock-producto').value)||0, imagen:img, descripcion:document.getElementById('descripcion-producto').value, descuento24u:parseInt(document.getElementById('descuento24u').value)||0, activo:document.getElementById('activo-producto').checked };    
     try {
         if (editProd) await db.collection('productos').doc(editProd).update(datos);
         else await db.collection('productos').add(datos);
@@ -156,6 +169,7 @@ async function editProducto(id) {
     document.getElementById('precio-producto').value = p.precio?.toFixed(2) || '0.00';
     document.getElementById('stock-producto').value = p.stock;
     document.getElementById('descripcion-producto').value = p.descripcion||'';
+    document.getElementById('descuento24u').value = p.descuento24u||0;
     document.getElementById('activo-producto').checked = p.activo;
     document.getElementById('form-titulo').textContent = 'Editar Producto';
     document.querySelector('.btn-cancelar').style.display = 'inline-block';
@@ -164,8 +178,7 @@ async function editProducto(id) {
 }
 function cancelarEdicionProd() {
     editProd = null; window.prodImg = null;
-    ['producto-id','nombre-producto','precio-producto','stock-producto','descripcion-producto'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('activo-producto').checked = true;
+    ['producto-id','nombre-producto','precio-producto','stock-producto','descripcion-producto','descuento24u'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('imagen-preview').style.display = 'none';
     document.getElementById('form-titulo').textContent = 'Agregar Producto';
     document.querySelector('.btn-cancelar').style.display = 'none';
@@ -198,6 +211,8 @@ function renderOrd(lista) {
                     <option value="cancelada" ${o.estado==='cancelada'?'selected':''}>Cancelada</option>
                 </select>
                 <span class="estado-orden ${o.estado}">${o.estado}</span>
+                <button onclick="descargarPDFOrden('${o.id}')" class="btn-editar" style="margin-top:5px;">📄 PDF</button>
+                <button onclick="descargarPDFOrden('${o.id}')" class="btn-editar" style="margin-top:5px;">📄 PDF</button>
             </div>
         </div>`).join('') : '<p>No hay órdenes aún</p>';
 }
@@ -502,6 +517,81 @@ function comprimirImagen(file, maxWidth, calidad) {
         };
         reader.readAsDataURL(file);
     });
+}
+
+// ============ SOLICITUDES DISTRIBUIDOR ============
+function cargarSolicitudes() {
+    db.collection('solicitudes_distribuidor').orderBy('fecha','desc').get().then(s => {
+        const c = document.getElementById('lista-solicitudes');
+        c.innerHTML = s.empty ? '<p>No hay solicitudes</p>' : Array.from(s).map(d => {
+            const sol = d.data();
+            return `<div class="contacto-card">
+                <h3>${sol.nombre}</h3>
+                <p>🏢 ${sol.empresa}</p>
+                <p>📞 ${sol.telefono}</p>
+                <p>📧 ${sol.email||'N/A'}</p>
+                <p>💬 ${sol.mensaje||''}</p>
+                <span class="fecha">${sol.fecha?.toDate().toLocaleString()}</span>
+                <select onchange="cambiarEstadoSolicitud('${d.id}',this.value)" class="form-input">
+                    <option value="pendiente" ${sol.estado==='pendiente'?'selected':''}>Pendiente</option>
+                    <option value="contactado" ${sol.estado==='contactado'?'selected':''}>Contactado</option>
+                    <option value="aprobado" ${sol.estado==='aprobado'?'selected':''}>Aprobado</option>
+                </select>
+                <button onclick="eliminarSolicitud('${d.id}')" class="btn-eliminar">Eliminar</button>
+            </div>`;
+        }).join('');
+    });
+}
+async function cambiarEstadoSolicitud(id, e) { if(e) await db.collection('solicitudes_distribuidor').doc(id).update({estado:e}); }
+async function eliminarSolicitud(id) { if(confirm('¿Eliminar?')) await db.collection('solicitudes_distribuidor').doc(id).delete(); }
+
+// ============ NOTICIAS ADMIN ============
+function cargarNoticiasAdmin() {
+    db.collection('noticias').orderBy('fecha','desc').onSnapshot(s => {
+        const c = document.getElementById('lista-noticias-admin');
+        c.innerHTML = s.empty ? '<p>No hay noticias</p>' : Array.from(s).map(d => {
+            const n = d.data();
+            return `<div class="seccion-card">
+                <h3>${n.titulo}</h3><span class="tipo-badge">${n.tipo}</span>
+                <p>${(n.contenido||'').substring(0,80)}...</p>
+                <button onclick="eliminarNoticia('${d.id}')" class="btn-eliminar">Eliminar</button>
+            </div>`;
+        }).join('');
+    });
+}
+function previewNoticiaMedia(e) {
+    const f = e.target.files[0];
+    if(f){window.notFile=f;const r=new FileReader();r.onload=ev=>{document.getElementById('noticia-media-preview').src=ev.target.result;document.getElementById('noticia-media-preview').style.display='block';};r.readAsDataURL(f);}
+}
+async function guardarNoticia() {
+    let media = document.getElementById('noticia-media-preview').src;
+    if(window.notFile) media = await imgToB64(window.notFile);
+    await db.collection('noticias').add({
+        titulo:document.getElementById('noticia-titulo').value,
+        tipo:document.getElementById('noticia-tipo').value,
+        contenido:document.getElementById('noticia-contenido').value,
+        mediaURL:media,
+        activo:document.getElementById('noticia-activo').checked,
+        fecha:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert('Noticia guardada');
+    ['noticia-titulo','noticia-contenido'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('noticia-media-preview').style.display='none';window.notFile=null;
+}
+async function eliminarNoticia(id) { if(confirm('¿Eliminar?')) await db.collection('noticias').doc(id).delete(); }
+
+// ============ DESCARGAR PDF ORDEN ============
+async function descargarPDFOrden(id) {
+    const doc = await db.collection('ordenes').doc(id).get();
+    if (doc.exists) {
+        const orden = {id: doc.id, ...doc.data()};
+        // Usar la misma función generarPDF del cliente (debe estar disponible)
+        if (typeof generarPDF === 'function') {
+            generarPDF(orden);
+        } else {
+            alert('Función PDF no disponible');
+        }
+    }
 }
 
 window.onload = function() {
