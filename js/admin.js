@@ -212,7 +212,6 @@ function renderOrd(lista) {
                 </select>
                 <span class="estado-orden ${o.estado}">${o.estado}</span>
                 <button onclick="descargarPDFOrden('${o.id}')" class="btn-editar" style="margin-top:5px;">📄 PDF</button>
-                <button onclick="descargarPDFOrden('${o.id}')" class="btn-editar" style="margin-top:5px;">📄 PDF</button>
             </div>
         </div>`).join('') : '<p>No hay órdenes aún</p>';
 }
