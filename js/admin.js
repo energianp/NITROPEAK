@@ -443,7 +443,11 @@ function cargarConfiguracion() {
         if (d.exists && d.data().logo) { document.getElementById('logo-preview').src = d.data().logo; document.getElementById('logo-preview').style.display = 'block'; document.getElementById('sidebar-logo').src = d.data().logo; }
     });
     db.collection('configuracion').doc('redes').get().then(d => {
-        if (d.exists) { document.getElementById('config-instagram').value = d.data().instagram||''; document.getElementById('config-whatsapp').value = d.data().whatsapp||''; }
+        if (d.exists) { 
+            document.getElementById('config-instagram').value = d.data().instagram||''; 
+            document.getElementById('config-whatsapp').value = d.data().whatsapp||''; 
+            document.getElementById('config-gmail').value = d.data().gmail||''; 
+        }
     });
 }
 function previewLogo(e) {
@@ -459,7 +463,11 @@ async function actualizarLogo() {
     alert('✅ Logo actualizado!');
 }
 async function guardarRedes() {
-    await db.collection('configuracion').doc('redes').set({instagram:document.getElementById('config-instagram').value, whatsapp:document.getElementById('config-whatsapp').value},{merge:true});
+    await db.collection('configuracion').doc('redes').set({
+        instagram:document.getElementById('config-instagram').value, 
+        whatsapp:document.getElementById('config-whatsapp').value,
+        gmail:document.getElementById('config-gmail').value
+    },{merge:true});
     alert('Redes guardadas');
 }
 
