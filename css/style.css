@@ -381,10 +381,19 @@ section h2::after {
 .historia-content {
     max-width: 1000px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 50px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.historia-content img,
+.historia-texto img {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 15px;
+    border: 2px solid var(--color-borde);
+    margin-top: 20px;
+    display: block;
 }
 
 .historia-texto h3 {
@@ -397,13 +406,6 @@ section h2::after {
     color: var(--color-texto-secundario);
     line-height: 1.8;
     font-size: 1.1em;
-}
-
-.historia-content img,
-.historia-texto img {
-    width: 100%;
-    border-radius: 15px;
-    border: 2px solid var(--color-borde);
 }
 
 /* ============ VALORACIONES ============ */
