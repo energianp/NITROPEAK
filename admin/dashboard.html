@@ -178,11 +178,12 @@
                     <h3>Agregar Noticia</h3>
                     <div class="form-grid">
                         <input type="text" id="noticia-titulo" placeholder="Título" class="form-input">
-                        <select id="noticia-tipo" class="form-input">
+                        <select id="noticia-tipo" class="form-input" onchange="toggleNoticiaTipo()">
                             <option value="texto">Solo texto</option>
                             <option value="imagen">Imagen + texto</option>
                             <option value="video">Video + texto</option>
                         </select>
+                        <input type="text" id="noticia-video-url" placeholder="🔗 Link de YouTube (solo para video)" class="form-input" style="display:none;">
                         <textarea id="noticia-contenido" placeholder="Contenido" class="form-input" rows="4"></textarea>
                         <div class="upload-container">
                             <label for="noticia-archivo" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Subir archivo</span></label>
