@@ -42,7 +42,8 @@ function imgToB64(file) {
 
 // ============ NOTIFICACIONES ============
 function initNotifs() {
-    const ordenesVistas = JSON.parse(sessionStorage.getItem('ordenes_vistas') || '[]');
+    const ordenesVistas = JSON.parse(localStorage.getItem('ordenes_vistas') || '[]');
+    const solicitudesVistas = JSON.parse(localStorage.getItem('solicitudes_vistas') || '[]');
     
     db.collection('valoraciones').where('aprobada','==',false).onSnapshot(s => s.docChanges().forEach(c => { if(c.type==='added') addNotif('valoraciones','Nueva valoración',c.doc.id); }));
     db.collection('contactos').where('contactado','==',false).onSnapshot(s => s.docChanges().forEach(c => { if(c.type==='added') addNotif('contactos','Nuevo mensaje',c.doc.id); }));
@@ -52,8 +53,13 @@ function initNotifs() {
         }
     }));
     db.collection('productos').where('activo','==',true).onSnapshot(s => s.docChanges().forEach(c => { const p=c.doc.data(); if(p.stock<12&&p.stock>0) addNotif('productos','Stock bajo: '+p.nombre,c.doc.id); }));
-    db.collection('solicitudes_distribuidor').where('estado','==','pendiente').onSnapshot(s => s.docChanges().forEach(c => { if(c.type==='added') addNotif('solicitudes','Nueva solicitud distribuidor',c.doc.id); }));
+    db.collection('solicitudes_distribuidor').where('estado','==','pendiente').onSnapshot(s => s.docChanges().forEach(c => { 
+        if(c.type==='added' && !solicitudesVistas.includes(c.doc.id)) {
+            addNotif('solicitudes','Nueva solicitud distribuidor',c.doc.id);
+        }
+    }));
 }
+
 function addNotif(sec, msg, id) {
     notificacionesLista.unshift({ sec, msg, id, fecha: new Date(), leida: false });
     notifSec[sec] = (notifSec[sec]||0) + 1;
@@ -75,11 +81,15 @@ function mostrarSeccion(sec, el) {
     document.querySelectorAll('.seccion').forEach(s => s.style.display = 'none');
     document.getElementById('seccion-'+sec).style.display = 'block';
     document.querySelectorAll('.nav-menu li').forEach(li => li.classList.remove('active'));
-    if (el) el.classList.add('active');
         if (sec === 'ordenes') {
-        const ordenesVistas = JSON.parse(sessionStorage.getItem('ordenes_vistas') || '[]');
+        const ordenesVistas = JSON.parse(localStorage.getItem('ordenes_vistas') || '[]');
         const nuevas = notificacionesLista.filter(n => n.sec === 'ordenes').map(n => n.id);
-        sessionStorage.setItem('ordenes_vistas', JSON.stringify([...new Set([...ordenesVistas, ...nuevas])]));
+        localStorage.setItem('ordenes_vistas', JSON.stringify([...new Set([...ordenesVistas, ...nuevas])]));
+    }
+    if (sec === 'solicitudes') {
+        const solicitudesVistas = JSON.parse(localStorage.getItem('solicitudes_vistas') || '[]');
+        const nuevas = notificacionesLista.filter(n => n.sec === 'solicitudes').map(n => n.id);
+        localStorage.setItem('solicitudes_vistas', JSON.stringify([...new Set([...solicitudesVistas, ...nuevas])]));
     }
     // Limpiar notificaciones de esta sección
     notifSec[sec] = 0;
@@ -184,7 +194,7 @@ async function eliminarProducto(id) { if (confirm('¿Eliminar?')) await db.colle
 
 // ============ ÓRDENES ============
 function cargarOrdenes() {
-    db.collection('ordenes').onSnapshot(s => {
+    db.collection('ordenes').get().then(s => {
         allOrd = []; s.forEach(d => allOrd.push({id:d.id,...d.data()}));
         allOrd.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
         renderOrd(allOrd);
@@ -222,7 +232,8 @@ async function cambiarEstadoOrden(id, e) {
     if (e && id && e !== '') {
         try {
             await db.collection('ordenes').doc(id).update({estado: e});
-            console.log('Estado actualizado:', id, e);
+            // Recargar la lista manualmente
+            cargarOrdenes();
         } catch(error) {
             console.error('Error al actualizar estado:', error);
         }
@@ -522,7 +533,7 @@ function comprimirImagen(file, maxWidth, calidad) {
 
 // ============ SOLICITUDES DISTRIBUIDOR ============
 function cargarSolicitudes() {
-    db.collection('solicitudes_distribuidor').orderBy('fecha','desc').get().then(s => {
+    db.collection('solicitudes_distribuidor').orderBy('fecha','desc').onSnapshot(s => {
         const c = document.getElementById('lista-solicitudes');
         c.innerHTML = s.empty ? '<p>No hay solicitudes</p>' : Array.from(s).map(d => {
             const sol = d.data();
@@ -586,20 +597,9 @@ async function descargarPDFOrden(id) {
     const docRef = await db.collection('ordenes').doc(id).get();
     if (docRef.exists) {
         const orden = {id: docRef.id, ...docRef.data()};
-        // Mostrar PDF en nueva ventana
-        if (typeof generarPDF === 'function') {
-            // Guardar referencia global para que admin pueda usar la función
-            window._ordenParaPDF = orden;
-            // Abrir en nueva pestaña
-            const pdfWindow = window.open('', '_blank');
-            pdfWindow.document.write('<html><head><title>Factura '+orden.id+'</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#333;"><p style="color:white;font-size:18px;">Generando PDF... Si no se descarga, <button onclick="window.close()" style="padding:10px 20px;cursor:pointer;">cerrar</button></p></body></html>');
-            setTimeout(() => {
-                generarPDF(orden);
-                pdfWindow.close();
-            }, 500);
-        } else {
-            alert('Función PDF no disponible. Asegúrate de que el cliente.js se cargó correctamente.');
-        }
+        generarPDFAdmin(orden);
+    } else {
+        alert('Orden no encontrada');
     }
 }
 
