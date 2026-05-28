@@ -568,44 +568,55 @@ async function generarPDF(orden) {
     doc.setFillColor(245, 245, 245);
     doc.rect(0, 0, 210, 297, 'F');
     
-    // Logo y encabezado
+    // Encabezado
     doc.setFillColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
     doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(blanco[0], blanco[1], blanco[2]);
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('⚡ NITROPEAK', 15, 25);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Energia Natural Sin Cafeina', 15, 33);
     
-    // Número de orden
+    // Intentar cargar logo desde Firebase
+    try {
+        const logoDoc = await db.collection('configuracion').doc('sitio').get();
+        if (logoDoc.exists && logoDoc.data().logo) {
+            doc.addImage(logoDoc.data().logo, 'PNG', 10, 5, 20, 20);
+        }
+    } catch(e) {}
+    
+    doc.setTextColor(blanco[0], blanco[1], blanco[2]);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NITROPEAK', 35, 20);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Energia Natural Sin Cafeina', 35, 28);
+    
+    // Datos de factura
     doc.setTextColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text(`FACTURA SIMULADA`, 105, 50, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text(`Orden: ${orden.id}`, 105, 58, { align: 'center' });
-    doc.text(`Fecha: ${new Date().toLocaleDateString('es-SV')}`, 105, 65, { align: 'center' });
+    doc.text('FACTURA', 105, 50, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const ahora = new Date();
+    doc.text(`Orden: ${orden.id}`, 15, 60);
+    doc.text(`Fecha: ${ahora.toLocaleDateString('es-SV')} ${ahora.toLocaleTimeString('es-SV')}`, 15, 67);
     
     // Datos del cliente
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('DATOS DEL CLIENTE', 15, 80);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Nombre: ${orden.cliente}`, 15, 88);
-    doc.text(`Telefono: ${orden.telefono}`, 15, 95);
+    doc.text(`Nombre: ${orden.cliente || ''}`, 15, 88);
+    doc.text(`Telefono: ${orden.telefono || ''}`, 15, 95);
     
     // Método de entrega
     doc.setFont('helvetica', 'bold');
     doc.text('METODO DE ENTREGA', 15, 108);
     doc.setFont('helvetica', 'normal');
     if (orden.entrega?.tipo === 'punto') {
-        doc.text(`Retiro en: ${orden.entrega.ptoNombre || 'Punto de distribucion'}`, 15, 116);
+        doc.text(`Retiro en: ${orden.entrega.ptoNombre || ''}`, 15, 116);
         doc.text(`Direccion: ${orden.entrega.ptoDir || ''}`, 15, 123);
         doc.text('Entrega estimada: 2 horas despues del pago', 15, 130);
     } else {
-        doc.text(`Envio a domicilio`, 15, 116);
+        doc.text('Envio a domicilio', 15, 116);
         doc.text(`Direccion: ${orden.entrega?.direccion || ''}, ${orden.entrega?.departamento || ''}, ${orden.entrega?.municipio || ''}`, 15, 123);
         doc.text('Tiempo estimado: 24 horas (excepto domingo)', 15, 130);
     }
@@ -619,42 +630,43 @@ async function generarPDF(orden) {
     doc.setFontSize(9);
     doc.text('Producto', 18, y + 7);
     doc.text('Cant', 100, y + 7);
-    doc.text('Precio', 120, y + 7);
-    doc.text('Subtotal', 150, y + 7);
+    doc.text('Precio', 130, y + 7);
+    doc.text('Subtotal', 165, y + 7);
     
     y += 15;
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'normal');
     
     orden.items.forEach(item => {
-        doc.text(item.nombre.substring(0, 30), 18, y);
-        doc.text(String(item.cantidad), 100, y);
-        doc.text(`$${item.precio.toFixed(2)}`, 120, y);
-        doc.text(`$${(item.precio * item.cantidad).toFixed(2)}`, 150, y);
+        doc.text(item.nombre.substring(0, 28), 18, y);
+        doc.text(String(item.cantidad), 102, y);
+        doc.text(`$${item.precio.toFixed(2)}`, 130, y);
+        doc.text(`$${(item.precio * item.cantidad).toFixed(2)}`, 165, y);
         y += 8;
-        if (y > 250) {
-            doc.addPage();
-            y = 20;
-        }
+        if (y > 250) { doc.addPage(); y = 20; }
     });
     
     // Total
     y += 5;
     doc.setDrawColor(verdeAcento[0], verdeAcento[1], verdeAcento[2]);
-    doc.line(100, y, 195, y);
+    doc.line(110, y, 195, y);
     y += 8;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
-    doc.text('TOTAL:', 100, y);
-    doc.text(`$${orden.total.toFixed(2)}`, 150, y);
+    doc.text('TOTAL:', 110, y);
+    doc.text(`$${orden.total.toFixed(2)}`, 165, y);
     
-    // Sello de cancelado
-    y = Math.max(y + 20, 240);
-    doc.setTextColor(255, 0, 0);
-    doc.setFontSize(40);
+    // Sello de cancelado estético
+    y = Math.max(y + 25, 245);
+    doc.setDrawColor(200, 0, 0);
+    doc.setLineWidth(2);
+    doc.rect(50, y - 15, 110, 30);
+    doc.setLineWidth(0.5);
+    doc.setFontSize(28);
+    doc.setTextColor(200, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.text('CANCELADO', 105, y, { align: 'center', angle: -15 });
+    doc.text('CANCELADO', 105, y + 5, { align: 'center' });
     
     // Descargar
     doc.save(`NITROPEAK_${orden.id}.pdf`);
@@ -679,18 +691,21 @@ function procesarPago(){
     
     db.collection('ordenes').add(orden).then(()=>{
         // Descontar stock
-        carrito.forEach(i=>{
-            db.collection('productos').doc(i.id).get().then(d=>{
+        const descuentos = carrito.map(i=>{
+            return db.collection('productos').doc(i.id).get().then(d=>{
                 if(d.exists){
                     const nuevoStock=Math.max(0,d.data().stock-i.cantidad);
-                    db.collection('productos').doc(i.id).update({stock:nuevoStock});
+                    return db.collection('productos').doc(i.id).update({stock:nuevoStock});
                 }
             });
         });
-        // Generar PDF
-        generarPDF(orden);
+        // Esperar a que todos los descuentos terminen para generar PDF y limpiar carrito
+        Promise.all(descuentos).then(()=>{
+            generarPDF(orden);
+            carrito=[];
+            actualizarContador();
+        });
     });
-    carrito=[];actualizarContador();
 }
 
 function cerrarPago(){
@@ -701,7 +716,17 @@ function cerrarPago(){
 }
 
 // ============ CONTACTO ============
-function cargarRedesSociales(){db.collection('configuracion').doc('redes').onSnapshot(d=>{if(!d.exists)return;const ig=document.querySelector('.icono-red.instagram'),wa=document.querySelector('.icono-red.whatsapp');if(ig&&d.data().instagram)ig.href=d.data().instagram;if(wa&&d.data().whatsapp)wa.href='https://wa.me/'+d.data().whatsapp.replace(/\D/g,'');});}
+function cargarRedesSociales(){
+    db.collection('configuracion').doc('redes').onSnapshot(d=>{
+        if(!d.exists)return;
+        const ig=document.querySelector('.icono-red.instagram'),
+              wa=document.querySelector('.icono-red.whatsapp'),
+              gm=document.querySelector('.icono-red.gmail');
+        if(ig&&d.data().instagram)ig.href=d.data().instagram;
+        if(wa&&d.data().whatsapp)wa.href='https://wa.me/'+d.data().whatsapp.replace(/\D/g,'');
+        if(gm&&d.data().gmail)gm.href='mailto:'+d.data().gmail;
+    });
+}
 async function enviarContacto(e){e.preventDefault();await db.collection('contactos').add({nombre:document.getElementById('nombre-contacto').value,email:document.getElementById('email-contacto').value,telefono:document.getElementById('telefono-contacto').value,mensaje:document.getElementById('mensaje-contacto').value,fecha:new Date().toISOString(),contactado:false,comentarioAdmin:''});alert('Mensaje enviado');document.getElementById('formulario-contacto').reset();}
 
 // ============ SECCIONES ============
