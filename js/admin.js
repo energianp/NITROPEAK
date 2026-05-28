@@ -141,7 +141,17 @@ async function guardarProducto() {
     }
     
     const descuento = parseInt(document.getElementById('descuento24u').value);
-    const datos = { nombre:n, precio:parseFloat(pr), stock:parseInt(document.getElementById('stock-producto').value)||0, imagen:img, descripcion:document.getElementById('descripcion-producto').value, descuento24u: descuento || 15, activo:document.getElementById('activo-producto').checked };    try {
+    const datos = { 
+        nombre:n, 
+        precio:parseFloat(pr), 
+        stock:parseInt(document.getElementById('stock-producto').value)||0, 
+        imagen:img, 
+        descripcion:document.getElementById('descripcion-producto').value, 
+        descuento24u: descuento || 15, 
+        activo:document.getElementById('activo-producto').checked 
+    };
+    
+    try {
         if (editProd) await db.collection('productos').doc(editProd).update(datos);
         else await db.collection('productos').add(datos);
         alert('Guardado'); cancelarEdicionProd();
