@@ -25,6 +25,8 @@
             <li><a href="#historia">Historia</a></li>
             <li><a href="#valoraciones">Valoraciones</a></li>
             <li><a href="#ubicaciones">Dónde Comprar</a></li>
+            <li><a href="#distribuidores">Distribuidores</a></li>
+            <li><a href="#noticias">Noticias</a></li>
             <li><a href="#personalizar">Personalizar</a></li>
             <li><a href="#contacto">Contacto</a></li>
             <li><a href="#" class="carrito-icon"><i class="fas fa-shopping-cart"></i><span id="contador-carrito">0</span></a></li>
@@ -98,6 +100,23 @@
         <div class="ubicaciones-lista" id="ubicaciones-contenido" style="overflow:visible;"></div>
     </section>
 
+        <!-- Sección Distribuidores -->
+    <section id="distribuidores" class="distribuidores">
+        <h2>Conoce a Nuestros Distribuidores</h2>
+        <div class="carrusel-auto-container">
+            <div class="carrusel-auto-track" id="carrusel-distribuidores-track"></div>
+        </div>
+        <div style="text-align:center;margin-top:20px;">
+            <button onclick="abrirModalDistribuidor()" class="btn-distribuidor">¿Quieres ser parte de nuestros distribuidores?</button>
+        </div>
+    </section>
+
+        <!-- Sección Noticias -->
+    <section id="noticias" class="noticias-seccion">
+        <h2>Noticias y Próximos Eventos</h2>
+        <div class="noticias-grid" id="noticias-lista"></div>
+    </section>
+    
     <section id="personalizar" class="personalizar">
         <h2>Personaliza tu NITROPEAK</h2>
         <p>¿Quieres un NITROPEAK único?</p>
@@ -140,6 +159,21 @@
         </div>
     </div>
 
+        <!-- Modal Solicitud Distribuidor -->
+    <div id="modal-distribuidor" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModalDistribuidor()">&times;</span>
+            <h2>Solicitar ser Distribuidor</h2>
+            <p style="color:var(--color-texto-secundario);margin-bottom:15px;">Completa tus datos y nos pondremos en contacto contigo</p>
+            <input type="text" id="dist-nombre" placeholder="Nombre completo" class="form-input">
+            <input type="text" id="dist-empresa" placeholder="Nombre de la empresa" class="form-input">
+            <input type="tel" id="dist-telefono" placeholder="Teléfono" class="form-input">
+            <input type="email" id="dist-email" placeholder="Correo electrónico" class="form-input">
+            <textarea id="dist-mensaje" placeholder="Mensaje (opcional)" class="form-input" rows="3"></textarea>
+            <button onclick="enviarSolicitudDistribuidor()" class="btn-guardar">Enviar Solicitud</button>
+        </div>
+    </div>
+    
     <!-- Modal Comentarios -->
     <div id="comentarios-modal" class="modal">
         <div class="modal-content">
