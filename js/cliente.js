@@ -799,7 +799,7 @@ function cargarDistribuidores() {
             'Farmacias Económicas': 'https://ilacad.com/BO/img/empresa/logo_farmacias_economicas_elsavador.png',
             'Smart Fit': 'https://ilacad.com/BO/img/empresa/logo_farmacias_economicas_elsavador.png',
             'World Gym': 'https://worldgymcorporate.com/wp-content/uploads/2024/02/WG_Logo_Legacy-Gorilla__AllWhite_Front-2-2048x2048-1.png',
-            'Goldl's Gym': 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3f/Gold%27s_Gym_logo.svg/1280px-Gold%27s_Gym_logo.svg.png',
+            'Gold\'s Gym': '', 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3f/Gold%27s_Gym_logo.svg/1280px-Gold%27s_Gym_logo.svg.png',
             'INDES': 'https://web.indes.gob.sv/',
             'Coach Gym': 'https://images.fineartamerica.com/images/artworkimages/medium/3/fitness-coach-logo-design-bella-kismet-transparent.png',
             'Super 7': 'https://i.pinimg.com/736x/ef/cc/01/efcc01530e27ebf6fd277d52e80065fd.jpg',
