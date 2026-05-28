@@ -873,7 +873,8 @@ function cargarNoticias() {
         if (!contenedor) return;
         
         if (snap.empty) {
-            contenedor.innerHTML = '<p style="text-align:center;color:var(--color-texto-terciario);">Próximamente noticias y eventos</p>';
+            contenedor.innerHTML = '<p style="text-align:center;color:var(--color-texto-terciario);padding:20px;">Próximamente noticias y eventos</p>';
+            contenedor.parentElement.style.cursor = 'default';
             return;
         }
         
@@ -881,32 +882,26 @@ function cargarNoticias() {
         snap.forEach(d => noticias.push(d.data()));
         noticias.sort((a, b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
         
-        contenedor.innerHTML = `
-            <div class="carrusel-auto-container" style="cursor:grab;">
-                <div class="carrusel-auto-track" id="carrusel-noticias-track">
-                    ${noticias.map(n => {
-                        let media = '';
-                        if (n.tipo === 'imagen' && n.mediaURL) {
-                            media = `<img src="${n.mediaURL}" alt="${n.titulo}" style="width:100%;height:180px;object-fit:contain;">`;
-                        } else if (n.tipo === 'video' && n.mediaURL) {
-                            media = `<iframe width="100%" height="180" src="${n.mediaURL}" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe>`;
-                        }
-                        return `
-                        <div class="noticia-card" style="min-width:300px;flex-shrink:0;">
-                            ${media}
-                            <div class="noticia-contenido">
-                                <h3>${n.titulo}</h3>
-                                <p>${(n.contenido||'').substring(0,100)}...</p>
-                                <span class="noticia-fecha">${n.fecha?.toDate?.().toLocaleDateString('es-SV')||''}</span>
-                            </div>
-                        </div>`;
-                    }).join('')}
+        contenedor.innerHTML = noticias.map(n => {
+            let media = '';
+            if (n.tipo === 'imagen' && n.mediaURL) {
+                media = `<img src="${n.mediaURL}" alt="${n.titulo}" style="width:100%;height:150px;object-fit:contain;">`;
+            } else if (n.tipo === 'video' && n.mediaURL) {
+                media = `<iframe width="100%" height="150" src="${n.mediaURL}" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe>`;
+            }
+            return `
+            <div class="noticia-card" style="min-width:280px;max-width:320px;flex-shrink:0;">
+                ${media}
+                <div class="noticia-contenido" style="padding:15px;">
+                    <h3 style="font-size:1em;">${n.titulo}</h3>
+                    <p style="font-size:0.8em;">${(n.contenido||'').substring(0,100)}...</p>
+                    <span class="noticia-fecha">${n.fecha?.toDate?.().toLocaleDateString('es-SV')||''}</span>
                 </div>
-            </div>
-        `;
+            </div>`;
+        }).join('');
         
-        hacerArrastrable('carrusel-noticias-track');
-        iniciarCarruselAuto('carrusel-noticias-track', 4000);
+        hacerArrastrable('noticias-lista');
+        iniciarCarruselAuto('noticias-lista', 4000);
     });
 }
 
