@@ -541,25 +541,37 @@ function comprimirImagen(file, maxWidth, calidad) {
 
 // ============ SOLICITUDES DISTRIBUIDOR ============
 function cargarSolicitudes() {
-    db.collection('solicitudes_distribuidor').orderBy('fecha','desc').onSnapshot(s => {
+    db.collection('solicitudes_distribuidor').onSnapshot(s => {
         const c = document.getElementById('lista-solicitudes');
-        c.innerHTML = s.empty ? '<p>No hay solicitudes</p>' : Array.from(s).map(d => {
-            const sol = d.data();
-            return `<div class="contacto-card">
-                <h3>${sol.nombre}</h3>
-                <p>🏢 ${sol.empresa}</p>
-                <p>📞 ${sol.telefono}</p>
-                <p>📧 ${sol.email||'N/A'}</p>
-                <p>💬 ${sol.mensaje||''}</p>
+        if (!c) return;
+        
+        if (s.empty) {
+            c.innerHTML = '<p>No hay solicitudes</p>';
+            return;
+        }
+        
+        const solicitudes = [];
+        s.forEach(d => {
+            solicitudes.push({id: d.id, ...d.data()});
+        });
+        solicitudes.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
+        
+        c.innerHTML = solicitudes.map(sol => `
+            <div class="contacto-card">
+                <h3>${sol.nombre || 'Sin nombre'}</h3>
+                <p>🏢 ${sol.empresa || 'N/A'}</p>
+                <p>📞 ${sol.telefono || 'N/A'}</p>
+                <p>📧 ${sol.email || 'N/A'}</p>
+                <p>💬 ${sol.mensaje || ''}</p>
                 <span class="fecha">${sol.fecha?.toDate?.().toLocaleString() || 'Sin fecha'}</span>
-                <select onchange="cambiarEstadoSolicitud('${d.id}',this.value)" class="form-input">
+                <select onchange="cambiarEstadoSolicitud('${sol.id}',this.value)" class="form-input">
                     <option value="pendiente" ${sol.estado==='pendiente'?'selected':''}>Pendiente</option>
                     <option value="contactado" ${sol.estado==='contactado'?'selected':''}>Contactado</option>
                     <option value="aprobado" ${sol.estado==='aprobado'?'selected':''}>Aprobado</option>
                 </select>
-                <button onclick="eliminarSolicitud('${d.id}')" class="btn-eliminar">Eliminar</button>
-            </div>`;
-        }).join('');
+                <button onclick="eliminarSolicitud('${sol.id}')" class="btn-eliminar">Eliminar</button>
+            </div>
+        `).join('');
     });
 }
 async function cambiarEstadoSolicitud(id, e) { if(e) await db.collection('solicitudes_distribuidor').doc(id).update({estado:e}); }
