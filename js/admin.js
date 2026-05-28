@@ -248,7 +248,7 @@ async function cambiarEstadoOrden(id, e) {
     }
 }
 
-// ============ HISTORIA =============
+// ============ HISTORIA ============
 async function cargarHistoriaAdmin() {
     const d = await db.collection('configuracion').doc('historia').get();
     if (d.exists) {
