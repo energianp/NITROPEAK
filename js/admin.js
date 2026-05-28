@@ -208,9 +208,8 @@ function filtrarOrdenes() {
 }
 
 async function cambiarEstadoOrden(id, e) { 
-    if (e) {
+    if (e && id) {
         await db.collection('ordenes').doc(id).update({estado: e});
-        cargarOrdenes();
     }
 }
 
