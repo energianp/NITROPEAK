@@ -209,8 +209,8 @@
                 <h3>Datos de Tarjeta</h3>
                 <div class="tarjeta-visual"><div class="chip">💳</div><div class="numero-tarjeta" id="numero-tarjeta-visual">•••• •••• •••• ••••</div><div class="tarjeta-detalles"><span id="nombre-tarjeta-visual">TITULAR</span><span id="vencimiento-visual">MM/AA</span></div></div>
                 <input type="text" id="numero-tarjeta" placeholder="Número de tarjeta" maxlength="19" oninput="formatearTarjeta(this)" class="form-input">
-                <input type="text" id="nombre-tarjeta" placeholder="Nombre del titular" class="form-input">
-                <div class="tarjeta-row"><input type="text" id="vencimiento" placeholder="MM/AA" maxlength="5" class="form-input"><input type="text" id="cvv" placeholder="CVV" maxlength="3" class="form-input"></div>
+                <input type="text" id="nombre-tarjeta" placeholder="Nombre del titular" class="form-input" oninput="actualizarNombreTarjeta(this.value)">
+                <div class="tarjeta-row"><input type="text" id="vencimiento" placeholder="MM/AA" maxlength="5" class="form-input" oninput="actualizarVencimientoTarjeta(this.value)"><input type="text" id="cvv" placeholder="CVV" maxlength="3" class="form-input"></div>
                 <button onclick="procesarPago()" class="btn-guardar">Pagar</button>
             </div>
         </div>
@@ -218,7 +218,6 @@
             <div class="exito-icono">✅</div>
             <h3>¡Pedido Confirmado!</h3>
             <p>Número de orden: <strong id="numero-orden"></strong></p>
-            <p id="whatsapp-estado" style="color:#48bb78;display:none;">Enviando confirmación por WhatsApp...</p>
             <button onclick="cerrarPago()" class="btn-guardar">Cerrar</button>
         </div>
     </div>
@@ -233,5 +232,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/cliente.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
