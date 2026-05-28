@@ -613,7 +613,6 @@ async function guardarNoticia() {
 async function eliminarNoticia(id) { if(confirm('¿Eliminar?')) await db.collection('noticias').doc(id).delete(); }
 
 // ============ DESCARGAR PDF ORDEN ============
-async function descargarPDFOrden(id) {
 async function descargarPDFOrden(docId) {
     try {
         const docRef = await db.collection('ordenes').doc(docId).get();
