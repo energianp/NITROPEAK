@@ -875,8 +875,11 @@ function cargarNoticias() {
             Array.from(snap).map(d => {
                 const n = d.data();
                 let media = '';
-                if (n.tipo === 'imagen' && n.mediaURL) media = `<img src="${n.mediaURL}" alt="${n.titulo}">`;
-                else if (n.tipo === 'video' && n.mediaURL) media = `<video controls><source src="${n.mediaURL}"></video>`;
+                if (n.tipo === 'imagen' && n.mediaURL) {
+                    media = `<img src="${n.mediaURL}" alt="${n.titulo}">`;
+                } else if (n.tipo === 'video' && n.mediaURL) {
+                    media = `<iframe width="100%" height="200" src="${n.mediaURL}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:10px;"></iframe>`;
+                }
                 return `
                 <div class="noticia-card">
                     ${media}
