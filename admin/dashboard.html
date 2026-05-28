@@ -31,6 +31,7 @@
                 <li class="active" onclick="mostrarSeccion('productos', this)"><i class="fas fa-box"></i> Productos <span class="badge-seccion" id="badge-productos">0</span></li>
                 <li onclick="mostrarSeccion('ordenes', this)"><i class="fas fa-shopping-cart"></i> Órdenes <span class="badge-seccion" id="badge-ordenes">0</span></li>
                 <li onclick="mostrarSeccion('historia', this)"><i class="fas fa-book"></i> Historia</li>
+                <li><a href="#equipo">Equipo</a></li>
                 <li onclick="mostrarSeccion('ubicaciones', this)"><i class="fas fa-map-marker-alt"></i> Ubicaciones</li>
                 <li onclick="mostrarSeccion('secciones', this)"><i class="fas fa-puzzle-piece"></i> Secciones</li>
                 <li onclick="mostrarSeccion('valoraciones', this)"><i class="fas fa-star"></i> Valoraciones <span class="badge-seccion" id="badge-valoraciones">0</span></li>
@@ -99,6 +100,11 @@
                     <button onclick="guardarHistoria()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
                 </div>
             </section>
+
+                <section id="equipo" class="historia">
+        <h2>Nuestro Equipo</h2>
+        <div class="historia-content" id="equipo-contenido"></div>
+    </section>
 
             <!-- Sección Ubicaciones -->
             <section id="seccion-ubicaciones" class="seccion" style="display:none;">
