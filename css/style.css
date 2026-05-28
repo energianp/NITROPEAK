@@ -431,32 +431,6 @@ section h2::after {
     max-width: 280px;
 }
 
-.carrusel-nav {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-carrusel {
-    background: rgba(72, 187, 120, 0.1);
-    border: 2px solid var(--color-acento);
-    color: var(--color-acento);
-    border-radius: 50%;
-    width: 42px;
-    height: 42px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-carrusel:hover {
-    background: rgba(72, 187, 120, 0.25);
-    transform: scale(1.1);
-    box-shadow: 0 0 15px rgba(72, 187, 120, 0.4);
-}
-
 .carrusel-container {
     overflow: hidden;
     max-width: 1000px;
@@ -673,35 +647,6 @@ section h2::after {
     font-weight: bold;
     color: var(--color-principal);
     margin-top: 10px;
-}
-
-/* Botones de navegación del carrusel de ubicaciones */
-.carrusel-ubicaciones-nav {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.btn-carrusel-ubicacion {
-    background: rgba(72, 187, 120, 0.1);
-    border: 2px solid var(--color-acento);
-    color: var(--color-acento);
-    border-radius: 50%;
-    width: 42px;
-    height: 42px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-carrusel-ubicacion:hover {
-    background: rgba(72, 187, 120, 0.25);
-    transform: scale(1.1);
-    box-shadow: 0 0 15px rgba(72, 187, 120, 0.4);
 }
 
 /* ============ PERSONALIZAR ============ */
@@ -1560,4 +1505,21 @@ button[type="submit"]:hover,
     font-size: 0.75em;
     margin-top: 10px;
     display: block;
+}
+
+/* ============ CARRUSEL ARRASTRABLE ============ */
+.carrusel-auto-track {
+    cursor: grab;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.carrusel-auto-track::-webkit-scrollbar {
+    display: none;
+}
+
+.carrusel-auto-track:active {
+    cursor: grabbing;
 }
