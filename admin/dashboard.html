@@ -35,6 +35,8 @@
                 <li onclick="mostrarSeccion('secciones', this)"><i class="fas fa-puzzle-piece"></i> Secciones</li>
                 <li onclick="mostrarSeccion('valoraciones', this)"><i class="fas fa-star"></i> Valoraciones <span class="badge-seccion" id="badge-valoraciones">0</span></li>
                 <li onclick="mostrarSeccion('contactos', this)"><i class="fas fa-envelope"></i> Contactos <span class="badge-seccion" id="badge-contactos">0</span></li>
+                <li onclick="mostrarSeccion('solicitudes', this)"><i class="fas fa-handshake"></i> Solicitudes Dist. <span class="badge-seccion" id="badge-solicitudes">0</span></li>
+                <li onclick="mostrarSeccion('noticias_admin', this)"><i class="fas fa-newspaper"></i> Noticias</li>
                 <li onclick="mostrarSeccion('configuracion', this)"><i class="fas fa-cog"></i> Configuración</li>
                 <li onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</li>
             </ul>
@@ -60,6 +62,7 @@
                             <img id="imagen-preview" class="imagen-preview" style="display:none;">
                         </div>
                         <textarea id="descripcion-producto" placeholder="Descripción" class="form-input" rows="3"></textarea>
+                        <input type="number" id="descuento24u" placeholder="Descuento 24U (%)" class="form-input" min="0" max="100">
                         <label class="checkbox-label"><input type="checkbox" id="activo-producto" checked> Activo</label>
                     </div>
                     <button onclick="guardarProducto()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
@@ -170,6 +173,37 @@
                     <select id="filtro-estado-contacto" class="form-input" onchange="filtrarContactos()"><option value="">Todos</option><option value="pendiente">Pendientes</option><option value="contactado">Contactados</option></select>
                 </div>
                 <div class="contactos-grid" id="lista-contactos"></div>
+            </section>
+
+                        <!-- Sección Solicitudes Distribuidor -->
+            <section id="seccion-solicitudes" class="seccion" style="display:none;">
+                <h2><i class="fas fa-handshake"></i> Solicitudes de Distribuidores</h2>
+                <div id="lista-solicitudes"></div>
+            </section>
+
+            <!-- Sección Noticias Admin -->
+            <section id="seccion-noticias_admin" class="seccion" style="display:none;">
+                <h2><i class="fas fa-newspaper"></i> Gestión de Noticias</h2>
+                <div class="form-container">
+                    <h3>Agregar Noticia</h3>
+                    <div class="form-grid">
+                        <input type="text" id="noticia-titulo" placeholder="Título" class="form-input">
+                        <select id="noticia-tipo" class="form-input">
+                            <option value="texto">Solo texto</option>
+                            <option value="imagen">Imagen + texto</option>
+                            <option value="video">Video + texto</option>
+                        </select>
+                        <textarea id="noticia-contenido" placeholder="Contenido" class="form-input" rows="4"></textarea>
+                        <div class="upload-container">
+                            <label for="noticia-archivo" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Subir archivo</span></label>
+                            <input type="file" id="noticia-archivo" class="form-input-file" onchange="previewNoticiaMedia(event)">
+                            <img id="noticia-media-preview" class="imagen-preview" style="display:none;">
+                        </div>
+                        <label class="checkbox-label"><input type="checkbox" id="noticia-activo" checked> Activa</label>
+                    </div>
+                    <button onclick="guardarNoticia()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
+                </div>
+                <div class="noticias-grid" id="lista-noticias-admin"></div>
             </section>
 
             <!-- Sección Configuración -->
