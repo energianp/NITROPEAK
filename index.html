@@ -44,7 +44,9 @@
 
     <section id="productos" class="productos">
         <h2>Nuestros Productos</h2>
-        <div class="productos-grid" id="productos-lista"></div>
+        <div class="carrusel-auto-container" style="cursor:grab;">
+            <div class="carrusel-auto-track" id="productos-carrusel-track"></div>
+        </div>
     </section>
 
     <section id="historia" class="historia">
@@ -63,10 +65,6 @@
                 <option value="2">★★</option>
                 <option value="1">★</option>
             </select>
-            <div class="carrusel-nav">
-                <button onclick="moverCarrusel(-1)" class="btn-carrusel"><i class="fas fa-chevron-left"></i></button>
-                <button onclick="moverCarrusel(1)" class="btn-carrusel"><i class="fas fa-chevron-right"></i></button>
-            </div>
         </div>
         <div class="carrusel-container">
             <div class="carrusel-track" id="carrusel-valoraciones"></div>
