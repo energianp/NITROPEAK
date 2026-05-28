@@ -732,18 +732,17 @@ async function generarPDFAdmin(orden) {
     doc.setLineWidth(2);
     doc.rect(50, y - 15, 110, 30);
     doc.setLineWidth(0.5);
-    doc.setFontSize(28);
-    doc.setTextColor(200, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CANCELADO', 105, y + 5, { align: 'center' });
-    
-    doc.save(`NITROPEAK_${orden.id}.pdf`);
-}
+  doc.setFontSize(28);
+doc.setTextColor(200, 0, 0);
+doc.setFont('helvetica', 'bold');
+doc.text('CANCELADO', 105, y + 5, { align: 'center' });
+
+doc.save(`NITROPEAK_${orden.id}.pdf`);  // ← USA BACKTICKS (`)
 
 window.onload = function() {
     verificarAdmin();
     if (sessionStorage.getItem('admin')) {
         cargarProductos();
-        initNotifs();
+        initNotifs();  // ← CORREGIDO: initNotifs, no initNotifis
     }
-};
+};  // ← SOLO ESTA LLAVE CIERRA window.onload, NO HAY MÁS DESPUÉS
