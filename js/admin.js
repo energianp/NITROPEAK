@@ -596,18 +596,49 @@ function previewNoticiaMedia(e) {
 }
 async function guardarNoticia() {
     let media = document.getElementById('noticia-media-preview').src;
-    if(window.notFile) media = await comprimirImagen(window.notFile, 500, 0.5);
+    
+    if (window.notFile && window.notFile.size > 300000) {
+        try {
+            // Subir a Imgur
+            const base64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                reader.readAsDataURL(window.notFile);
+            });
+            
+            const response = await fetch('https://api.imgur.com/3/image', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Client-ID 546c25a59c58ad7',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: base64, type: 'base64' })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                media = data.data.link;
+            }
+        } catch (e) {
+            media = await comprimirImagen(window.notFile, 300, 0.3);
+        }
+    } else if (window.notFile) {
+        media = await comprimirImagen(window.notFile, 500, 0.6);
+    }
+    
     await db.collection('noticias').add({
-        titulo:document.getElementById('noticia-titulo').value,
-        tipo:document.getElementById('noticia-tipo').value,
-        contenido:document.getElementById('noticia-contenido').value,
-        mediaURL:media,
-        activo:document.getElementById('noticia-activo').checked,
-        fecha:firebase.firestore.FieldValue.serverTimestamp()
+        titulo: document.getElementById('noticia-titulo').value,
+        tipo: document.getElementById('noticia-tipo').value,
+        contenido: document.getElementById('noticia-contenido').value,
+        mediaURL: media || '',
+        activo: document.getElementById('noticia-activo').checked,
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
     });
+    
     alert('Noticia guardada');
     ['noticia-titulo','noticia-contenido'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('noticia-media-preview').style.display='none';window.notFile=null;
+    document.getElementById('noticia-media-preview').style.display='none';
+    window.notFile = null;
 }
 
 async function eliminarNoticia(id) { if(confirm('¿Eliminar?')) await db.collection('noticias').doc(id).delete(); }
