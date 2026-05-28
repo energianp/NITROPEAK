@@ -603,6 +603,114 @@ async function descargarPDFOrden(id) {
     }
 }
 
+// ============ GENERAR PDF (copia de cliente.js) ============
+async function generarPDFAdmin(orden) {
+    const { jsPDF } = window.jspdf;
+    if (!jsPDF) { alert('Librería PDF no cargada'); return; }
+    
+    const doc = new jsPDF();
+    const verdeOscuro = [26, 71, 42];
+    const verdeAcento = [72, 187, 120];
+    const blanco = [255, 255, 255];
+    
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, 0, 210, 297, 'F');
+    
+    doc.setFillColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    try {
+        const logoDoc = await db.collection('configuracion').doc('sitio').get();
+        if (logoDoc.exists && logoDoc.data().logo) {
+            doc.addImage(logoDoc.data().logo, 'PNG', 10, 5, 20, 20);
+        }
+    } catch(e) {}
+    
+    doc.setTextColor(blanco[0], blanco[1], blanco[2]);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NITROPEAK', 35, 20);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Energia Natural Sin Cafeina', 35, 28);
+    
+    doc.setTextColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.setFontSize(14);
+    doc.text('FACTURA', 105, 50, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const ahora = new Date();
+    doc.text(`Orden: ${orden.id}`, 15, 60);
+    doc.text(`Fecha: ${ahora.toLocaleDateString('es-SV')} ${ahora.toLocaleTimeString('es-SV')}`, 15, 67);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DATOS DEL CLIENTE', 15, 80);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nombre: ${orden.cliente || ''}`, 15, 88);
+    doc.text(`Telefono: ${orden.telefono || ''}`, 15, 95);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('METODO DE ENTREGA', 15, 108);
+    doc.setFont('helvetica', 'normal');
+    if (orden.entrega?.tipo === 'punto') {
+        doc.text(`Retiro en: ${orden.entrega.ptoNombre || ''}`, 15, 116);
+        doc.text(`Direccion: ${orden.entrega.ptoDir || ''}`, 15, 123);
+        doc.text('Entrega estimada: 2 horas despues del pago', 15, 130);
+    } else {
+        doc.text('Envio a domicilio', 15, 116);
+        doc.text(`Direccion: ${orden.entrega?.direccion || ''}, ${orden.entrega?.departamento || ''}, ${orden.entrega?.municipio || ''}`, 15, 123);
+        doc.text('Tiempo estimado: 24 horas (excepto domingo)', 15, 130);
+    }
+    
+    let y = 145;
+    doc.setFillColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.rect(15, y, 180, 10, 'F');
+    doc.setTextColor(blanco[0], blanco[1], blanco[2]);
+    doc.setFontSize(9);
+    doc.text('Producto', 18, y + 7);
+    doc.text('Cant', 100, y + 7);
+    doc.text('Precio', 130, y + 7);
+    doc.text('Subtotal', 165, y + 7);
+    
+    y += 15;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    
+    if (orden.items) {
+        orden.items.forEach(item => {
+            doc.text((item.nombre||'').substring(0, 28), 18, y);
+            doc.text(String(item.cantidad||0), 102, y);
+            doc.text(`$${(item.precio||0).toFixed(2)}`, 130, y);
+            doc.text(`$${((item.precio||0) * (item.cantidad||0)).toFixed(2)}`, 165, y);
+            y += 8;
+            if (y > 250) { doc.addPage(); y = 20; }
+        });
+    }
+    
+    y += 5;
+    doc.setDrawColor(verdeAcento[0], verdeAcento[1], verdeAcento[2]);
+    doc.line(110, y, 195, y);
+    y += 8;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.text('TOTAL:', 110, y);
+    doc.text(`$${(orden.total||0).toFixed(2)}`, 165, y);
+    
+    y = Math.max(y + 25, 245);
+    doc.setDrawColor(200, 0, 0);
+    doc.setLineWidth(2);
+    doc.rect(50, y - 15, 110, 30);
+    doc.setLineWidth(0.5);
+    doc.setFontSize(28);
+    doc.setTextColor(200, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CANCELADO', 105, y + 5, { align: 'center' });
+    
+    doc.save(`NITROPEAK_${orden.id}.pdf`);
+}
+
 window.onload = function() {
     verificarAdmin();
     if (sessionStorage.getItem('admin')) {
