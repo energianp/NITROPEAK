@@ -81,7 +81,7 @@ function mostrarSeccion(sec, el) {
     document.querySelectorAll('.seccion').forEach(s => s.style.display = 'none');
     document.getElementById('seccion-'+sec).style.display = 'block';
     document.querySelectorAll('.nav-menu li').forEach(li => li.classList.remove('active'));
-        if (sec === 'ordenes') {
+    if (sec === 'ordenes') {
         const ordenesVistas = JSON.parse(localStorage.getItem('ordenes_vistas') || '[]');
         const nuevas = notificacionesLista.filter(n => n.sec === 'ordenes').map(n => n.id);
         localStorage.setItem('ordenes_vistas', JSON.stringify([...new Set([...ordenesVistas, ...nuevas])]));
@@ -96,14 +96,19 @@ function mostrarSeccion(sec, el) {
     notificacionesLista = notificacionesLista.filter(n => n.sec !== sec);
     updateBadges();
     const fn = {
-        productos: cargarProductos, ordenes: cargarOrdenes, historia: cargarHistoriaAdmin,
+        productos: cargarProductos, 
+        ordenes: cargarOrdenes, 
+        historia: cargarHistoriaAdmin,
         ubicaciones: () => { cargarUbicacionesAdmin(); cargarDepartamentos(); },
-        secciones: cargarSecciones, valoraciones: cargarValoracionesAdmin,
-        contactos: cargarContactos, configuracion: cargarConfiguracion,
-        solicitudes: cargarSolicitudes, noticias_admin: cargarNoticiasAdmin
+        secciones: cargarSecciones, 
+        valoraciones: cargarValoracionesAdmin,
+        contactos: cargarContactos, 
+        configuracion: cargarConfiguracion,
+        solicitudes: cargarSolicitudes, 
+        noticias_admin: cargarNoticiasAdmin
     };
     if (fn[sec]) fn[sec]();
-}
+} 
 
 // ============ PRODUCTOS ============
 function previewImagen(e) {
