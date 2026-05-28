@@ -195,7 +195,14 @@ async function eliminarProducto(id) { if (confirm('¿Eliminar?')) await db.colle
 // ============ ÓRDENES ============
 function cargarOrdenes() {
     db.collection('ordenes').get().then(s => {
-        allOrd = []; s.forEach(d => allOrd.push({id:d.id,...d.data()}));
+        allOrd = []; 
+        s.forEach(d => {
+            const data = d.data();
+            allOrd.push({
+                docId: d.id,  // ID REAL de Firebase
+                ...data
+            });
+        });
         allOrd.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
         renderOrd(allOrd);
     });
@@ -204,11 +211,11 @@ function cargarOrdenes() {
 function renderOrd(lista) {
     document.getElementById('lista-ordenes').innerHTML = lista.length ? lista.map(o => `
         <div class="orden-card">
-            <h3>${o.id}</h3><p>${o.fecha?.toDate?.().toLocaleString()||''}</p><p>Cliente: ${o.cliente||''}</p>
+            <h3>${o.id || o.docId}</h3><p>${o.fecha?.toDate?.().toLocaleString()||''}</p><p>Cliente: ${o.cliente||''}</p>
             ${o.items?.map(i => `<p>${i.nombre} x${i.cantidad}</p>`).join('')||''}
             <p><strong>$${o.total?.toFixed(2)}</strong></p>
             <div class="orden-row">
-                <select onchange="cambiarEstadoOrden('${o.id}',this.value)" class="form-input">
+                <select onchange="cambiarEstadoOrden('${o.docId}',this.value)" class="form-input">
                     <option value="">Estado</option>
                     <option value="confirmada" ${o.estado==='confirmada'?'selected':''}>Confirmada</option>
                     <option value="enviada" ${o.estado==='enviada'?'selected':''}>Enviada</option>
@@ -218,14 +225,15 @@ function renderOrd(lista) {
                     <option value="cancelada" ${o.estado==='cancelada'?'selected':''}>Cancelada</option>
                 </select>
                 <span class="estado-orden ${o.estado}">${o.estado}</span>
-                <button onclick="descargarPDFOrden('${o.id}')" class="btn-editar" style="margin-top:5px;">📄 PDF</button>
+                <button onclick="descargarPDFOrden('${o.docId}')" class="btn-editar" style="margin-top:5px;">📄 PDF</button>
             </div>
         </div>`).join('') : '<p>No hay órdenes aún</p>';
 }
+
 function filtrarOrdenes() {
     const t = document.getElementById('buscar-orden').value.toLowerCase();
     const e = document.getElementById('filtro-estado-orden').value;
-    renderOrd(allOrd.filter(o => (!t||o.id.toLowerCase().includes(t)) && (!e||o.estado===e)));
+    renderOrd(allOrd.filter(o => (!t||(o.id||'').toLowerCase().includes(t)) && (!e||o.estado===e)));
 }
 
 async function cambiarEstadoOrden(id, e) { 
@@ -594,12 +602,17 @@ async function eliminarNoticia(id) { if(confirm('¿Eliminar?')) await db.collect
 
 // ============ DESCARGAR PDF ORDEN ============
 async function descargarPDFOrden(id) {
-    const docRef = await db.collection('ordenes').doc(id).get();
-    if (docRef.exists) {
-        const orden = {id: docRef.id, ...docRef.data()};
-        generarPDFAdmin(orden);
-    } else {
-        alert('Orden no encontrada');
+async function descargarPDFOrden(docId) {
+    try {
+        const docRef = await db.collection('ordenes').doc(docId).get();
+        if (docRef.exists) {
+            const orden = {id: docRef.data().id || docId, ...docRef.data()};
+            generarPDFAdmin(orden);
+        } else {
+            alert('Orden no encontrada');
+        }
+    } catch(e) {
+        alert('Error: ' + e.message);
     }
 }
 
