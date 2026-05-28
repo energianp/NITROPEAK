@@ -595,40 +595,54 @@ function previewNoticiaMedia(e) {
     if(f){window.notFile=f;const r=new FileReader();r.onload=ev=>{document.getElementById('noticia-media-preview').src=ev.target.result;document.getElementById('noticia-media-preview').style.display='block';};r.readAsDataURL(f);}
 }
 async function guardarNoticia() {
+    const tipo = document.getElementById('noticia-tipo').value;
     let media = document.getElementById('noticia-media-preview').src;
     
-    if (window.notFile && window.notFile.size > 300000) {
-        try {
-            // Subir a Imgur
-            const base64 = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result.split(',')[1]);
-                reader.readAsDataURL(window.notFile);
-            });
-            
-            const response = await fetch('https://api.imgur.com/3/image', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Client-ID 546c25a59c58ad7',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ image: base64, type: 'base64' })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                media = data.data.link;
-            }
-        } catch (e) {
-            media = await comprimirImagen(window.notFile, 300, 0.3);
+    // Si es video, usar URL de YouTube
+    if (tipo === 'video') {
+        media = document.getElementById('noticia-video-url').value;
+        if (!media) {
+            alert('Ingresa el link de YouTube');
+            return;
         }
-    } else if (window.notFile) {
-        media = await comprimirImagen(window.notFile, 500, 0.6);
+        // Convertir a formato embed si es necesario
+        if (media.includes('watch?v=')) {
+            media = media.replace('watch?v=', 'embed/');
+        }
+        if (media.includes('youtu.be/')) {
+            media = media.replace('youtu.be/', 'youtube.com/embed/');
+        }
+    }
+    // Si es imagen y hay archivo
+    else if (window.notFile && tipo === 'imagen') {
+        if (window.notFile.size > 300000) {
+            try {
+                const base64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(window.notFile);
+                });
+                const response = await fetch('https://api.imgur.com/3/image', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Client-ID 546c25a59c58ad7',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: base64, type: 'base64' })
+                });
+                const data = await response.json();
+                if (data.success) media = data.data.link;
+            } catch (e) {
+                media = await comprimirImagen(window.notFile, 300, 0.3);
+            }
+        } else {
+            media = await comprimirImagen(window.notFile, 500, 0.6);
+        }
     }
     
     await db.collection('noticias').add({
         titulo: document.getElementById('noticia-titulo').value,
-        tipo: document.getElementById('noticia-tipo').value,
+        tipo: tipo,
         contenido: document.getElementById('noticia-contenido').value,
         mediaURL: media || '',
         activo: document.getElementById('noticia-activo').checked,
@@ -636,11 +650,10 @@ async function guardarNoticia() {
     });
     
     alert('Noticia guardada');
-    ['noticia-titulo','noticia-contenido'].forEach(id=>document.getElementById(id).value='');
+    ['noticia-titulo','noticia-contenido','noticia-video-url'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('noticia-media-preview').style.display='none';
     window.notFile = null;
 }
-
 async function eliminarNoticia(id) { if(confirm('¿Eliminar?')) await db.collection('noticias').doc(id).delete(); }
 
 // ============ DESCARGAR PDF ORDEN ============
@@ -764,7 +777,24 @@ async function generarPDFAdmin(orden) {
     doc.text('CANCELADO', 105, y + 5, { align: 'center' });
 
     doc.save(`NITROPEAK_${orden.id}.pdf`);  
-} // ← ESTA ES LA LLAVE QUE FALTABA PARA CERRAR "generarPDFAdmin"
+} 
+
+function toggleNoticiaTipo() {
+    const tipo = document.getElementById('noticia-tipo').value;
+    const archivoDiv = document.querySelector('#noticia-archivo').parentElement;
+    const videoUrlInput = document.getElementById('noticia-video-url');
+    
+    if (tipo === 'video') {
+        archivoDiv.style.display = 'none';
+        videoUrlInput.style.display = 'block';
+    } else if (tipo === 'imagen') {
+        archivoDiv.style.display = 'block';
+        videoUrlInput.style.display = 'none';
+    } else {
+        archivoDiv.style.display = 'none';
+        videoUrlInput.style.display = 'none';
+    }
+}
 
 window.onload = function() {
     verificarAdmin();
