@@ -218,7 +218,6 @@ async function cambiarEstadoOrden(id, e) {
         }
     }
 }
-}
 
 // ============ HISTORIA ============
 async function cargarHistoriaAdmin() {
