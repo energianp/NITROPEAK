@@ -288,13 +288,15 @@ document.addEventListener('click', function(e) {
 function generarEstrellasParciales(prom) {
     let h = '<span style="display:inline-flex;gap:2px;align-items:center;">';
     for(let i=1;i<=5;i++){
-        if(prom >= i) h += '<span style="color:#ffd700;font-size:0.9em;">★</span>';
-        else if(prom >= i - 0.9) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:90%;color:#ffd700;">★</span></span>';
-        else if(prom >= i - 0.7) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:70%;color:#ffd700;">★</span></span>';
-        else if(prom >= i - 0.5) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:50%;color:#ffd700;">★</span></span>';
-        else if(prom >= i - 0.3) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:30%;color:#ffd700;">★</span></span>';
-        else if(prom >= i - 0.1) h += '<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:10%;color:#ffd700;">★</span></span>';
-        else h += '<span style="color:#2d5a3d;font-size:0.9em;">★</span>';
+        const porcentaje = prom - (i - 1);
+        if(porcentaje >= 1) {
+            h += '<span style="color:#ffd700;font-size:0.9em;">★</span>';
+        } else if(porcentaje >= 0.05) {
+            const width = Math.round(porcentaje * 100);
+            h += `<span style="position:relative;display:inline-block;font-size:0.9em;color:#2d5a3d;">★<span style="position:absolute;left:0;top:0;overflow:hidden;width:${width}%;color:#ffd700;">★</span></span>`;
+        } else {
+            h += '<span style="color:#2d5a3d;font-size:0.9em;">★</span>';
+        }
     }
     h += `<small style="font-size:0.8em;margin-left:4px;">(${prom.toFixed(1)})</small></span>`;
     return h;
@@ -545,20 +547,117 @@ function irAPaso2(){
 }
 function formatearTarjeta(input){let v=input.value.replace(/\D/g,'').replace(/(\d{4})/g,'$1 ').trim();input.value=v;document.getElementById('numero-tarjeta-visual').textContent=v||'•••• •••• •••• ••••';}
 
-// ============ WHATSAPP AUTOMÁTICO CON CALLMEBOT ============
-// Reemplaza TU_API_KEY con la que obtengas de https://callmebot.com
-const CALLMEBOT_API_KEY = '1722285'; // ← Cambiar por tu API Key real
-const NUMERO_EMPRESA = '50361727059';
+function actualizarNombreTarjeta(valor) {
+    document.getElementById('nombre-tarjeta-visual').textContent = valor.toUpperCase() || 'TITULAR';
+}
 
-async function enviarWhatsAppAutomatico(telefonoCliente, mensaje) {
-    try {
-        const url = `https://api.callmebot.com/whatsapp.php?phone=${NUMERO_EMPRESA}&text=${encodeURIComponent(mensaje)}&apikey=${CALLMEBOT_API_KEY}`;
-        await fetch(url);
-        return true;
-    } catch (e) {
-        console.error('Error enviando WhatsApp:', e);
-        return false;
+function actualizarVencimientoTarjeta(valor) {
+    document.getElementById('vencimiento-visual').textContent = valor || 'MM/AA';
+}
+
+async function generarPDF(orden) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Colores
+    const verdeOscuro = [26, 71, 42];
+    const verdeAcento = [72, 187, 120];
+    const blanco = [255, 255, 255];
+    
+    // Fondo
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, 0, 210, 297, 'F');
+    
+    // Logo y encabezado
+    doc.setFillColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(blanco[0], blanco[1], blanco[2]);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('⚡ NITROPEAK', 15, 25);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Energia Natural Sin Cafeina', 15, 33);
+    
+    // Número de orden
+    doc.setTextColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`FACTURA SIMULADA`, 105, 50, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text(`Orden: ${orden.id}`, 105, 58, { align: 'center' });
+    doc.text(`Fecha: ${new Date().toLocaleDateString('es-SV')}`, 105, 65, { align: 'center' });
+    
+    // Datos del cliente
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DATOS DEL CLIENTE', 15, 80);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nombre: ${orden.cliente}`, 15, 88);
+    doc.text(`Telefono: ${orden.telefono}`, 15, 95);
+    
+    // Método de entrega
+    doc.setFont('helvetica', 'bold');
+    doc.text('METODO DE ENTREGA', 15, 108);
+    doc.setFont('helvetica', 'normal');
+    if (orden.entrega?.tipo === 'punto') {
+        doc.text(`Retiro en: ${orden.entrega.ptoNombre || 'Punto de distribucion'}`, 15, 116);
+        doc.text(`Direccion: ${orden.entrega.ptoDir || ''}`, 15, 123);
+        doc.text('Entrega estimada: 2 horas despues del pago', 15, 130);
+    } else {
+        doc.text(`Envio a domicilio`, 15, 116);
+        doc.text(`Direccion: ${orden.entrega?.direccion || ''}, ${orden.entrega?.departamento || ''}, ${orden.entrega?.municipio || ''}`, 15, 123);
+        doc.text('Tiempo estimado: 24 horas (excepto domingo)', 15, 130);
     }
+    
+    // Tabla de productos
+    let y = 145;
+    doc.setFillColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.rect(15, y, 180, 10, 'F');
+    doc.setTextColor(blanco[0], blanco[1], blanco[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Producto', 18, y + 7);
+    doc.text('Cant', 100, y + 7);
+    doc.text('Precio', 120, y + 7);
+    doc.text('Subtotal', 150, y + 7);
+    
+    y += 15;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    
+    orden.items.forEach(item => {
+        doc.text(item.nombre.substring(0, 30), 18, y);
+        doc.text(String(item.cantidad), 100, y);
+        doc.text(`$${item.precio.toFixed(2)}`, 120, y);
+        doc.text(`$${(item.precio * item.cantidad).toFixed(2)}`, 150, y);
+        y += 8;
+        if (y > 250) {
+            doc.addPage();
+            y = 20;
+        }
+    });
+    
+    // Total
+    y += 5;
+    doc.setDrawColor(verdeAcento[0], verdeAcento[1], verdeAcento[2]);
+    doc.line(100, y, 195, y);
+    y += 8;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(verdeOscuro[0], verdeOscuro[1], verdeOscuro[2]);
+    doc.text('TOTAL:', 100, y);
+    doc.text(`$${orden.total.toFixed(2)}`, 150, y);
+    
+    // Sello de cancelado
+    y = Math.max(y + 20, 240);
+    doc.setTextColor(255, 0, 0);
+    doc.setFontSize(40);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CANCELADO', 105, y, { align: 'center', angle: -15 });
+    
+    // Descargar
+    doc.save(`NITROPEAK_${orden.id}.pdf`);
 }
 
 function procesarPago(){
@@ -567,17 +666,19 @@ function procesarPago(){
     if(!nombreCliente||!telefonoCliente){alert('Faltan datos del cliente');return;}
     document.getElementById('pago-paso2').style.display='none';
     document.getElementById('pago-exitoso').style.display='block';
-    document.getElementById('whatsapp-estado').style.display = 'block';
     const ordId='ORD-'+Date.now().toString(36).toUpperCase();
     document.getElementById('numero-orden').textContent=ordId;
     const total=window.totalCompra||carrito.reduce((s,i)=>s+i.precio*i.cantidad,0);
     
-    db.collection('ordenes').add({
+    const orden = {
         id:ordId,items:carrito,total:total,
         fecha:firebase.firestore.FieldValue.serverTimestamp(),
         estado:'confirmada',cliente:nombreCliente,
         entrega:window.datosEntrega,telefono:telefonoCliente
-    }).then(()=>{
+    };
+    
+    db.collection('ordenes').add(orden).then(()=>{
+        // Descontar stock
         carrito.forEach(i=>{
             db.collection('productos').doc(i.id).get().then(d=>{
                 if(d.exists){
@@ -586,16 +687,12 @@ function procesarPago(){
                 }
             });
         });
-        // Enviar WhatsApp automático (sin abrir ventana)
-        const itemsTexto=carrito.map(i=>`• ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toFixed(2)}`).join('\n');
-        const mensaje=`✅ *PEDIDO CONFIRMADO - NITROPEAK*\n\n📦 Orden: *${ordId}*\n👤 Cliente: *${nombreCliente}*\n💰 Total: *$${total.toFixed(2)}*\n\n📋 Productos:\n${itemsTexto}\n\nGracias por tu compra ⚡`;
-        
-        enviarWhatsAppAutomatico(telefonoCliente, mensaje).then(() => {
-            document.getElementById('whatsapp-estado').textContent = '✅ Confirmación enviada por WhatsApp';
-        });
+        // Generar PDF
+        generarPDF(orden);
     });
     carrito=[];actualizarContador();
 }
+
 function cerrarPago(){
     document.getElementById('pago-modal').style.display='none';
     ['numero-tarjeta','nombre-tarjeta','vencimiento','cvv'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
