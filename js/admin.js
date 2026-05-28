@@ -99,8 +99,8 @@ function mostrarSeccion(sec, el) {
         productos: cargarProductos, 
         ordenes: cargarOrdenes, 
         historia: cargarHistoriaAdmin,
+        equipo: cargarEquipoAdmin,
         ubicaciones: () => { cargarUbicacionesAdmin(); cargarDepartamentos(); },
-        secciones: cargarSecciones, 
         valoraciones: cargarValoracionesAdmin,
         contactos: cargarContactos, 
         configuracion: cargarConfiguracion,
@@ -305,6 +305,34 @@ function cargarEquipo() {
     });
 }
 
+// ============ EQUIPO ============
+async function cargarEquipoAdmin() {
+    const d = await db.collection('configuracion').doc('equipo').get();
+    if (d.exists) {
+        const h = d.data();
+        document.getElementById('equipo-titulo').value = h.titulo||'';
+        document.getElementById('equipo-contenido').value = h.contenido||'';
+        if (h.imagen) { document.getElementById('equipo-imagen-preview').src = h.imagen; document.getElementById('equipo-imagen-preview').style.display = 'block'; }
+    }
+}
+function previewImagenEquipo(e) {
+    const f = e.target.files[0];
+    if (f) { window.equipoImg = f; const r = new FileReader(); r.onload = ev => { document.getElementById('equipo-imagen-preview').src = ev.target.result; document.getElementById('equipo-imagen-preview').style.display = 'block'; }; r.readAsDataURL(f); }
+}
+async function guardarEquipo() {
+    let imagenURL = document.getElementById('equipo-imagen-preview').src;
+    if (window.equipoImg) { imagenURL = await comprimirImagen(window.equipoImg, 800, 0.7); }
+    const datos = {
+        titulo: document.getElementById('equipo-titulo').value,
+        contenido: document.getElementById('equipo-contenido').value,
+        imagen: imagenURL
+    };
+    try {
+        await db.collection('configuracion').doc('equipo').set(datos, { merge: true });
+        alert('✅ Equipo guardado exitosamente');
+    } catch (error) { alert('Error al guardar: ' + error.message); }
+}
+
 // ============ UBICACIONES ============
 function autoColorUbicacion() {
     const t = document.getElementById('ubicacion-tipo').value;
@@ -388,55 +416,6 @@ async function guardarUbicacion() {
     } catch(ex) { alert('Error'); }
 }
 async function eliminarUbicacion(id) { if (confirm('¿Eliminar?')) await db.collection('ubicaciones').doc(id).delete(); }
-
-// ============ SECCIONES ============
-function previewSeccionMedia(e) {
-    const f = e.target.files[0];
-    if (f) { window.secFile = f; const r = new FileReader(); r.onload = ev => { document.getElementById('seccion-media-preview').src = ev.target.result; document.getElementById('seccion-media-preview').style.display = 'block'; }; r.readAsDataURL(f); }
-}
-function cargarSecciones() {
-    db.collection('secciones').onSnapshot(s => {
-        allSec = []; s.forEach(d => allSec.push({id:d.id,...d.data()}));
-        renderSec(allSec);
-    });
-}
-function renderSec(lista) {
-    document.getElementById('lista-secciones').innerHTML = lista.length ? lista.map(s => `
-        <div class="seccion-card">
-            <h3>${s.titulo}</h3><span class="tipo-badge">${s.tipo}</span>
-            <p>${(s.contenido||'').substring(0,80)}...</p>
-            <button onclick="editSeccion('${s.id}')" class="btn-editar">Editar</button>
-            <button onclick="eliminarSeccion('${s.id}')" class="btn-eliminar">Eliminar</button>
-        </div>`).join('') : '<p>No hay secciones creadas</p>';
-}
-function filtrarSecciones() {
-    const t = document.getElementById('buscar-seccion').value.toLowerCase();
-    renderSec(allSec.filter(s => s.titulo.toLowerCase().includes(t)));
-}
-async function guardarSeccion() {
-    let media = document.getElementById('seccion-media-preview').src;
-    if (window.secFile) media = await imgToB64(window.secFile);
-    const datos = { titulo:document.getElementById('seccion-titulo').value, tipo:document.getElementById('seccion-tipo').value, contenido:document.getElementById('seccion-contenido').value, mediaURL:media, activo:document.getElementById('seccion-activo').checked, orden:Date.now() };
-    try {
-        if (editSec) await db.collection('secciones').doc(editSec).update(datos);
-        else await db.collection('secciones').add(datos);
-        alert('Guardado'); editSec = null;
-        ['seccion-titulo','seccion-contenido'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('seccion-media-preview').style.display = 'none'; window.secFile = null;
-    } catch(ex) { alert('Error'); }
-}
-async function editSeccion(id) {
-    const d = await db.collection('secciones').doc(id).get();
-    const s = d.data();
-    document.getElementById('seccion-id').value = id;
-    document.getElementById('seccion-titulo').value = s.titulo||'';
-    document.getElementById('seccion-tipo').value = s.tipo||'texto';
-    document.getElementById('seccion-contenido').value = s.contenido||'';
-    document.getElementById('seccion-activo').checked = s.activo;
-    if (s.mediaURL) { document.getElementById('seccion-media-preview').src = s.mediaURL; document.getElementById('seccion-media-preview').style.display = 'block'; }
-    editSec = id; window.scrollTo({top:0,behavior:'smooth'});
-}
-async function eliminarSeccion(id) { if (confirm('¿Eliminar?')) await db.collection('secciones').doc(id).delete(); }
 
 // ============ VALORACIONES ============
 function cargarValoracionesAdmin() {
