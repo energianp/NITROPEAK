@@ -11,11 +11,36 @@ let allCon = [];
 
 function verificarAdmin() {
     if (!sessionStorage.getItem('admin')) {
-        const u = prompt('Usuario:'), p = prompt('Contraseña:');
-        if (u === ADMIN.u && p === ADMIN.p) sessionStorage.setItem('admin', '1');
-        else { alert('Credenciales incorrectas'); window.location.href = '../index.html'; return false; }
+        document.getElementById('login-modal').style.display = 'flex';
+        return false;
     }
     return true;
+}
+
+function intentarLogin() {
+    const u = document.getElementById('login-usuario').value;
+    const p = document.getElementById('login-password').value;
+    if (u === ADMIN.u && p === ADMIN.p) {
+        sessionStorage.setItem('admin', '1');
+        document.getElementById('login-modal').style.display = 'none';
+        cargarProductos();
+        initNotifs();
+    } else {
+        document.getElementById('login-error').textContent = 'Credenciales incorrectas';
+    }
+}
+
+function intentarLogin() {
+    const u = document.getElementById('login-usuario').value;
+    const p = document.getElementById('login-password').value;
+    if (u === ADMIN.u && p === ADMIN.p) {
+        sessionStorage.setItem('admin', '1');
+        document.getElementById('login-modal').style.display = 'none';
+        cargarProductos();
+        initNotifs();
+    } else {
+        document.getElementById('login-error').textContent = 'Credenciales incorrectas';
+    }
 }
 
 function imgToB64(file) {
@@ -149,12 +174,13 @@ async function eliminarProducto(id) { if (confirm('¿Eliminar?')) await db.colle
 
 // ============ ÓRDENES ============
 function cargarOrdenes() {
-    db.collection('ordenes').get().then(s => {
+    db.collection('ordenes').onSnapshot(s => {
         allOrd = []; s.forEach(d => allOrd.push({id:d.id,...d.data()}));
         allOrd.sort((a,b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
         renderOrd(allOrd);
     });
 }
+
 function renderOrd(lista) {
     document.getElementById('lista-ordenes').innerHTML = lista.length ? lista.map(o => `
         <div class="orden-card">
@@ -472,5 +498,9 @@ function comprimirImagen(file, maxWidth, calidad) {
 }
 
 window.onload = function() {
-    if (verificarAdmin()) { cargarProductos(); initNotifs(); }
+    verificarAdmin();
+    if (sessionStorage.getItem('admin')) {
+        cargarProductos();
+        initNotifs();
+    }
 };
