@@ -290,6 +290,21 @@ async function guardarHistoria() {
     }
 }
 
+function cargarEquipo() {
+    db.collection('configuracion').doc('equipo').onSnapshot(doc => {
+        const c = document.getElementById('equipo-contenido');
+        if (!c||!doc.exists) return;
+        const h = doc.data();
+        c.innerHTML = `
+            <div class="historia-texto">
+                <h3>${h.titulo||'Nuestro Equipo'}</h3>
+                <p>${(h.contenido||'').replace(/\n/g, '<br>')}</p>
+            </div>
+            ${h.imagen ? `<img src="${h.imagen}" alt="Nuestro Equipo">` : ''}
+        `;
+    });
+}
+
 // ============ UBICACIONES ============
 function autoColorUbicacion() {
     const t = document.getElementById('ubicacion-tipo').value;
