@@ -31,9 +31,8 @@
                 <li class="active" onclick="mostrarSeccion('productos', this)"><i class="fas fa-box"></i> Productos <span class="badge-seccion" id="badge-productos">0</span></li>
                 <li onclick="mostrarSeccion('ordenes', this)"><i class="fas fa-shopping-cart"></i> Órdenes <span class="badge-seccion" id="badge-ordenes">0</span></li>
                 <li onclick="mostrarSeccion('historia', this)"><i class="fas fa-book"></i> Historia</li>
-                <li><a href="#equipo">Equipo</a></li>
+                <li onclick="mostrarSeccion('equipo', this)"><i class="fas fa-users"></i> Equipo</li>
                 <li onclick="mostrarSeccion('ubicaciones', this)"><i class="fas fa-map-marker-alt"></i> Ubicaciones</li>
-                <li onclick="mostrarSeccion('secciones', this)"><i class="fas fa-puzzle-piece"></i> Secciones</li>
                 <li onclick="mostrarSeccion('valoraciones', this)"><i class="fas fa-star"></i> Valoraciones <span class="badge-seccion" id="badge-valoraciones">0</span></li>
                 <li onclick="mostrarSeccion('contactos', this)"><i class="fas fa-envelope"></i> Contactos <span class="badge-seccion" id="badge-contactos">0</span></li>
                 <li onclick="mostrarSeccion('solicitudes', this)"><i class="fas fa-handshake"></i> Solicitudes Dist. <span class="badge-seccion" id="badge-solicitudes">0</span></li>
@@ -101,10 +100,20 @@
                 </div>
             </section>
 
-                <section id="equipo" class="historia">
-        <h2>Nuestro Equipo</h2>
-        <div class="historia-content" id="equipo-contenido"></div>
-    </section>
+                        <!-- Sección Equipo -->
+            <section id="seccion-equipo" class="seccion" style="display:none;">
+                <h2><i class="fas fa-users"></i> Nuestro Equipo</h2>
+                <div class="form-container">
+                    <input type="text" id="equipo-titulo" placeholder="Título" class="form-input">
+                    <textarea id="equipo-contenido" placeholder="Contenido" class="form-input" rows="6"></textarea>
+                    <div class="upload-container">
+                        <label for="equipo-imagen" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Subir imagen</span></label>
+                        <input type="file" id="equipo-imagen" accept="image/*" class="form-input-file" onchange="previewImagenEquipo(event)">
+                        <img id="equipo-imagen-preview" class="imagen-preview" style="display:none;">
+                    </div>
+                    <button onclick="guardarEquipo()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
+                </div>
+            </section>
 
             <!-- Sección Ubicaciones -->
             <section id="seccion-ubicaciones" class="seccion" style="display:none;">
@@ -136,32 +145,7 @@
                 <div class="ubicaciones-grid" id="lista-ubicaciones"></div>
             </section>
 
-            <!-- Sección Secciones -->
-            <section id="seccion-secciones" class="seccion" style="display:none;">
-                <h2><i class="fas fa-puzzle-piece"></i> Gestión de Secciones</h2>
-                <div class="buscador-seccion">
-                    <input type="text" id="buscar-seccion" placeholder="🔍 Buscar..." class="form-input" oninput="filtrarSecciones()">
-                </div>
-                <div class="form-container">
-                    <h3>Agregar/Editar Sección</h3>
-                    <input type="hidden" id="seccion-id">
-                    <div class="form-grid">
-                        <input type="text" id="seccion-titulo" placeholder="Título" class="form-input">
-                        <select id="seccion-tipo" class="form-input"><option value="texto">Solo texto</option><option value="imagen">Imagen + texto</option><option value="video">Video + texto</option></select>
-                        <textarea id="seccion-contenido" placeholder="Contenido" class="form-input" rows="4"></textarea>
-                        <div class="upload-container">
-                            <label for="seccion-archivo" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Subir archivo</span></label>
-                            <input type="file" id="seccion-archivo" class="form-input-file" onchange="previewSeccionMedia(event)">
-                            <img id="seccion-media-preview" class="imagen-preview" style="display:none;">
-                        </div>
-                        <label class="checkbox-label"><input type="checkbox" id="seccion-activo" checked> Activa</label>
-                    </div>
-                    <button onclick="guardarSeccion()" class="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
-                </div>
-                <div class="secciones-grid" id="lista-secciones"></div>
-            </section>
-
-            <!-- Sección Valoraciones -->
+           <!-- Sección Valoraciones -->
             <section id="seccion-valoraciones" class="seccion" style="display:none;">
                 <h2><i class="fas fa-star"></i> Valoraciones</h2>
                 <div class="buscador-seccion">
