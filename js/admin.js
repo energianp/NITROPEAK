@@ -740,5 +740,5 @@ window.onload = function() {
     if (sessionStorage.getItem('admin')) {
         cargarProductos();
         initNotifs();
-    };
+    }
 };
