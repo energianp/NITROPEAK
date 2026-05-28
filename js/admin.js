@@ -734,7 +734,6 @@ async function generarPDFAdmin(orden) {
     
     doc.save(`NITROPEAK_${orden.id}.pdf`);
 }
-};
 
 window.onload = function() {
     verificarAdmin();
