@@ -1534,3 +1534,21 @@ button[type="submit"]:hover,
     margin-bottom: 12px;
     background: rgba(0,0,0,0.2);
 }
+
+#carrusel-noticias-track {
+    display: flex;
+    gap: 20px;
+}
+
+.noticia-card {
+    background: var(--color-oscuro);
+    border: 1px solid var(--color-borde);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.noticia-card:hover {
+    border-color: var(--color-acento);
+    box-shadow: 0 0 20px rgba(72, 187, 120, 0.2);
+}
