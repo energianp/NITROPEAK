@@ -624,3 +624,17 @@ textarea.form-input {
     .main-content { margin-left: 0; }
     .buscador-seccion { flex-direction: column; }
 }
+
+/* ============ LOGIN MODAL ============ */
+#login-modal {
+    transition: all 0.5s ease;
+}
+
+#login-modal .form-input {
+    margin: 8px 0;
+}
+
+#login-modal .btn-guardar {
+    width: 100%;
+    margin-top: 15px;
+}
