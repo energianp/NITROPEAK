@@ -901,7 +901,6 @@ function cargarNoticias() {
         }).join('');
         
         hacerArrastrable('noticias-lista');
-        iniciarCarruselAuto('noticias-lista', 4000);
     });
 }
 
@@ -984,7 +983,4 @@ window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.displa
 window.onload=function(){
     cargarLogo();
     initMap();
-    
-    // Iniciar carrusel de valoraciones automático
-    setTimeout(() => iniciarCarruselAuto('carrusel-valoraciones', 4000), 2000);
 };
