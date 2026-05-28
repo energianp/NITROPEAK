@@ -824,7 +824,6 @@ function cargarDistribuidores() {
                 ${logoUrl ? `<img src="${logoUrl}" alt="${d.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
                 <div style="width:80px;height:80px;border-radius:50%;background:${d.color||'#48bb78'};margin:0 auto 10px;display:${logoUrl?'none':'flex'};align-items:center;justify-content:center;font-size:2em;color:#1a472a;">🏪</div>
                 <h4>${d.nombre}</h4>
-                <p>${d.cantidad} ubicaciones</p>
             </div>`;
         }).join('') + `
             <div class="distribuidor-card-especial" onclick="abrirModalDistribuidor()">
@@ -878,32 +877,39 @@ function cargarNoticias() {
             return;
         }
         
-        // Ordenar manualmente sin índice
         const noticias = [];
-        snap.forEach(d => {
-            noticias.push(d.data());
-        });
+        snap.forEach(d => noticias.push(d.data()));
         noticias.sort((a, b) => (b.fecha?.toDate?.() || 0) - (a.fecha?.toDate?.() || 0));
         
-        contenedor.innerHTML = noticias.map(n => {
-            let media = '';
-            if (n.tipo === 'imagen' && n.mediaURL) {
-                media = `<img src="${n.mediaURL}" alt="${n.titulo}">`;
-            } else if (n.tipo === 'video' && n.mediaURL) {
-                media = `<iframe width="100%" height="200" src="${n.mediaURL}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:10px;"></iframe>`;
-            }
-            return `
-            <div class="noticia-card">
-                ${media}
-                <div class="noticia-contenido">
-                    <h3>${n.titulo}</h3>
-                    <p>${n.contenido||''}</p>
-                    <span class="noticia-fecha">${n.fecha?.toDate?.().toLocaleDateString('es-SV')||''}</span>
+        contenedor.innerHTML = `
+            <div class="carrusel-auto-container" style="cursor:grab;">
+                <div class="carrusel-auto-track" id="carrusel-noticias-track">
+                    ${noticias.map(n => {
+                        let media = '';
+                        if (n.tipo === 'imagen' && n.mediaURL) {
+                            media = `<img src="${n.mediaURL}" alt="${n.titulo}" style="width:100%;height:180px;object-fit:contain;">`;
+                        } else if (n.tipo === 'video' && n.mediaURL) {
+                            media = `<iframe width="100%" height="180" src="${n.mediaURL}" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe>`;
+                        }
+                        return `
+                        <div class="noticia-card" style="min-width:300px;flex-shrink:0;">
+                            ${media}
+                            <div class="noticia-contenido">
+                                <h3>${n.titulo}</h3>
+                                <p>${(n.contenido||'').substring(0,100)}...</p>
+                                <span class="noticia-fecha">${n.fecha?.toDate?.().toLocaleDateString('es-SV')||''}</span>
+                            </div>
+                        </div>`;
+                    }).join('')}
                 </div>
-            </div>`;
-        }).join('');
+            </div>
+        `;
+        
+        hacerArrastrable('carrusel-noticias-track');
+        iniciarCarruselAuto('carrusel-noticias-track', 4000);
     });
 }
+
 // ============ CARRUSEL AUTOMÁTICO ============
 function iniciarCarruselAuto(trackId, velocidad) {
     const track = document.getElementById(trackId);
