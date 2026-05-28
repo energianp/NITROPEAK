@@ -32,19 +32,6 @@ function intentarLogin() {
     }
 }
 
-function intentarLogin() {
-    const u = document.getElementById('login-usuario').value;
-    const p = document.getElementById('login-password').value;
-    if (u === ADMIN.u && p === ADMIN.p) {
-        sessionStorage.setItem('admin', '1');
-        document.getElementById('login-modal').style.display = 'none';
-        cargarProductos();
-        initNotifs();
-    } else {
-        document.getElementById('login-error').textContent = 'Credenciales incorrectas';
-    }
-}
-
 function imgToB64(file) {
     return new Promise((resolve) => {
         const r = new FileReader();
