@@ -387,18 +387,42 @@ function cerrarComentarios(){document.getElementById('comentarios-modal').style.
 
 // ============ CARRITO ============
 function agregarAlCarrito(id,nombre,precio,stock){
-    const cant=parseInt(document.getElementById('cant-'+id)?.value)||1,c=Math.min(cant,stock);
-    if(c<=0){alert('Cantidad inválida');return;}
-    const item=carrito.find(i=>i.id===id);
-    if(item)item.cantidad=Math.min(item.cantidad+c,stock);else carrito.push({id,nombre,precio,cantidad:c});
-    actualizarContador();mostrarNotificacion(`${nombre} x${c} agregado`);
+    const cant=parseInt(document.getElementById('cant-'+id)?.value)||1;
+    if(stock<=0){alert('Producto agotado');return;}
+    
+    // Verificar descuento por volumen
+    db.collection('productos').doc(id).get().then(doc=>{
+        const producto = doc.data();
+        const descuento24u = producto.descuento24u || 0;
+        let precioFinal = precio;
+        
+        if(cant>=24 && descuento24u>0){
+            precioFinal = precio - (precio * descuento24u / 100);
+        }
+        
+        const c=Math.min(cant,stock);
+        if(cant>stock){
+            alert(`Stock insuficiente. Se agregaron ${c} unidades (máximo disponible).`);
+        }
+        
+        const item=carrito.find(i=>i.id===id);
+        if(item){
+            item.cantidad=Math.min(item.cantidad+c,stock);
+            item.precio = precioFinal;
+            item.descuento = descuento24u;
+        } else {
+            carrito.push({id,nombre,precio:precioFinal,precioOriginal:precio,cantidad:c,descuento:descuento24u});
+        }
+        actualizarContador();
+        mostrarNotificacion(`${nombre} x${c} agregado${precioFinal<precio?' (con descuento)':''}`);
+    });
 }
 function actualizarContador(){const el=document.getElementById('contador-carrito');if(el)el.textContent=carrito.reduce((s,i)=>s+i.cantidad,0);}
 function mostrarCarrito(){
     const m=document.getElementById('carrito-modal');if(!m)return;
     const ic=document.getElementById('carrito-items'),tc=document.getElementById('carrito-total');
     if(carrito.length===0){ic.innerHTML='<p>Carrito vacío</p>';tc.innerHTML='';document.getElementById('btn-pagar').style.display='none';}
-    else{ic.innerHTML=carrito.map((item,i)=>`<div class="carrito-item"><span>${item.nombre}</span><span><button onclick="cambiarCantidad(${i},-1)">-</button> ${item.cantidad} <button onclick="cambiarCantidad(${i},1)">+</button></span><span>$${(item.precio*item.cantidad).toFixed(2)}</span><button onclick="eliminarDelCarrito(${i})">🗑️</button></div>`).join('');tc.innerHTML=`<h3>Total: $${carrito.reduce((s,i)=>s+i.precio*i.cantidad,0).toFixed(2)}</h3>`;document.getElementById('btn-pagar').style.display='block';}
+    else{ic.innerHTML=carrito.map((item,i)=>`<div class="carrito-item"><span>${item.nombre}</span><span><button onclick="cambiarCantidad(${i},-1)">-</button> ${item.cantidad} <button onclick="cambiarCantidad(${i},1)">+</button></span><span>${item.descuento?`<span style="text-decoration:line-through;color:#6b8f71;font-size:0.8em;">$${(item.precioOriginal*item.cantidad).toFixed(2)}</span> `:''}$${(item.precio*item.cantidad).toFixed(2)}</span><button onclick="eliminarDelCarrito(${i})">🗑️</button></div>`).join('');tc.innerHTML=`<h3>Total: $${carrito.reduce((s,i)=>s+i.precio*i.cantidad,0).toFixed(2)}</h3>`;document.getElementById('btn-pagar').style.display='block';}
     m.style.display='block';
 }
 function cambiarCantidad(idx,cambio){const item=carrito[idx],nc=item.cantidad+cambio;if(nc<=0){eliminarDelCarrito(idx);return;}db.collection('productos').doc(item.id).get().then(d=>{if(d.exists)item.cantidad=Math.min(nc,d.data().stock);mostrarCarrito();actualizarContador();});}
@@ -733,7 +757,122 @@ async function enviarContacto(e){e.preventDefault();await db.collection('contact
 function cargarSeccionesDinamicas(){db.collection('secciones').get().then(snap=>{document.querySelectorAll('.seccion-dinamica').forEach(s=>s.remove());snap.forEach(d=>{const s=d.data();if(!s.activo)return;const div=document.createElement('section');div.className='seccion-dinamica';let media='';if(s.tipo==='imagen'&&s.mediaURL)media=`<img src="${s.mediaURL}" alt="${s.titulo}" style="max-width:100%;border-radius:15px;">`;else if(s.tipo==='video'&&s.mediaURL)media=`<video controls style="max-width:100%"><source src="${s.mediaURL}"></video>`;div.innerHTML=`<div class="contenido"><h2>${s.titulo}</h2><p>${s.contenido||''}</p>${media}</div>`;const footer=document.querySelector('.footer');if(footer)footer.parentNode.insertBefore(div,footer);});});}
 function mostrarNotificacion(msg){const n=document.createElement('div');n.className='notificacion';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),3000);}
 
+// ============ DISTRIBUIDORES ============
+function cargarDistribuidores() {
+    db.collection('ubicaciones').get().then(snap => {
+        const distribuidores = [];
+        snap.forEach(d => distribuidores.push(d.data()));
+        
+        const track = document.getElementById('carrusel-distribuidores-track');
+        if (!track) return;
+        
+        track.innerHTML = distribuidores.map(u => `
+            <div class="distribuidor-item">
+                <div style="width:80px;height:80px;border-radius:50%;background:${u.color||'#48bb78'};margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:2em;color:#1a472a;">🏪</div>
+                <h4>${u.nombre}</h4>
+                <p>${u.tipo}</p>
+            </div>
+        `).join('') + `
+            <div class="distribuidor-card-especial" onclick="abrirModalDistribuidor()">
+                <span>🤝</span>
+                <p>¿Quieres ser distribuidor?</p>
+            </div>
+        `;
+        
+        iniciarCarruselAuto('carrusel-distribuidores-track', 3000);
+    });
+}
+
+function abrirModalDistribuidor() {
+    document.getElementById('modal-distribuidor').style.display = 'block';
+}
+
+function cerrarModalDistribuidor() {
+    document.getElementById('modal-distribuidor').style.display = 'none';
+}
+
+async function enviarSolicitudDistribuidor() {
+    const nombre = document.getElementById('dist-nombre').value;
+    const empresa = document.getElementById('dist-empresa').value;
+    const telefono = document.getElementById('dist-telefono').value;
+    const email = document.getElementById('dist-email').value;
+    
+    if (!nombre || !empresa || !telefono) {
+        alert('Completa nombre, empresa y teléfono');
+        return;
+    }
+    
+    await db.collection('solicitudes_distribuidor').add({
+        nombre, empresa, telefono, email,
+        mensaje: document.getElementById('dist-mensaje').value,
+        fecha: firebase.firestore.FieldValue.serverTimestamp(),
+        estado: 'pendiente'
+    });
+    
+    alert('Solicitud enviada. Nos pondremos en contacto contigo pronto.');
+    cerrarModalDistribuidor();
+    ['dist-nombre','dist-empresa','dist-telefono','dist-email','dist-mensaje'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ============ NOTICIAS ============
+function cargarNoticias() {
+    db.collection('noticias').where('activo','==',true).orderBy('fecha','desc').get().then(snap => {
+        const contenedor = document.getElementById('noticias-lista');
+        if (!contenedor) return;
+        
+        contenedor.innerHTML = snap.empty ? '<p style="text-align:center;color:var(--color-texto-terciario);">Próximamente noticias y eventos</p>' :
+            Array.from(snap).map(d => {
+                const n = d.data();
+                let media = '';
+                if (n.tipo === 'imagen' && n.mediaURL) media = `<img src="${n.mediaURL}" alt="${n.titulo}">`;
+                else if (n.tipo === 'video' && n.mediaURL) media = `<video controls><source src="${n.mediaURL}"></video>`;
+                return `
+                <div class="noticia-card">
+                    ${media}
+                    <div class="noticia-contenido">
+                        <h3>${n.titulo}</h3>
+                        <p>${n.contenido||''}</p>
+                        <span class="noticia-fecha">${n.fecha?.toDate?.().toLocaleDateString('es-SV')||''}</span>
+                    </div>
+                </div>`;
+            }).join('');
+    });
+}
+
+// ============ CARRUSEL AUTOMÁTICO ============
+function iniciarCarruselAuto(trackId, velocidad) {
+    const track = document.getElementById(trackId);
+    if (!track) return;
+    
+    let index = 0;
+    let interval = setInterval(() => {
+        const items = track.querySelectorAll('div');
+        if (!items.length) return;
+        const maxIndex = Math.max(0, items.length - 4);
+        index = (index + 1) > maxIndex ? 0 : index + 1;
+        track.style.transform = `translateX(-${index * 240}px)`;
+    }, velocidad);
+    
+    track.parentElement.addEventListener('mouseenter', () => clearInterval(interval));
+    track.parentElement.addEventListener('mouseleave', () => {
+        interval = setInterval(() => {
+            const items = track.querySelectorAll('div');
+            if (!items.length) return;
+            const maxIndex = Math.max(0, items.length - 4);
+            index = (index + 1) > maxIndex ? 0 : index + 1;
+            track.style.transform = `translateX(-${index * 240}px)`;
+        }, velocidad);
+    });
+}
 document.querySelector('.carrito-icon')?.addEventListener('click',e=>{e.preventDefault();mostrarCarrito();});
 document.querySelectorAll('.close').forEach(el=>el.addEventListener('click',function(){this.closest('.modal').style.display='none';}));
 window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.display='none';};
-window.onload=function(){cargarLogo();initMap();};
+window.onload=function(){
+    cargarLogo();
+    initMap();
+    cargarDistribuidores();
+    cargarNoticias();
+    
+    // Iniciar carrusel de valoraciones automático
+    setTimeout(() => iniciarCarruselAuto('carrusel-valoraciones', 4000), 2000);
+};
