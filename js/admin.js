@@ -32,19 +32,6 @@ function intentarLogin() {
     }
 }
 
-function intentarLogin() {
-    const u = document.getElementById('login-usuario').value;
-    const p = document.getElementById('login-password').value;
-    if (u === ADMIN.u && p === ADMIN.p) {
-        sessionStorage.setItem('admin', '1');
-        document.getElementById('login-modal').style.display = 'none';
-        cargarProductos();
-        initNotifs();
-    } else {
-        document.getElementById('login-error').textContent = 'Credenciales incorrectas';
-    }
-}
-
 function imgToB64(file) {
     return new Promise((resolve) => {
         const r = new FileReader();
@@ -65,8 +52,8 @@ function initNotifs() {
         }
     }));
     db.collection('productos').where('activo','==',true).onSnapshot(s => s.docChanges().forEach(c => { const p=c.doc.data(); if(p.stock<12&&p.stock>0) addNotif('productos','Stock bajo: '+p.nombre,c.doc.id); }));
+    db.collection('solicitudes_distribuidor').where('estado','==','pendiente').onSnapshot(s => s.docChanges().forEach(c => { if(c.type==='added') addNotif('solicitudes','Nueva solicitud distribuidor',c.doc.id); }));
 }
-
 function addNotif(sec, msg, id) {
     notificacionesLista.unshift({ sec, msg, id, fecha: new Date(), leida: false });
     notifSec[sec] = (notifSec[sec]||0) + 1;
@@ -74,7 +61,7 @@ function addNotif(sec, msg, id) {
 }
 
 function updateBadges() {
-    ['productos','ordenes','valoraciones','contactos'].forEach(s => {
+    ['productos','ordenes','valoraciones','contactos','solicitudes'].forEach(s => {
         const b = document.getElementById('badge-'+s);
         if (b) {
             const count = notifSec[s] || 0;
@@ -153,8 +140,8 @@ async function guardarProducto() {
         img = await comprimirImagen(window.prodImg, 600, 0.6);
     }
     
-    const datos = { nombre:n, precio:parseFloat(pr), stock:parseInt(document.getElementById('stock-producto').value)||0, imagen:img, descripcion:document.getElementById('descripcion-producto').value, descuento24u:parseInt(document.getElementById('descuento24u').value)||0, activo:document.getElementById('activo-producto').checked };    
-    try {
+    const descuento = parseInt(document.getElementById('descuento24u').value);
+    const datos = { nombre:n, precio:parseFloat(pr), stock:parseInt(document.getElementById('stock-producto').value)||0, imagen:img, descripcion:document.getElementById('descripcion-producto').value, descuento24u: descuento || 15, activo:document.getElementById('activo-producto').checked };    try {
         if (editProd) await db.collection('productos').doc(editProd).update(datos);
         else await db.collection('productos').add(datos);
         alert('Guardado'); cancelarEdicionProd();
@@ -222,9 +209,15 @@ function filtrarOrdenes() {
 }
 
 async function cambiarEstadoOrden(id, e) { 
-    if (e && id) {
-        await db.collection('ordenes').doc(id).update({estado: e});
+    if (e && id && e !== '') {
+        try {
+            await db.collection('ordenes').doc(id).update({estado: e});
+            console.log('Estado actualizado:', id, e);
+        } catch(error) {
+            console.error('Error al actualizar estado:', error);
+        }
     }
+}
 }
 
 // ============ HISTORIA ============
@@ -530,7 +523,7 @@ function cargarSolicitudes() {
                 <p>📞 ${sol.telefono}</p>
                 <p>📧 ${sol.email||'N/A'}</p>
                 <p>💬 ${sol.mensaje||''}</p>
-                <span class="fecha">${sol.fecha?.toDate().toLocaleString()}</span>
+                <span class="fecha">${sol.fecha?.toDate?.().toLocaleString() || 'Sin fecha'}</span>
                 <select onchange="cambiarEstadoSolicitud('${d.id}',this.value)" class="form-input">
                     <option value="pendiente" ${sol.estado==='pendiente'?'selected':''}>Pendiente</option>
                     <option value="contactado" ${sol.estado==='contactado'?'selected':''}>Contactado</option>
@@ -581,14 +574,22 @@ async function eliminarNoticia(id) { if(confirm('¿Eliminar?')) await db.collect
 
 // ============ DESCARGAR PDF ORDEN ============
 async function descargarPDFOrden(id) {
-    const doc = await db.collection('ordenes').doc(id).get();
-    if (doc.exists) {
-        const orden = {id: doc.id, ...doc.data()};
-        // Usar la misma función generarPDF del cliente (debe estar disponible)
+    const docRef = await db.collection('ordenes').doc(id).get();
+    if (docRef.exists) {
+        const orden = {id: docRef.id, ...docRef.data()};
+        // Mostrar PDF en nueva ventana
         if (typeof generarPDF === 'function') {
-            generarPDF(orden);
+            // Guardar referencia global para que admin pueda usar la función
+            window._ordenParaPDF = orden;
+            // Abrir en nueva pestaña
+            const pdfWindow = window.open('', '_blank');
+            pdfWindow.document.write('<html><head><title>Factura '+orden.id+'</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#333;"><p style="color:white;font-size:18px;">Generando PDF... Si no se descarga, <button onclick="window.close()" style="padding:10px 20px;cursor:pointer;">cerrar</button></p></body></html>');
+            setTimeout(() => {
+                generarPDF(orden);
+                pdfWindow.close();
+            }, 500);
         } else {
-            alert('Función PDF no disponible');
+            alert('Función PDF no disponible. Asegúrate de que el cliente.js se cargó correctamente.');
         }
     }
 }
