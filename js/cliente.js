@@ -32,6 +32,8 @@ function initMap() {
     cargarValoracionesCliente();
     cargarSeccionesDinamicas();
     cargarRedesSociales();
+    cargarNoticias();
+    cargarDistribuidores();
 }
 
 function cargarDepartamentosSelect() {
@@ -981,8 +983,6 @@ window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.displa
 window.onload=function(){
     cargarLogo();
     initMap();
-    cargarDistribuidores();
-    cargarNoticias();
     
     // Iniciar carrusel de valoraciones automático
     setTimeout(() => iniciarCarruselAuto('carrusel-valoraciones', 4000), 2000);
