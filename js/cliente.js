@@ -893,7 +893,7 @@ function cargarNoticias() {
             <div class="noticia-card" style="min-width:280px;max-width:320px;flex-shrink:0;">
                 ${media}
                 <div class="noticia-contenido" style="padding:15px;">
-                    <h3 style="font-size:1em;">${n.titulo}</h3>
+                    <h3 style="font-size:1em;cursor:pointer;" onclick="verNoticia('${n.titulo.replace(/'/g,"\\'")}','${(n.contenido||'').replace(/'/g,"\\'").substring(0,200)}')">${n.titulo}</h3>
                     <p style="font-size:0.8em;">${(n.contenido||'').substring(0,100)}...</p>
                     <span class="noticia-fecha">${n.fecha?.toDate?.().toLocaleDateString('es-SV')||''}</span>
                 </div>
@@ -975,6 +975,45 @@ function hacerArrastrable(trackId) {
         const walk = (x - startX) * 2;
         track.scrollLeft = scrollLeft - walk;
     });
+}
+
+let noticiaActualTitulo = '';
+
+function verNoticia(titulo, contenido) {
+    noticiaActualTitulo = titulo;
+    document.getElementById('noticia-modal-titulo').textContent = titulo;
+    document.getElementById('noticia-modal-contenido').textContent = contenido;
+    document.getElementById('noticia-modal').style.display = 'block';
+    cargarComentariosNoticia(titulo);
+}
+
+function cargarComentariosNoticia(titulo) {
+    db.collection('comentarios_noticias').where('noticiaTitulo','==',titulo).get().then(snap => {
+        const lista = document.getElementById('noticia-comentarios-lista');
+        const comentarios = [];
+        snap.forEach(d => comentarios.push(d.data()));
+        comentarios.sort((a,b) => (b.fecha?.toDate?.()||0) - (a.fecha?.toDate?.()||0));
+        lista.innerHTML = snap.empty ? '<p style="color:var(--color-texto-terciario);">Sin comentarios aún</p>' :
+            comentarios.map(c => `<p style="color:var(--color-texto-secundario);margin:5px 0;font-size:0.9em;"><strong>${c.nombre}:</strong> ${c.comentario}</p>`).join('');
+    });
+}
+
+async function agregarComentarioNoticia() {
+    const nombre = document.getElementById('noticia-comentario-nombre').value;
+    const comentario = document.getElementById('noticia-comentario-texto').value;
+    if (!nombre || !comentario) { alert('Completa los campos'); return; }
+    
+    await db.collection('comentarios_noticias').add({
+        noticiaTitulo: noticiaActualTitulo,
+        nombre,
+        comentario,
+        fecha: firebase.firestore.FieldValue.serverTimestamp(),
+        aprobada: true
+    });
+    
+    document.getElementById('noticia-comentario-nombre').value = '';
+    document.getElementById('noticia-comentario-texto').value = '';
+    cargarComentariosNoticia(noticiaActualTitulo);
 }
 
 document.querySelector('.carrito-icon')?.addEventListener('click',e=>{e.preventDefault();mostrarCarrito();});
