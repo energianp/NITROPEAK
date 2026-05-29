@@ -191,6 +191,22 @@
         </div>
     </div>
 
+        <!-- Modal Noticia (para ver detalle y comentarios) -->
+    <div id="noticia-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('noticia-modal').style.display='none'">&times;</span>
+            <h2 id="noticia-modal-titulo" style="color:var(--color-acento);"></h2>
+            <p id="noticia-modal-contenido" style="color:var(--color-texto-secundario);"></p>
+            <div style="margin-top:20px;text-align:left;">
+                <h4 style="color:var(--color-acento);margin-bottom:10px;">💬 Comentarios</h4>
+                <div id="noticia-comentarios-lista" style="max-height:200px;overflow-y:auto;margin-bottom:10px;"></div>
+                <input type="text" id="noticia-comentario-nombre" placeholder="Tu nombre" class="form-input" style="margin:5px 0;">
+                <textarea id="noticia-comentario-texto" placeholder="Escribe un comentario..." class="form-input" rows="2"></textarea>
+                <button onclick="agregarComentarioNoticia()" class="btn-guardar" style="margin-top:5px;">Comentar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Carrito Modal -->
     <div id="carrito-modal" class="modal">
         <div class="modal-content">
