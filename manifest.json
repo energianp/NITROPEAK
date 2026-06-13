@@ -1,21 +1,8 @@
 {
-    "name": "NITROPEAK",
-    "short_name": "NITROPEAK",
-    "description": "Energía Natural Sin Cafeína",
-    "start_url": "/NITROPEAK/",
-    "display": "standalone",
-    "background_color": "#0a1a0f",
-    "theme_color": "#1a472a",
-    "icons": [
-        {
-            "src": "favicon.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "favicon.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
-    ]
+  "name": "NITROPEAK",
+  "short_name": "NITROPEAK",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a1a0f",
+  "theme_color": "#1a472a"
 }
