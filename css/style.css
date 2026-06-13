@@ -785,11 +785,74 @@ select.form-input option { background: var(--color-card); color: var(--color-tex
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1024px) {
-    .buscador-header { max-width: 180px; }
-    .historia-content { max-width: 100%; }
-    .nav { padding: 12px 20px; }
-    .nav-menu { gap: 15px; }
-    .nav-menu a { font-size: 0.85em; }
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+    }
+    
+    .nav {
+        flex-direction: column;
+        padding: 10px 20px;
+        gap: 8px;
+    }
+    
+    .logo {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .logo h1 {
+        font-size: 1.4em;
+    }
+    
+    .logo img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .buscador-header {
+        order: 2;
+        max-width: 100%;
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .buscar-input {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+    
+    .nav-menu {
+        order: 3;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        padding: 5px 0;
+        margin: 0;
+    }
+    
+    .nav-menu li {
+        margin: 0;
+    }
+    
+    .nav-menu a {
+        font-size: 0.82em;
+        padding: 6px 10px;
+        white-space: nowrap;
+        display: inline-block;
+    }
+    
+    .historia-content {
+        max-width: 100%;
+    }
+    
+    .hero {
+        padding-top: 170px;
+    }
 }
 
 @media (max-width: 768px) {
